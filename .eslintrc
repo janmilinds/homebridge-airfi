@@ -1,9 +1,11 @@
 {
   "parser": "@typescript-eslint/parser",
+  "plugins": ["prettier"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended" // uses the recommended rules from the @typescript-eslint/eslint-plugin
+    "plugin:@typescript-eslint/recommended", // uses the recommended rules from the @typescript-eslint/eslint-plugin
+    "prettier"
   ],
   "parserOptions": {
     "ecmaVersion": 2018,
@@ -13,16 +15,23 @@
     "dist"
   ],
   "rules": {
+    "prettier/prettier": "error",
     "quotes": ["warn", "single"],
     "indent": ["warn", 2, { "SwitchCase": 1 }],
     "semi": ["off"],
-    "comma-dangle": ["warn", "always-multiline"],
+    "comma-dangle": ["error", {
+      "arrays": "always-multiline",
+      "objects": "always-multiline",
+      "imports": "always-multiline",
+      "exports": "never",
+      "functions": "never"
+    }],
     "dot-notation": "off",
     "eqeqeq": "warn",
     "curly": ["warn", "all"],
     "brace-style": ["warn"],
     "prefer-arrow-callback": ["warn"],
-    "max-len": ["warn", 140],
+    "max-len": ["warn", 80],
     "no-console": ["warn"], // use the provided Homebridge log method instead
     "no-non-null-assertion": ["off"],
     "comma-spacing": ["error"],
