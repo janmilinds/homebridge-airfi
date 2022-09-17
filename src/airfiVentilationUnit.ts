@@ -8,7 +8,11 @@ import {
 } from 'homebridge';
 
 import { AirfiModbusController } from './controller';
-import { AirfiFanService, AirfiService } from './services';
+import {
+  AirfiFanService,
+  AirfiInformationService,
+  AirfiService,
+} from './services';
 
 /**
  * Airfi Ventilation unit – accessory that defines services available through
@@ -46,6 +50,15 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     this.Characteristic = api.hap.Characteristic;
     this.Service = api.hap.Service;
 
+    // Add information service.
+    const informationService = new AirfiInformationService(
+      this,
+      this.airfiController,
+      config
+    );
+    this.services.push(informationService);
+
+    // Add fan service
     const fanService = new AirfiFanService(
       this,
       this.airfiController,
@@ -53,6 +66,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     );
     this.services.push(fanService);
 
+    // Run periodic operations into modbus.
     setTimeout(() => setInterval(() => this.run(), 1000), 5000);
 
     this.log.info(`${this.name} initialized.`);
