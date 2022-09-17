@@ -1,6 +1,6 @@
 {
   "pluginAlias": "Homebridge Airfi",
-  "pluginType": "platform",
+  "pluginType": "accessory",
   "singular": true,
   "schema": {
     "type": "object",
@@ -9,7 +9,38 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "Airfi ventilation unit"
+      },
+      "host": {
+        "title": "Host",
+        "type": "string",
+        "required": true,
+        "format": "hostname"
+      },
+      "port": {
+        "title": "Port",
+        "type": "number",
+        "default": 502,
+        "required": true
+      },
+      "model": {
+        "title": "Model",
+        "type": "string",
+        "default": "Model 60",
+        "oneOf": [
+          { "title": "Model 60", "enum": ["Model 60"] },
+          { "title": "Model 100", "enum": ["Model 100"] },
+          { "title": "Model 130", "enum": ["Model 130"] },
+          { "title": "Model 150", "enum": ["Model 150"] },
+          { "title": "Model 250", "enum": ["Model 250"] },
+          { "title": "Model 350", "enum": ["Model 350"] }
+        ],
+        "required": true
+      },
+      "serialNumber": {
+        "title": "Serial number",
+        "type": "string",
+        "required": true
       }
     }
   }
