@@ -1,11 +1,7 @@
 import { CharacteristicValue, Logger, Service } from 'homebridge';
+
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
-
-type Active = 0 | 1;
-
-interface AirfiFanState {
-  Active: Active;
-}
+import { Active, RotationSpeed, AirfiFanState } from '../types';
 
 export default class AirfiFanService {
   private readonly log: Logger;
@@ -14,6 +10,7 @@ export default class AirfiFanService {
 
   private state: AirfiFanState = {
     Active: 1,
+    RotationSpeed: 3,
   };
 
   constructor(accessory: AirfiVentilationUnitAccessory) {
@@ -23,6 +20,17 @@ export default class AirfiFanService {
       .getCharacteristic(accessory.Characteristic.Active)
       .onGet(this.getActive.bind(this))
       .onSet(this.setActive.bind(this));
+
+    // Set RotationSpeed charasteristic to correspond with speed supported by
+    // the Airfi ventilation unit.
+    this.service
+      .getCharacteristic(accessory.Characteristic.RotationSpeed)
+      .setProps({ minValue: 0, maxValue: 5 });
+
+    this.service
+      .getCharacteristic(accessory.Characteristic.RotationSpeed)
+      .onGet(this.getRotationSpeed.bind(this))
+      .onSet(this.setRotationSpeed.bind(this));
 
     this.log.debug('Airfi Fan service initialized.');
   }
@@ -37,6 +45,20 @@ export default class AirfiFanService {
     if (value !== this.state.Active) {
       this.log.info(`Fan Active ${this.state.Active} → ${value}`);
       this.state.Active = value as Active;
+    }
+  }
+
+  private async getRotationSpeed() {
+    this.log.debug('RotationSpeed is:', this.state.RotationSpeed);
+    return this.state.RotationSpeed;
+  }
+
+  private async setRotationSpeed(value: CharacteristicValue) {
+    // Airfi ventilation unit supports only speeds 1–5, so only change speed on
+    // that range. Speed 0 anyway sets the fan inactive.
+    if (value > 0) {
+      this.state.RotationSpeed = value as RotationSpeed;
+      this.log.info(`Fan RotationSpeed ${this.state.Active} → ${value}`);
     }
   }
 
