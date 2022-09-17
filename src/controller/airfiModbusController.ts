@@ -73,11 +73,13 @@ export default class airfiModbusController {
    *   Input register address to read information.
    */
   read(address: number): Promise<number> {
+    this.log.debug(`Reading address ${address}`);
+
     if (!this.isConnected) {
-      throw new Error('No connection to device.');
+      this.log.error('Not connected to device');
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.client
         .readInputRegisters(address, 1)
         .then(
@@ -88,11 +90,12 @@ export default class airfiModbusController {
               },
             },
           }) => {
+            this.log.debug(`Value for address "${address}" is "${value}"`);
             resolve(value);
           }
         )
         .catch((error) => {
-          reject(new Error(`Unable to read register ${address}: ${error}`));
+          this.log.error(`Unable to read register ${address}: ${error}`);
         });
     });
   }

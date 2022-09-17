@@ -1,3 +1,4 @@
+import { AirfiService } from './airfiService';
 import AirfiFanService from './airfiFanService';
 
-export { AirfiFanService };
+export { AirfiFanService, AirfiService };

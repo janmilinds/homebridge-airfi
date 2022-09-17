@@ -1,9 +1,17 @@
 import { CharacteristicValue, Logger, Service } from 'homebridge';
 
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
+import { AirfiModbusController } from '../controller';
 import { Active, RotationSpeed, AirfiFanState } from '../types';
+import { AirfiService } from './airfiService';
 
-export default class AirfiFanService {
+export default class AirfiFanService implements AirfiService {
+  static readonly ROTATION_SPEED_READ_ADDRESS = 24;
+
+  private readonly accessory;
+
+  private readonly controller: AirfiModbusController;
+
   private readonly log: Logger;
 
   private service: Service;
@@ -13,22 +21,27 @@ export default class AirfiFanService {
     RotationSpeed: 3,
   };
 
-  constructor(accessory: AirfiVentilationUnitAccessory) {
-    this.log = accessory.log;
-    this.service = new accessory.Service.Fanv2();
+  constructor(
+    accessory: AirfiVentilationUnitAccessory,
+    controller: AirfiModbusController
+  ) {
+    this.accessory = accessory;
+    this.controller = controller;
+    this.log = this.accessory.log;
+    this.service = new this.accessory.Service.Fanv2();
     this.service
-      .getCharacteristic(accessory.Characteristic.Active)
+      .getCharacteristic(this.accessory.Characteristic.Active)
       .onGet(this.getActive.bind(this))
       .onSet(this.setActive.bind(this));
 
     // Set RotationSpeed charasteristic to correspond with speed supported by
     // the Airfi ventilation unit.
     this.service
-      .getCharacteristic(accessory.Characteristic.RotationSpeed)
+      .getCharacteristic(this.accessory.Characteristic.RotationSpeed)
       .setProps({ minValue: 0, maxValue: 5 });
 
     this.service
-      .getCharacteristic(accessory.Characteristic.RotationSpeed)
+      .getCharacteristic(this.accessory.Characteristic.RotationSpeed)
       .onGet(this.getRotationSpeed.bind(this))
       .onSet(this.setRotationSpeed.bind(this));
 
@@ -60,6 +73,20 @@ export default class AirfiFanService {
       this.state.RotationSpeed = value as RotationSpeed;
       this.log.info(`Fan RotationSpeed ${this.state.Active} → ${value}`);
     }
+  }
+
+  public async runUpdates() {
+    await this.controller
+      .read(AirfiFanService.ROTATION_SPEED_READ_ADDRESS)
+      .then((value) => {
+        this.state.RotationSpeed = value as RotationSpeed;
+        this.service
+          .getCharacteristic(this.accessory.Characteristic.RotationSpeed)
+          .updateValue(this.state.RotationSpeed);
+      })
+      .catch((error) => {
+        this.log.error(error);
+      });
   }
 
   public getService() {
