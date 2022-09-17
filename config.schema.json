@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "Homebridge Airfi",
   "pluginType": "platform",
   "singular": true,
   "schema": {
