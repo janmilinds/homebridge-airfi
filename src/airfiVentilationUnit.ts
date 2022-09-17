@@ -6,6 +6,7 @@ import {
   Logger,
   Service,
 } from 'homebridge';
+import { AirfiFanService } from './services';
 
 /**
  * AirfiVentilationUnitAccessory
@@ -13,7 +14,7 @@ import {
 export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   public readonly Characteristic: typeof Characteristic;
 
-  private readonly log: Logger;
+  public readonly log: Logger;
 
   private readonly name: string;
 
@@ -34,6 +35,9 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     );
 
     this.services.push(informationService);
+
+    const fanService = new AirfiFanService(this);
+    this.services.push(fanService.getService());
 
     log.info(`${this.name} initialized.`);
   }
