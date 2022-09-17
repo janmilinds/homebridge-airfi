@@ -6,7 +6,9 @@ import { Active, RotationSpeed, AirfiFanState } from '../types';
 import { AirfiService } from './airfiService';
 
 export default class AirfiFanService implements AirfiService {
-  static readonly ROTATION_SPEED_READ_ADDRESS = 24;
+  static readonly READ_ADDRESS_ACTIVE = 16;
+
+  static readonly READ_ADDRESS_ROTATION_SPEED = 24;
 
   private readonly accessory;
 
@@ -77,7 +79,23 @@ export default class AirfiFanService implements AirfiService {
 
   public async runUpdates() {
     await this.controller
-      .read(AirfiFanService.ROTATION_SPEED_READ_ADDRESS)
+      .read(AirfiFanService.READ_ADDRESS_ACTIVE)
+      .then((value) => {
+        // Active state in the device is inverted so convert the value received
+        // from the device:
+        // 1 = "Away" state = "inactive"
+        // 0 = "At home" state = "active".
+        this.state.Active = Math.abs(value - 1) as Active;
+        this.service
+          .getCharacteristic(this.accessory.Characteristic.Active)
+          .updateValue(this.state.Active);
+      })
+      .catch((error) => {
+        this.log.error(error);
+      });
+
+    await this.controller
+      .read(AirfiFanService.READ_ADDRESS_ROTATION_SPEED)
       .then((value) => {
         this.state.RotationSpeed = value as RotationSpeed;
         this.service
