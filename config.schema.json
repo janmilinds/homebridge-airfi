@@ -1,6 +1,6 @@
 {
   "pluginAlias": "Homebridge Airfi",
-  "pluginType": "platform",
+  "pluginType": "accessory",
   "singular": true,
   "schema": {
     "type": "object",
@@ -9,7 +9,19 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "Airfi ventilation unit"
+      },
+      "host": {
+        "title": "Host",
+        "type": "string",
+        "required": true,
+        "format": "hostname"
+      },
+      "port": {
+        "title": "Port",
+        "type": "number",
+        "default": 502,
+        "required": true
       }
     }
   }
