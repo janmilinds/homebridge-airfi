@@ -1,11 +1,15 @@
-import { CharacteristicValue, Logger, Service } from 'homebridge';
+import { CharacteristicValue } from 'homebridge';
 
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
 import { AirfiModbusController } from '../controller';
-import { Active, RotationSpeed, AirfiFanState, WriteQueue } from '../types';
+import { Active, RotationSpeed, AirfiFanState } from '../types';
 import { AirfiService } from './airfiService';
 
-export default class AirfiFanService implements AirfiService {
+/**
+ * Defines the fan service for controlling speed and "At home"/"Away" states of
+ * the Airfi ventilation unit.
+ */
+export default class AirfiFanService extends AirfiService {
   static readonly READ_ADDRESS_ACTIVE = 16;
 
   static readonly READ_ADDRESS_ROTATION_SPEED = 24;
@@ -14,29 +18,18 @@ export default class AirfiFanService implements AirfiService {
 
   static readonly WRITE_ADDRESS_ROTATION_SPEED = 1;
 
-  private readonly accessory;
-
-  private readonly controller: AirfiModbusController;
-
-  private readonly log: Logger;
-
-  private service: Service;
-
   private state: AirfiFanState = {
     Active: 1,
     RotationSpeed: 3,
   };
 
-  private queue: WriteQueue = {};
-
   constructor(
     accessory: AirfiVentilationUnitAccessory,
-    controller: AirfiModbusController
+    controller: AirfiModbusController,
+    displayName: string
   ) {
-    this.accessory = accessory;
-    this.controller = controller;
-    this.log = this.accessory.log;
-    this.service = new this.accessory.Service.Fanv2();
+    super(accessory, controller, new accessory.Service.Fanv2(displayName));
+
     this.service
       .getCharacteristic(this.accessory.Characteristic.Active)
       .onGet(this.getActive.bind(this))
@@ -102,8 +95,7 @@ export default class AirfiFanService implements AirfiService {
   }
 
   /**
-   * Update device charasteristic values by reading them from the ventilation
-   * unit.
+   * {@inheritDoc AirfiService.runUpdates}
    */
   public async runUpdates() {
     await this.controller
@@ -129,26 +121,5 @@ export default class AirfiFanService implements AirfiService {
       .catch((error) => {
         this.log.error(error);
       });
-  }
-
-  /**
-   * Write values from queue to the ventilation unit.
-   */
-  public runQueue(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      Object.entries(this.queue).map(([address, value]) => {
-        this.controller
-          .write(parseInt(address), value)
-          .then()
-          .finally(() => {
-            delete this.queue[address];
-          });
-      });
-      resolve();
-    });
-  }
-
-  public getService() {
-    return this.service;
   }
 }

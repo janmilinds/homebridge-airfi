@@ -2,6 +2,10 @@ import { Logger } from 'homebridge';
 import { ModbusTCPClient } from 'jsmodbus';
 import { Socket, SocketConnectOpts } from 'net';
 
+/**
+ * Modbus controller handling reading and writing registers in the Airfi
+ * ventilation unit.
+ */
 export default class airfiModbusController {
   private client: ModbusTCPClient;
 

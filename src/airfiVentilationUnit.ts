@@ -11,14 +11,15 @@ import { AirfiModbusController } from './controller';
 import { AirfiFanService, AirfiService } from './services';
 
 /**
- * AirfiVentilationUnitAccessory
+ * Airfi Ventilation unit – accessory that defines services available through
+ * this plugin.
  */
 export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   private readonly airfiController: AirfiModbusController;
 
   public readonly Characteristic: typeof Characteristic;
 
-  private isFetching = false;
+  private isNetworking = false;
 
   public readonly log: Logger;
 
@@ -45,42 +46,41 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     this.Characteristic = api.hap.Characteristic;
     this.Service = api.hap.Service;
 
-    // const informationService = new this.Service.AccessoryInformation();
-    // informationService.setCharacteristic(
-    //   this.Characteristic.Manufacturer,
-    //   'Airfi'
-    // );
-
-    // this.services.push(informationService);
-
-    const fanService = new AirfiFanService(this, this.airfiController);
+    const fanService = new AirfiFanService(
+      this,
+      this.airfiController,
+      'Ventilation'
+    );
     this.services.push(fanService);
 
-    setTimeout(() => setInterval(() => this.fetch(), 1000), 5000);
+    setTimeout(() => setInterval(() => this.run(), 1000), 5000);
 
-    log.info(`${this.name} initialized.`);
+    this.log.info(`${this.name} initialized.`);
   }
 
-  private async fetch() {
+  /**
+   * Run write & read operations for each service.
+   */
+  private async run() {
     try {
-      if (this.isFetching) {
+      if (this.isNetworking) {
+        this.log.info(`${this.name} is busy completing previous operations.`);
         return;
       }
 
-      this.isFetching = true;
+      this.isNetworking = true;
+
       await this.airfiController.open();
-      const outdoorTemp = await this.airfiController.read(4);
-      this.log.info('Outdoor temperature is', outdoorTemp);
 
       for (const service of this.services) {
         await service.runQueue();
         await service.runUpdates();
       }
     } catch (error) {
-      this.log.error(`Error fetching values: ${error}`);
+      this.log.error(`Controller Error: ${error}`);
     } finally {
       this.airfiController.close();
-      this.isFetching = false;
+      this.isNetworking = false;
     }
   }
 
