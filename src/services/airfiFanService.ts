@@ -73,10 +73,10 @@ export default class AirfiFanService extends AirfiService {
     // Airfi ventilation unit supports only speeds 1–5, so only change speed on
     // that range. Speed 0 anyway sets the fan inactive.
     if (value > 0) {
+      this.log.info(`Fan RotationSpeed ${this.state.RotationSpeed} → ${value}`);
       this.state.RotationSpeed = value as RotationSpeed;
       this.queue[AirfiFanService.WRITE_ADDRESS_ROTATION_SPEED] =
         this.state.RotationSpeed;
-      this.log.info(`Fan RotationSpeed ${this.state.RotationSpeed} → ${value}`);
     }
   }
 
