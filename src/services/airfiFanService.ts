@@ -76,7 +76,7 @@ export default class AirfiFanService extends AirfiService {
       this.state.RotationSpeed = value as RotationSpeed;
       this.queue[AirfiFanService.WRITE_ADDRESS_ROTATION_SPEED] =
         this.state.RotationSpeed;
-      this.log.info(`Fan RotationSpeed ${this.state.Active} → ${value}`);
+      this.log.info(`Fan RotationSpeed ${this.state.RotationSpeed} → ${value}`);
     }
   }
 
