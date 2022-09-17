@@ -2,13 +2,17 @@ import { CharacteristicValue, Logger, Service } from 'homebridge';
 
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
 import { AirfiModbusController } from '../controller';
-import { Active, RotationSpeed, AirfiFanState } from '../types';
+import { Active, RotationSpeed, AirfiFanState, WriteQueue } from '../types';
 import { AirfiService } from './airfiService';
 
 export default class AirfiFanService implements AirfiService {
   static readonly READ_ADDRESS_ACTIVE = 16;
 
   static readonly READ_ADDRESS_ROTATION_SPEED = 24;
+
+  static readonly WRITE_ADDRESS_ACTIVE = 12;
+
+  static readonly WRITE_ADDRESS_ROTATION_SPEED = 1;
 
   private readonly accessory;
 
@@ -22,6 +26,8 @@ export default class AirfiFanService implements AirfiService {
     Active: 1,
     RotationSpeed: 3,
   };
+
+  private queue: WriteQueue = {};
 
   constructor(
     accessory: AirfiVentilationUnitAccessory,
@@ -58,6 +64,8 @@ export default class AirfiFanService implements AirfiService {
   private async setActive(value: CharacteristicValue) {
     // Only change fan state if it differs from current state,
     if (value !== this.state.Active) {
+      this.queue[AirfiFanService.WRITE_ADDRESS_ACTIVE] =
+        AirfiFanService.convertActiveState(value as Active);
       this.log.info(`Fan Active ${this.state.Active} → ${value}`);
       this.state.Active = value as Active;
     }
@@ -73,19 +81,35 @@ export default class AirfiFanService implements AirfiService {
     // that range. Speed 0 anyway sets the fan inactive.
     if (value > 0) {
       this.state.RotationSpeed = value as RotationSpeed;
+      this.queue[AirfiFanService.WRITE_ADDRESS_ROTATION_SPEED] =
+        this.state.RotationSpeed;
       this.log.info(`Fan RotationSpeed ${this.state.Active} → ${value}`);
     }
   }
 
+  /**
+   * Inverts the active state from/to device.
+   *
+   * From device perspective:
+   * -  1 = "Away" state = "inactive"
+   * -  0 = "At home" state = "active".
+   *
+   * @param value
+   *   Active state value to conver.
+   */
+  private static convertActiveState(value: Active): Active {
+    return Math.abs(value - 1) as Active;
+  }
+
+  /**
+   * Update device charasteristic values by reading them from the ventilation
+   * unit.
+   */
   public async runUpdates() {
     await this.controller
       .read(AirfiFanService.READ_ADDRESS_ACTIVE)
       .then((value) => {
-        // Active state in the device is inverted so convert the value received
-        // from the device:
-        // 1 = "Away" state = "inactive"
-        // 0 = "At home" state = "active".
-        this.state.Active = Math.abs(value - 1) as Active;
+        this.state.Active = AirfiFanService.convertActiveState(value as Active);
         this.service
           .getCharacteristic(this.accessory.Characteristic.Active)
           .updateValue(this.state.Active);
@@ -105,6 +129,23 @@ export default class AirfiFanService implements AirfiService {
       .catch((error) => {
         this.log.error(error);
       });
+  }
+
+  /**
+   * Write values from queue to the ventilation unit.
+   */
+  public runQueue(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      Object.entries(this.queue).map(([address, value]) => {
+        this.controller
+          .write(parseInt(address), value)
+          .then()
+          .finally(() => {
+            delete this.queue[address];
+          });
+      });
+      resolve();
+    });
   }
 
   public getService() {

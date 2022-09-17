@@ -8,3 +8,7 @@ interface AirfiFanState {
 type Active = 0 | 1;
 
 type RotationSpeed = 0 | 1 | 2 | 3 | 4 | 5;
+
+type WriteQueue = {
+  [key: number]: number;
+};

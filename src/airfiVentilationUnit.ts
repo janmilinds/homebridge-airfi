@@ -56,7 +56,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     const fanService = new AirfiFanService(this, this.airfiController);
     this.services.push(fanService);
 
-    setTimeout(() => setInterval(() => this.fetch(), 5000), 5000);
+    setTimeout(() => setInterval(() => this.fetch(), 1000), 5000);
 
     log.info(`${this.name} initialized.`);
   }
@@ -73,6 +73,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
       this.log.info('Outdoor temperature is', outdoorTemp);
 
       for (const service of this.services) {
+        await service.runQueue();
         await service.runUpdates();
       }
     } catch (error) {
