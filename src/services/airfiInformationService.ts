@@ -1,4 +1,4 @@
-import { AccessoryConfig } from 'homebridge';
+import { AccessoryConfig, CharacteristicValue } from 'homebridge';
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
 import { AirfiModbusController } from '../controller';
 import { AirfiService } from './airfiService';
@@ -16,6 +16,10 @@ export default class AirfiInformationService extends AirfiService {
     config: AccessoryConfig
   ) {
     super(accessory, controller, new accessory.Service.AccessoryInformation());
+
+    this.service
+      .getCharacteristic(this.accessory.Characteristic.Identify)
+      .onSet(this.setIdentify.bind(this));
 
     this.service.setCharacteristic(
       this.accessory.Characteristic.Manufacturer,
@@ -39,6 +43,10 @@ export default class AirfiInformationService extends AirfiService {
   private async getFirmwareRevision() {
     this.log.debug('Firmware revision is:', this.firmwareRevision);
     return this.firmwareRevision;
+  }
+
+  private async setIdentify(value: CharacteristicValue) {
+    this.log.debug('Triggered SET Identify:', value);
   }
 
   /**
