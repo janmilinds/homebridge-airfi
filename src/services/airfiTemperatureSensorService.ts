@@ -37,13 +37,10 @@ export default class AirfiTemperatureSensorService extends AirfiService {
     this.readAddress = readAddress;
     this.subtype = subtype;
 
-    this.service.setCharacteristic(
-      this.accessory.Characteristic.Name,
-      displayName
-    );
+    this.service.setCharacteristic(this.Characteristic.Name, displayName);
 
     this.service
-      .getCharacteristic(this.accessory.Characteristic.CurrentTemperature)
+      .getCharacteristic(this.Characteristic.CurrentTemperature)
       .onGet(this.getCurrentTemperature.bind(this));
 
     this.log.debug(
@@ -80,7 +77,7 @@ export default class AirfiTemperatureSensorService extends AirfiService {
       this.accessory.getInputRegisterValue(this.readAddress)
     );
     this.service
-      .getCharacteristic(this.accessory.Characteristic.CurrentTemperature)
+      .getCharacteristic(this.Characteristic.CurrentTemperature)
       .updateValue(this.currentTemperature);
   }
 }

@@ -20,25 +20,25 @@ export default class AirfiInformationService extends AirfiService {
     super(accessory, new accessory.Service.AccessoryInformation(), 60);
 
     this.service
-      .getCharacteristic(this.accessory.Characteristic.Identify)
+      .getCharacteristic(this.Characteristic.Identify)
       .onSet(this.setIdentify.bind(this));
     this.service.setCharacteristic(
-      this.accessory.Characteristic.Manufacturer,
+      this.Characteristic.Manufacturer,
       this.manufacturer
     );
     this.service.setCharacteristic(
-      this.accessory.Characteristic.Model,
+      this.Characteristic.Model,
       config.model
     );
     this.service.setCharacteristic(
-      this.accessory.Characteristic.SerialNumber,
+      this.Characteristic.SerialNumber,
       config.serialNumber
     );
     this.service
-      .getCharacteristic(this.accessory.Characteristic.FirmwareRevision)
+      .getCharacteristic(this.Characteristic.FirmwareRevision)
       .onGet(this.getFirmwareRevision.bind(this));
     this.service
-      .getCharacteristic(this.accessory.Characteristic.HardwareRevision)
+      .getCharacteristic(this.Characteristic.HardwareRevision)
       .onGet(this.getHardwareRevision.bind(this));
 
     this.log.debug('Airfi Information service initialized.');
@@ -73,7 +73,7 @@ export default class AirfiInformationService extends AirfiService {
       )
     );
     this.service
-      .getCharacteristic(this.accessory.Characteristic.FirmwareRevision)
+      .getCharacteristic(this.Characteristic.FirmwareRevision)
       .updateValue(this.firmwareRevision);
 
     // Update Hardware Revision.
@@ -83,7 +83,7 @@ export default class AirfiInformationService extends AirfiService {
       )
     );
     this.service
-      .getCharacteristic(this.accessory.Characteristic.FirmwareRevision)
+      .getCharacteristic(this.Characteristic.FirmwareRevision)
       .updateValue(this.firmwareRevision);
   }
 }

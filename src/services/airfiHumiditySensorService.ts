@@ -24,13 +24,10 @@ export default class AirfiHumiditySensorService extends AirfiService {
       updateFrequency
     );
 
-    this.service.setCharacteristic(
-      this.accessory.Characteristic.Name,
-      displayName
-    );
+    this.service.setCharacteristic(this.Characteristic.Name, displayName);
 
     this.service
-      .getCharacteristic(this.accessory.Characteristic.CurrentRelativeHumidity)
+      .getCharacteristic(this.Characteristic.CurrentRelativeHumidity)
       .onGet(this.getRelativeHumidity.bind(this));
 
     this.log.debug('Airfi HumiditySensor service initialized.');
@@ -50,7 +47,7 @@ export default class AirfiHumiditySensorService extends AirfiService {
       AirfiHumiditySensorService.READ_ADDRESS_RELATIVE_HUMIDITY
     );
     this.service
-      .getCharacteristic(this.accessory.Characteristic.CurrentRelativeHumidity)
+      .getCharacteristic(this.Characteristic.CurrentRelativeHumidity)
       .updateValue(this.relativeHumidity);
   }
 }
