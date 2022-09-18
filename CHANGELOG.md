@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Modbus read/write operations are done centralized manner in the accessory instead of services.
+- Fan speeds are represented as full range percentage for better compatibility with Siri.
 
 ### Fixed
 
