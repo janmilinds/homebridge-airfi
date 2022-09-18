@@ -6,7 +6,11 @@ import { AirfiService } from './airfiService';
 export default class AirfiInformationService extends AirfiService {
   private static readonly READ_ADDRESS_FIRMWARE_REVISION = 2;
 
+  private static readonly READ_ADDRESS_HARDWARE_REVISION = 1;
+
   private firmwareRevision = 'unknown';
+
+  private hardwareRevision = 'unknown';
 
   private readonly manufacturer = 'Airfi';
 
@@ -20,7 +24,6 @@ export default class AirfiInformationService extends AirfiService {
     this.service
       .getCharacteristic(this.accessory.Characteristic.Identify)
       .onSet(this.setIdentify.bind(this));
-
     this.service.setCharacteristic(
       this.accessory.Characteristic.Manufacturer,
       this.manufacturer
@@ -36,6 +39,9 @@ export default class AirfiInformationService extends AirfiService {
     this.service
       .getCharacteristic(this.accessory.Characteristic.FirmwareRevision)
       .onGet(this.getFirmwareRevision.bind(this));
+    this.service
+      .getCharacteristic(this.accessory.Characteristic.HardwareRevision)
+      .onGet(this.getHardwareRevision.bind(this));
 
     this.log.debug('Airfi Information service initialized.');
   }
@@ -45,8 +51,17 @@ export default class AirfiInformationService extends AirfiService {
     return this.firmwareRevision;
   }
 
+  private async getHardwareRevision() {
+    this.log.debug('Hardware revision is:', this.hardwareRevision);
+    return this.hardwareRevision;
+  }
+
   private async setIdentify(value: CharacteristicValue) {
     this.log.debug('Triggered SET Identify:', value);
+  }
+
+  private static getVersionString(value: CharacteristicValue): string {
+    return value.toString().split('').join('.');
   }
 
   /**
@@ -56,7 +71,16 @@ export default class AirfiInformationService extends AirfiService {
     await this.controller
       .read(AirfiInformationService.READ_ADDRESS_FIRMWARE_REVISION)
       .then((value) => {
-        this.firmwareRevision = value.toString().split('').join('.');
+        this.firmwareRevision = AirfiInformationService.getVersionString(value);
+      })
+      .catch((error) => {
+        this.log.error(error);
+      });
+
+    await this.controller
+      .read(AirfiInformationService.READ_ADDRESS_HARDWARE_REVISION)
+      .then((value) => {
+        this.hardwareRevision = AirfiInformationService.getVersionString(value);
       })
       .catch((error) => {
         this.log.error(error);
