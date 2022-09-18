@@ -10,6 +10,7 @@ import {
 import { AirfiModbusController } from './controller';
 import {
   AirfiFanService,
+  AirfiHumiditySensorService,
   AirfiInformationService,
   AirfiService,
 } from './services';
@@ -62,6 +63,14 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     // Add fan service
     const fanService = new AirfiFanService(this, 'Ventilation', 1);
     this.services.push(fanService);
+
+    // Humidity sensor service.
+    const humiditySensorService = new AirfiHumiditySensorService(
+      this,
+      'HumiditySensor',
+      30
+    );
+    this.services.push(humiditySensorService);
 
     // Initial fetch.
     this.run();
