@@ -1,6 +1,5 @@
 import { AccessoryConfig, CharacteristicValue } from 'homebridge';
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
-import { AirfiModbusController } from '../controller';
 import { AirfiService } from './airfiService';
 
 export default class AirfiInformationService extends AirfiService {
@@ -16,10 +15,9 @@ export default class AirfiInformationService extends AirfiService {
 
   constructor(
     accessory: AirfiVentilationUnitAccessory,
-    controller: AirfiModbusController,
     config: AccessoryConfig
   ) {
-    super(accessory, controller, new accessory.Service.AccessoryInformation());
+    super(accessory, new accessory.Service.AccessoryInformation(), 60);
 
     this.service
       .getCharacteristic(this.accessory.Characteristic.Identify)
@@ -65,25 +63,27 @@ export default class AirfiInformationService extends AirfiService {
   }
 
   /**
-   * {@inheritDoc AirfiService.runUpdates}
+   * {@inheritDoc AirfiService.updateState}
    */
-  public async runUpdates() {
-    await this.controller
-      .read(AirfiInformationService.READ_ADDRESS_FIRMWARE_REVISION)
-      .then((value) => {
-        this.firmwareRevision = AirfiInformationService.getVersionString(value);
-      })
-      .catch((error) => {
-        this.log.error(error);
-      });
+  protected updateState() {
+    // Update Firmware Revision.
+    this.firmwareRevision = AirfiInformationService.getVersionString(
+      this.accessory.getInputRegisterValue(
+        AirfiInformationService.READ_ADDRESS_FIRMWARE_REVISION
+      )
+    );
+    this.service
+      .getCharacteristic(this.accessory.Characteristic.FirmwareRevision)
+      .updateValue(this.firmwareRevision);
 
-    await this.controller
-      .read(AirfiInformationService.READ_ADDRESS_HARDWARE_REVISION)
-      .then((value) => {
-        this.hardwareRevision = AirfiInformationService.getVersionString(value);
-      })
-      .catch((error) => {
-        this.log.error(error);
-      });
+    // Update Hardware Revision.
+    this.hardwareRevision = AirfiInformationService.getVersionString(
+      this.accessory.getInputRegisterValue(
+        AirfiInformationService.READ_ADDRESS_HARDWARE_REVISION
+      )
+    );
+    this.service
+      .getCharacteristic(this.accessory.Characteristic.FirmwareRevision)
+      .updateValue(this.firmwareRevision);
   }
 }

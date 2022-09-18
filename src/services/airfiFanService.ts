@@ -1,7 +1,6 @@
 import { CharacteristicValue } from 'homebridge';
 
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
-import { AirfiModbusController } from '../controller';
 import { Active, RotationSpeed, AirfiFanState } from '../types';
 import { AirfiService } from './airfiService';
 
@@ -23,12 +22,15 @@ export default class AirfiFanService extends AirfiService {
     RotationSpeed: 3,
   };
 
+  /**
+   * {@inheritDoc AirfiService.constructor}
+   */
   constructor(
     accessory: AirfiVentilationUnitAccessory,
-    controller: AirfiModbusController,
-    displayName: string
+    displayName: string,
+    updateFrequency = 0
   ) {
-    super(accessory, controller, new accessory.Service.Fanv2(displayName));
+    super(accessory, new accessory.Service.Fanv2(displayName), updateFrequency);
 
     this.service.setCharacteristic(
       this.accessory.Characteristic.Name,
@@ -62,8 +64,11 @@ export default class AirfiFanService extends AirfiService {
   private async setActive(value: CharacteristicValue) {
     // Only change fan state if it differs from current state,
     if (value !== this.state.Active) {
-      this.queue[AirfiFanService.WRITE_ADDRESS_ACTIVE] =
-        AirfiFanService.convertActiveState(value as Active);
+      this.accessory.queueInsert(
+        AirfiFanService.WRITE_ADDRESS_ACTIVE,
+        AirfiFanService.convertActiveState(value as Active),
+        AirfiFanService.READ_ADDRESS_ACTIVE
+      );
       this.log.info(`Fan Active ${this.state.Active} → ${value}`);
       this.state.Active = value as Active;
     }
@@ -80,8 +85,11 @@ export default class AirfiFanService extends AirfiService {
     if (value > 0) {
       this.log.info(`Fan RotationSpeed ${this.state.RotationSpeed} → ${value}`);
       this.state.RotationSpeed = value as RotationSpeed;
-      this.queue[AirfiFanService.WRITE_ADDRESS_ROTATION_SPEED] =
-        this.state.RotationSpeed;
+      this.accessory.queueInsert(
+        AirfiFanService.WRITE_ADDRESS_ROTATION_SPEED,
+        this.state.RotationSpeed,
+        AirfiFanService.READ_ADDRESS_ROTATION_SPEED
+      );
     }
   }
 
@@ -100,31 +108,25 @@ export default class AirfiFanService extends AirfiService {
   }
 
   /**
-   * {@inheritDoc AirfiService.runUpdates}
+   * Run periodic updates to service state.
    */
-  public async runUpdates() {
-    await this.controller
-      .read(AirfiFanService.READ_ADDRESS_ACTIVE)
-      .then((value) => {
-        this.state.Active = AirfiFanService.convertActiveState(value as Active);
-        this.service
-          .getCharacteristic(this.accessory.Characteristic.Active)
-          .updateValue(this.state.Active);
-      })
-      .catch((error) => {
-        this.log.error(error);
-      });
+  protected updateState() {
+    // Read active state
+    this.state.Active = AirfiFanService.convertActiveState(
+      this.accessory.getInputRegisterValue(
+        AirfiFanService.READ_ADDRESS_ACTIVE
+      ) as Active
+    );
+    this.service
+      .getCharacteristic(this.accessory.Characteristic.Active)
+      .updateValue(this.state.Active);
 
-    await this.controller
-      .read(AirfiFanService.READ_ADDRESS_ROTATION_SPEED)
-      .then((value) => {
-        this.state.RotationSpeed = value as RotationSpeed;
-        this.service
-          .getCharacteristic(this.accessory.Characteristic.RotationSpeed)
-          .updateValue(this.state.RotationSpeed);
-      })
-      .catch((error) => {
-        this.log.error(error);
-      });
+    // Read rotation speed state
+    this.state.RotationSpeed = this.accessory.getInputRegisterValue(
+      AirfiFanService.READ_ADDRESS_ROTATION_SPEED
+    ) as RotationSpeed;
+    this.service
+      .getCharacteristic(this.accessory.Characteristic.RotationSpeed)
+      .updateValue(this.state.RotationSpeed);
   }
 }
