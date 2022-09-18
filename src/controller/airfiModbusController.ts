@@ -73,33 +73,35 @@ export default class airfiModbusController {
   /**
    * Read value from input register.
    *
-   * @param address
-   *   Input register address to read information.
+   * @param startAddress
+   *   Input register address to start reading information.
+   * @param length
+   *   Length of registers to read.
    */
-  read(address: number): Promise<number> {
+  read(startAddress: number, length = 1): Promise<number[]> {
     return new Promise((resolve) => {
-      this.log.debug(`Reading address ${address}`);
+      this.log.debug(`Reading from "${startAddress}" to "${length}"`);
 
       if (!this.isConnected) {
         this.log.error('Not connected to device');
       }
 
       this.client
-        .readInputRegisters(address, 1)
+        .readInputRegisters(startAddress, length)
         .then(
           ({
             response: {
-              body: {
-                values: [value],
-              },
+              body: { values },
             },
           }) => {
-            this.log.debug(`Value for address "${address}" is "${value}"`);
-            resolve(value);
+            this.log.debug(
+              `Value for from "${startAddress}" to ${length} is "${values}"`
+            );
+            resolve(values as number[]);
           }
         )
         .catch((error) => {
-          this.log.error(`Unable to read register "${address}": ${error}`);
+          this.log.error(`Unable to read register: ${error}`);
         });
     });
   }
@@ -110,7 +112,7 @@ export default class airfiModbusController {
    * @param address
    *   Holding register value to write value.
    * @param value
-   *   Value to be writte into the register.
+   *   Value to be written into the register.
    */
   write(address: number, value: number): Promise<void> {
     return new Promise<void>((resolve) => {

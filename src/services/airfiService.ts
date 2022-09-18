@@ -1,8 +1,6 @@
 import { Logger, Service } from 'homebridge';
 
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
-import { AirfiModbusController } from '../controller';
-import { WriteQueue } from '../types';
 
 /**
  * Accessory service class for defining services communicating on modbus
@@ -11,52 +9,35 @@ import { WriteQueue } from '../types';
 export abstract class AirfiService {
   protected readonly accessory: AirfiVentilationUnitAccessory;
 
-  protected readonly controller: AirfiModbusController;
-
   protected readonly log: Logger;
 
   protected service: Service;
 
-  protected queue: WriteQueue;
-
+  /**
+   * Defines the Airfi accessory service.
+   *
+   * @param accessory
+   *   Accessory object.
+   * @param service
+   *   Service object to define accessory service.
+   * @param updateFrequency
+   *   Number of seconds to run periodic updates on service charasterictics.
+   */
   constructor(
     accessory: AirfiVentilationUnitAccessory,
-    controller: AirfiModbusController,
-    service: Service
+    service: Service,
+    updateFrequency = 0
   ) {
     this.accessory = accessory;
-    this.controller = controller;
     this.log = accessory.log;
     this.service = service;
-    this.queue = {};
-  }
 
-  /**
-   * Update device charasteristic values by reading them from the ventilation
-   * unit.
-   */
-  public runUpdates(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      resolve();
-    });
-  }
-
-  /**
-   * Write values from queue to the ventilation unit.
-   */
-  public runQueue(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      Object.entries(this.queue).map(([address, value]) => {
-        this.controller
-          .write(parseInt(address), value)
-          .then()
-          .finally(() => {
-            delete this.queue[address];
-          });
-      });
-
-      resolve();
-    });
+    if (updateFrequency !== 0) {
+      setTimeout(() => {
+        this.updateState();
+        setInterval(() => this.updateState(), updateFrequency * 1000);
+      }, 5000);
+    }
   }
 
   /**
@@ -64,5 +45,12 @@ export abstract class AirfiService {
    */
   public getService() {
     return this.service;
+  }
+
+  /**
+   * Updates service state with a frequency set in constructor.
+   */
+  protected updateState(): void {
+    return;
   }
 }
