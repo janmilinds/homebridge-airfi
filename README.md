@@ -17,10 +17,11 @@ Homebridge plugin for controlling Airfi ventilation unit through Modbus TCP.
   - Control "At home"/"Away" states
 - Sensors
   - Humidity sensor
-
-## Supported ventilation units
-
-This plugin supports ventilation units Model 60, 100, 130, 150, 250, 350 manufactured by Airfi.
+  - Temperature sensors
+    - Outdoor air
+    - Supply air
+    - Extract air
+    - Exhaust air
 
 ## Installation
 
@@ -29,6 +30,15 @@ Install either through [Homebridge UI](https://github.com/oznu/homebridge-config
 ```bash
 npm install -g homebrigde-airfi
 ```
+
+### Requirements
+
+This plugin supports ventilation units Model 60, 100, 130, 150, 250, 350 manufactured by Airfi.
+
+- Node.js >= 14
+- Modbus map v2.1 on the ventilation unit
+
+### Configuration
 
 Plugin configuration is available through Homebridge UI. Example config.json:
 
