@@ -67,7 +67,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     // Humidity sensor service.
     const humiditySensorService = new AirfiHumiditySensorService(
       this,
-      'HumiditySensor',
+      'Humidity sensor',
       30
     );
     this.services.push(humiditySensorService);

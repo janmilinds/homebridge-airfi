@@ -33,7 +33,7 @@ export default class AirfiHumiditySensorService extends AirfiService {
       .getCharacteristic(this.accessory.Characteristic.CurrentRelativeHumidity)
       .onGet(this.getRelativeHumidity.bind(this));
 
-    this.log.debug('Airfi Fan service initialized.');
+    this.log.debug('Airfi HumiditySensor service initialized.');
   }
 
   private async getRelativeHumidity() {
@@ -45,7 +45,7 @@ export default class AirfiHumiditySensorService extends AirfiService {
    * Run periodic updates to service state.
    */
   protected updateState() {
-    // Read active state
+    // Read relative humidity value.
     this.relativeHumidity = this.accessory.getInputRegisterValue(
       AirfiHumiditySensorService.READ_ADDRESS_RELATIVE_HUMIDITY
     );
