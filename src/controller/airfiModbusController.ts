@@ -35,11 +35,10 @@ export default class airfiModbusController {
 
   open(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      const rejectListener = (err: Error) => {
-        this.log.error(
-          `Error connecting ${Object.values(this.options).join(':')}`
+      const rejectListener = (error: Error) => {
+        reject(
+          `Error connecting ${Object.values(this.options).join(':')}: ${error}`
         );
-        reject(err);
       };
 
       this.socket.once('error', rejectListener);
@@ -79,7 +78,7 @@ export default class airfiModbusController {
    *   Length of registers to read.
    */
   read(startAddress: number, length = 1): Promise<number[]> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       this.log.debug(`Reading from "${startAddress}" to "${length}"`);
 
       if (!this.isConnected) {
@@ -95,13 +94,14 @@ export default class airfiModbusController {
             },
           }) => {
             this.log.debug(
-              `Value for from "${startAddress}" to ${length} is "${values}"`
+              `Values for address "${startAddress}" for length ${length}: ` +
+                `"${values}"`
             );
             resolve(values as number[]);
           }
         )
         .catch((error) => {
-          this.log.error(`Unable to read register: ${error}`);
+          reject(`Unable to read register: ${error}`);
         });
     });
   }
@@ -115,7 +115,7 @@ export default class airfiModbusController {
    *   Value to be written into the register.
    */
   write(address: number, value: number): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       if (!this.isConnected) {
         this.log.error('Not connected to device');
       }
@@ -124,12 +124,12 @@ export default class airfiModbusController {
         .writeSingleRegister(address, value)
         .then(() => {
           this.log.debug(
-            `Successfully write value "${value}" register "${address}"`
+            `Successfully written value "${value}" register "${address}"`
           );
           resolve();
         })
         .catch((error) => {
-          this.log.error(
+          reject(
             `Unable to write value "${value}" register "${address}": ${error}`
           );
         });

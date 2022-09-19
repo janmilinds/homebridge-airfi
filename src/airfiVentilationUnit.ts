@@ -76,7 +76,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     this.run();
 
     // Run periodic operations into modbus.
-    setTimeout(() => setInterval(() => this.run(), 1000), 2000);
+    setTimeout(() => setInterval(() => this.run(), 5000), 2000);
 
     this.log.info(`${this.name} initialized.`);
   }
@@ -120,6 +120,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
         this.airfiController
           .write(parseInt(address), value)
           .then()
+          .catch((error) => this.log.error(error as string))
           .finally(() => {
             delete this.writeQueue[address];
           });
@@ -141,13 +142,18 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
 
       this.isNetworking = true;
 
-      await this.airfiController.open();
+      await this.airfiController
+        .open()
+        .catch((error) => this.log.error(error as string));
       await this.runQueue();
-      await this.airfiController.read(1, 40).then((values) => {
-        this.inputRegister = values;
-      });
+      await this.airfiController
+        .read(1, 40)
+        .then((values) => {
+          this.inputRegister = values;
+        })
+        .catch((error) => this.log.error(error as string));
     } catch (error) {
-      this.log.error(`Controller Error: ${error}`);
+      this.log.error(error as string);
     } finally {
       this.airfiController.close();
       this.isNetworking = false;
