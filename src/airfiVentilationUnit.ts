@@ -13,6 +13,7 @@ import {
   AirfiHumiditySensorService,
   AirfiInformationService,
   AirfiService,
+  AirfiTemperatureSensorService,
 } from './services';
 import { WriteQueue } from './types';
 
@@ -67,10 +68,45 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     // Humidity sensor service.
     const humiditySensorService = new AirfiHumiditySensorService(
       this,
-      'Humidity sensor',
+      'Extract air humidity',
       30
     );
     this.services.push(humiditySensorService);
+
+    // Temperature sensors
+    const outdoorAirtemperatureSensorService =
+      new AirfiTemperatureSensorService(
+        this,
+        'Outdoor air temperature',
+        '_outdoorAir',
+        4
+      );
+    const extractAirtemperatureSensorService =
+      new AirfiTemperatureSensorService(
+        this,
+        'Extract air temperature',
+        '_extractAir',
+        6
+      );
+    const exhaustAirtemperatureSensorService =
+      new AirfiTemperatureSensorService(
+        this,
+        'Exhaust air temperature',
+        '_exhaustAir',
+        7
+      );
+    const supplyAirtemperatureSensorService = new AirfiTemperatureSensorService(
+      this,
+      'Supply air temperature',
+      '_supplyAir',
+      8
+    );
+    this.services.push(
+      outdoorAirtemperatureSensorService,
+      extractAirtemperatureSensorService,
+      exhaustAirtemperatureSensorService,
+      supplyAirtemperatureSensorService
+    );
 
     // Initial fetch.
     this.run();

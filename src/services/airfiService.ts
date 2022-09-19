@@ -1,4 +1,4 @@
-import { Logger, Service } from 'homebridge';
+import { Characteristic, Logger, Service } from 'homebridge';
 
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
 
@@ -8,6 +8,8 @@ import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
  */
 export abstract class AirfiService {
   protected readonly accessory: AirfiVentilationUnitAccessory;
+
+  protected readonly Characteristic: typeof Characteristic;
 
   protected readonly log: Logger;
 
@@ -29,6 +31,7 @@ export abstract class AirfiService {
     updateFrequency = 0
   ) {
     this.accessory = accessory;
+    this.Characteristic = accessory.Characteristic;
     this.log = accessory.log;
     this.service = service;
 
