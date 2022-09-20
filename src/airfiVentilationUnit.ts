@@ -15,7 +15,7 @@ import {
   AirfiService,
   AirfiTemperatureSensorService,
 } from './services';
-import { WriteQueue } from './types';
+import { RegisterType, WriteQueue } from './types';
 
 /**
  * Airfi Ventilation unit – accessory that defines services available through
@@ -25,6 +25,8 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   private readonly airfiController: AirfiModbusController;
 
   public readonly Characteristic: typeof Characteristic;
+
+  private holdingRegister: number[] = [];
 
   private inputRegister: number[] = [];
 
@@ -118,12 +120,25 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   }
 
   /**
-   * Return value from modbus register.
+   * Return value from modbus holding register.
    *
    * @param address
    *   Register address to get value.
    */
-  public getInputRegisterValue(address): number {
+  public getHoldingRegisterValue(address: number): number {
+    // Shift address to 0-based array index.
+    const value = this.holdingRegister[address - 1];
+
+    return value ? value : 0;
+  }
+
+  /**
+   * Return value from modbus input register.
+   *
+   * @param address
+   *   Register address to get value.
+   */
+  public getInputRegisterValue(address: number): number {
     // Shift address to 0-based array index.
     const value = this.inputRegister[address - 1];
 
@@ -131,7 +146,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   }
 
   /**
-   * Queue value to be writte into holding register.
+   * Queue value to be written into holding register.
    *
    * @param writeAddress
    *   Register address to write.
@@ -139,10 +154,21 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
    *   Value to be written.
    * @param readAddress
    *   Register read address to update immediately into the object state.
+   * @param readRegisterType
+   *   Which register to read: 3 = input register, 4 = holding register.
    */
-  public queueInsert(address, value, readAddress = 0) {
+  public queueInsert(
+    address: number,
+    value: number,
+    readAddress = 0,
+    readRegisterType: RegisterType = 3
+  ) {
     if (readAddress > 0) {
-      this.inputRegister[readAddress - 1] = value;
+      if (readRegisterType === 3) {
+        this.inputRegister[readAddress - 1] = value;
+      } else if (readRegisterType === 4) {
+        this.holdingRegister[readAddress - 1] = value;
+      }
     }
     this.writeQueue[address] = value;
   }
@@ -183,9 +209,15 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
         .catch((error) => this.log.error(error as string));
       await this.runQueue();
       await this.airfiController
-        .read(1, 40)
+        .read(1, 40, 3)
         .then((values) => {
           this.inputRegister = values;
+        })
+        .catch((error) => this.log.error(error as string));
+      await this.airfiController
+        .read(1, 51, 4)
+        .then((values) => {
+          this.holdingRegister = values;
         })
         .catch((error) => this.log.error(error as string));
     } catch (error) {
