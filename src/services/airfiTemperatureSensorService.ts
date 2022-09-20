@@ -64,7 +64,7 @@ export default class AirfiTemperatureSensorService extends AirfiService {
    *
    * @returns Temperature value in °C
    */
-  private static convertTemperature(value: number): number {
+  public static convertTemperature(value: number): number {
     return parseFloat((value / 10).toFixed(1));
   }
 

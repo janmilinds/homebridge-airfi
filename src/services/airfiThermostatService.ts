@@ -1,19 +1,21 @@
+import { CharacteristicValue } from 'homebridge';
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
 import { AirfiService } from './airfiService';
+import AirfiTemperatureSensorService from './airfiTemperatureSensorService';
 
 /**
  *
  */
 export default class AirfiThermostatService extends AirfiService {
-  private readonly currentHeatingCoolingState;
+  private static readonly READ_ADDRESS_CURRENT_TEMPERATURE = 8;
 
-  private readonly targetHeatingCoolingState;
+  private static readonly READ_ADDRESS_TARGET_TEMPERATURE = 5;
+
+  private static readonly WRITE_ADDRESS_TARGET_TEMPERATURE = 5;
 
   private currentTemperature = 0;
 
-  private targetTemperature;
-
-  private readonly temperatureDisplayUnits;
+  private targetTemperature = 17;
 
   /**
    * @param accessory
@@ -25,11 +27,6 @@ export default class AirfiThermostatService extends AirfiService {
     super(accessory, new accessory.Service.Thermostat(displayName), 60);
 
     this.service.setCharacteristic(this.Characteristic.Name, displayName);
-
-    this.currentHeatingCoolingState =
-      this.Characteristic.CurrentHeatingCoolingState.HEAT;
-    this.targetHeatingCoolingState =
-      this.Characteristic.TargetHeatingCoolingState.AUTO;
 
     this.service
       .getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
@@ -44,8 +41,7 @@ export default class AirfiThermostatService extends AirfiService {
       .setProps({
         minValue: this.Characteristic.TargetHeatingCoolingState.AUTO,
       })
-      .onGet(this.getTargetHeatingCoolingState.bind(this))
-      .onSet(this.setTargetHeatingCoolingState.bind(this));
+      .onGet(this.getTargetHeatingCoolingState.bind(this));
 
     this.service
       .getCharacteristic(this.Characteristic.CurrentTemperature)
@@ -53,55 +49,71 @@ export default class AirfiThermostatService extends AirfiService {
 
     this.service
       .getCharacteristic(this.Characteristic.TargetTemperature)
+      .setProps({ maxValue: 22, minStep: 1, minValue: 15 })
       .onGet(this.getTargetTemperature.bind(this))
       .onSet(this.setTargetTemperature.bind(this));
 
     this.service
       .getCharacteristic(this.Characteristic.TemperatureDisplayUnits)
-      .onGet(this.getTemperatureDisplayUnits.bind(this))
-      .onSet(this.setTemperatureDisplayUnits.bind(this));
+      .onGet(this.getTemperatureDisplayUnits.bind(this));
 
     this.log.debug('Airfi Thermostat service initialized.');
   }
 
   private async getCurrentHeatingCoolingState() {
-    return this.currentHeatingCoolingState;
+    return this.Characteristic.CurrentHeatingCoolingState.OFF;
   }
 
   private async getCurrentTemperature() {
-    this.log.debug(
-      'Theromostat CurrentTemperature is',
-      this.currentTemperature
-    );
+    this.log.debug('Thermostat CurrentTemperature is', this.currentTemperature);
     return this.currentTemperature;
   }
 
   private async getTargetHeatingCoolingState() {
-    return 0;
-  }
-
-  private async setTargetHeatingCoolingState() {
-    return 0;
+    return this.Characteristic.TargetHeatingCoolingState.AUTO;
   }
 
   private async getTargetTemperature() {
-    return 0;
+    this.log.debug('Thermostat TargetTemperature is', this.targetTemperature);
+    return this.targetTemperature;
   }
 
-  private async setTargetTemperature() {
-    return 0;
+  private async setTargetTemperature(value: CharacteristicValue) {
+    this.targetTemperature = value as number;
+    this.accessory.queueInsert(
+      AirfiThermostatService.WRITE_ADDRESS_TARGET_TEMPERATURE,
+      (value as number) * 10,
+      AirfiThermostatService.READ_ADDRESS_TARGET_TEMPERATURE,
+      4
+    );
   }
 
   private async getTemperatureDisplayUnits() {
-    return 0;
-  }
-
-  private async setTemperatureDisplayUnits() {
-    return 0;
+    return this.Characteristic.TemperatureDisplayUnits.CELSIUS;
   }
 
   /**
    * Run periodic updates to service state.
    */
-  protected updateState() {}
+  protected updateState() {
+    // Read current temperature value.
+    this.currentTemperature = AirfiTemperatureSensorService.convertTemperature(
+      this.accessory.getInputRegisterValue(
+        AirfiThermostatService.READ_ADDRESS_CURRENT_TEMPERATURE
+      )
+    );
+    this.service
+      .getCharacteristic(this.Characteristic.CurrentTemperature)
+      .updateValue(this.currentTemperature);
+
+    // Read target temperature value.
+    this.targetTemperature = AirfiTemperatureSensorService.convertTemperature(
+      this.accessory.getHoldingRegisterValue(
+        AirfiThermostatService.READ_ADDRESS_TARGET_TEMPERATURE
+      )
+    );
+    this.service
+      .getCharacteristic(this.Characteristic.TargetTemperature)
+      .updateValue(this.targetTemperature);
+  }
 }

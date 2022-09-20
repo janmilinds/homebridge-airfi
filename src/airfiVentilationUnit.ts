@@ -14,6 +14,7 @@ import {
   AirfiInformationService,
   AirfiService,
   AirfiTemperatureSensorService,
+  AirfiThermostatService,
 } from './services';
 import { RegisterType, WriteQueue } from './types';
 
@@ -109,6 +110,9 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
       exhaustAirtemperatureSensorService,
       supplyAirtemperatureSensorService
     );
+
+    const thermostatService = new AirfiThermostatService(this, 'Supply air');
+    this.services.push(thermostatService);
 
     // Initial fetch.
     this.run();
