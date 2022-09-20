@@ -1,6 +1,7 @@
 import { Logger } from 'homebridge';
 import { ModbusTCPClient } from 'jsmodbus';
 import { Socket, SocketConnectOpts } from 'net';
+import { RegisterType } from '../types';
 
 /**
  * Modbus controller handling reading and writing registers in the Airfi
@@ -76,8 +77,14 @@ export default class airfiModbusController {
    *   Input register address to start reading information.
    * @param length
    *   Length of registers to read.
+   * @param registerType
+   *   Which register to read: 3 = input register, 4 = holding register.
    */
-  read(startAddress: number, length = 1): Promise<number[]> {
+  read(
+    startAddress: number,
+    length = 1,
+    registerType: RegisterType
+  ): Promise<number[]> {
     return new Promise((resolve, reject) => {
       this.log.debug(`Reading from "${startAddress}" to "${length}"`);
 
@@ -85,8 +92,12 @@ export default class airfiModbusController {
         this.log.error('Not connected to device');
       }
 
-      this.client
-        .readInputRegisters(startAddress, length)
+      const read =
+        registerType === 4
+          ? this.client.readHoldingRegisters(startAddress, length)
+          : this.client.readInputRegisters(startAddress, length);
+
+      read
         .then(
           ({
             response: {
@@ -94,7 +105,8 @@ export default class airfiModbusController {
             },
           }) => {
             this.log.debug(
-              `Values for address "${startAddress}" for length ${length}: ` +
+              `Values for ${registerType === 4 ? 'holding' : 'input'}` +
+                ` register address "${startAddress}" for length ${length}: ` +
                 `"${values}"`
             );
             resolve(values as number[]);
