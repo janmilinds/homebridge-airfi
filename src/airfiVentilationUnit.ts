@@ -112,7 +112,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     this.run();
 
     // Run periodic operations into modbus.
-    setTimeout(() => setInterval(() => this.run(), 5000), 2000);
+    setTimeout(() => setInterval(() => this.run(), 1000), 2000);
 
     this.log.info(`${this.name} initialized.`);
   }
