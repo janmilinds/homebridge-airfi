@@ -30,9 +30,19 @@ export default class AirfiThermostatService extends AirfiService {
    *   Accessory object.
    * @param displayName
    *   Name shown on the sensor.
+   * @param updateFrequency
+   *   Number of seconds to run periodic updates on service charasterictics.
    */
-  constructor(accessory: AirfiVentilationUnitAccessory, displayName: string) {
-    super(accessory, new accessory.Service.Thermostat(displayName), 60);
+  constructor(
+    accessory: AirfiVentilationUnitAccessory,
+    displayName: string,
+    updateFrequency: number
+  ) {
+    super(
+      accessory,
+      new accessory.Service.Thermostat(displayName),
+      updateFrequency
+    );
 
     this.service.setCharacteristic(this.Characteristic.Name, displayName);
 

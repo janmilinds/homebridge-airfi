@@ -77,41 +77,30 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     this.services.push(humiditySensorService);
 
     // Temperature sensors
-    const outdoorAirtemperatureSensorService =
-      new AirfiTemperatureSensorService(
-        this,
-        'Outdoor air temperature',
-        '_outdoorAir',
-        4
-      );
-    const extractAirtemperatureSensorService =
-      new AirfiTemperatureSensorService(
-        this,
-        'Extract air temperature',
-        '_extractAir',
-        6
-      );
-    const exhaustAirtemperatureSensorService =
-      new AirfiTemperatureSensorService(
-        this,
-        'Exhaust air temperature',
-        '_exhaustAir',
-        7
-      );
-    const supplyAirtemperatureSensorService = new AirfiTemperatureSensorService(
+    const outdoorAirTemperatureSensorService =
+      new AirfiTemperatureSensorService(this, 'Outdoor air', '_outdoorAir', 4);
+    const extractAirTemperatureSensorService =
+      new AirfiTemperatureSensorService(this, 'Extract air', '_extractAir', 6);
+    const exhaustAirTemperatureSensorService =
+      new AirfiTemperatureSensorService(this, 'Exhaust air', '_exhaustAir', 7);
+    const supplyAirTemperatureSensorService = new AirfiTemperatureSensorService(
       this,
-      'Supply air temperature',
+      'Supply air',
       '_supplyAir',
       8
     );
     this.services.push(
-      outdoorAirtemperatureSensorService,
-      extractAirtemperatureSensorService,
-      exhaustAirtemperatureSensorService,
-      supplyAirtemperatureSensorService
+      outdoorAirTemperatureSensorService,
+      extractAirTemperatureSensorService,
+      exhaustAirTemperatureSensorService,
+      supplyAirTemperatureSensorService
     );
 
-    const thermostatService = new AirfiThermostatService(this, 'Supply air');
+    const thermostatService = new AirfiThermostatService(
+      this,
+      'Supply air temperature',
+      15
+    );
     this.services.push(thermostatService);
 
     // Initial fetch.
