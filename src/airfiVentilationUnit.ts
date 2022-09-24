@@ -25,9 +25,9 @@ import { RegisterType, WriteQueue } from './types';
 export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   private readonly airfiController: AirfiModbusController;
 
-  public readonly Characteristic: typeof Characteristic;
+  readonly Characteristic: typeof Characteristic;
 
-  public readonly config: AccessoryConfig;
+  readonly config: AccessoryConfig;
 
   private holdingRegister: number[] = [];
 
@@ -35,11 +35,11 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
 
   private isNetworking = false;
 
-  public readonly log: Logger;
+  readonly log: Logger;
 
   private readonly name: string;
 
-  public readonly Service: typeof Service;
+  readonly Service: typeof Service;
 
   private services: AirfiService[] = [];
 
@@ -121,7 +121,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
    * @param address
    *   Register address to get value.
    */
-  public getHoldingRegisterValue(address: number): number {
+  getHoldingRegisterValue(address: number): number {
     // Shift address to 0-based array index.
     const value = this.holdingRegister[address - 1];
 
@@ -134,7 +134,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
    * @param address
    *   Register address to get value.
    */
-  public getInputRegisterValue(address: number): number {
+  getInputRegisterValue(address: number): number {
     // Shift address to 0-based array index.
     const value = this.inputRegister[address - 1];
 
@@ -153,7 +153,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
    * @param readRegisterType
    *   Which register to read: 3 = input register, 4 = holding register.
    */
-  public queueInsert(
+  queueInsert(
     address: number,
     value: number,
     readAddress = 0,
