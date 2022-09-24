@@ -46,22 +46,23 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   private writeQueue: WriteQueue = {};
 
   constructor(log: Logger, config: AccessoryConfig, api: API) {
-    this.config = config;
-    this.log = log;
-    this.name = config.name;
-
     if (!(config.host && config.port)) {
       throw new Error('No host and port configured.');
     }
 
+    this.Characteristic = api.hap.Characteristic;
+    this.config = config;
+    this.log = log;
+    this.name = config.name;
+    this.Service = api.hap.Service;
     this.airfiController = new AirfiModbusController(
       config.host,
       config.port,
       this.log
     );
 
-    this.Characteristic = api.hap.Characteristic;
-    this.Service = api.hap.Service;
+    // Initial modbus register read.
+    this.run();
 
     // Add information service.
     const informationService = new AirfiInformationService(this);
@@ -105,9 +106,6 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
       15
     );
     this.services.push(thermostatService);
-
-    // Initial fetch.
-    this.run();
 
     // Run periodic operations into modbus.
     setTimeout(() => setInterval(() => this.run(), 1000), 2000);
