@@ -7,13 +7,17 @@ import AirfiTemperatureSensorService from './airfiTemperatureSensorService';
  * Defines the thermostat service to set the target temperature for supply air.
  */
 export default class AirfiThermostatService extends AirfiService {
+  private static readonly MINIMUM_TEMPERATURE = 15;
+
+  private static readonly MAXIMUM_TEMPERATURE = 22;
+
   private static readonly READ_ADDRESS_CURRENT_TEMPERATURE = 8;
 
   private static readonly READ_ADDRESS_TARGET_TEMPERATURE = 5;
 
   private static readonly WRITE_ADDRESS_TARGET_TEMPERATURE = 5;
 
-  private currentTemperature = 0;
+  private currentTemperature = 17;
 
   private targetTemperature = 17;
 
@@ -49,7 +53,11 @@ export default class AirfiThermostatService extends AirfiService {
 
     this.service
       .getCharacteristic(this.Characteristic.TargetTemperature)
-      .setProps({ maxValue: 22, minStep: 1, minValue: 15 })
+      .setProps({
+        maxValue: AirfiThermostatService.MAXIMUM_TEMPERATURE,
+        minStep: 1,
+        minValue: AirfiThermostatService.MINIMUM_TEMPERATURE,
+      })
       .onGet(this.getTargetTemperature.bind(this))
       .onSet(this.setTargetTemperature.bind(this));
 
