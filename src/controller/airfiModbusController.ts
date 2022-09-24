@@ -112,8 +112,9 @@ export default class airfiModbusController {
             resolve(values as number[]);
           }
         )
-        .catch((error) => {
-          reject(`Unable to read register: ${error}`);
+        .catch(({ err, message }) => {
+          console.log(err);
+          reject(`Unable to read register: ${err} - ${message}`);
         });
     });
   }

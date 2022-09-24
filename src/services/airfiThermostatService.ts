@@ -133,6 +133,7 @@ export default class AirfiThermostatService extends AirfiService {
   }
 
   private async setTargetTemperature(value: CharacteristicValue) {
+    this.log.info(`TargetTemperature ${this.targetTemperature}°C → ${value}°C`);
     this.targetTemperature = value as number;
     this.accessory.queueInsert(
       AirfiThermostatService.WRITE_ADDRESS_TARGET_TEMPERATURE,

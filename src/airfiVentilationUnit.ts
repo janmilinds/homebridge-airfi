@@ -172,7 +172,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
         this.holdingRegister[readAddress - 1] = value;
       }
     }
-    this.writeQueue[address] = value;
+    this.queue[address] = value;
   }
 
   /**
@@ -224,10 +224,11 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
    */
   private writeQueue(): Promise<void> {
     return new Promise<void>((resolve) => {
+      this.log.debug('Writing values to modbus');
+
       Object.entries(this.queue).map(([address, value]) => {
         this.airfiController
           .write(parseInt(address), value)
-          .then()
           .catch((error) => this.log.error(error as string))
           .finally(() => {
             delete this.queue[address];
