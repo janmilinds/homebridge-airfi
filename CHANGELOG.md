@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Thermostat for changing supply air temperature
 
+### Changed
+
+- Modbus read/write and logging improvements
+
 ## [1.2.1] - 2022-09-21
 
 ### Fixed
