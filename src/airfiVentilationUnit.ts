@@ -27,6 +27,8 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
 
   public readonly Characteristic: typeof Characteristic;
 
+  public readonly config: AccessoryConfig;
+
   private holdingRegister: number[] = [];
 
   private inputRegister: number[] = [];
@@ -44,6 +46,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   private writeQueue: WriteQueue = {};
 
   constructor(log: Logger, config: AccessoryConfig, api: API) {
+    this.config = config;
     this.log = log;
     this.name = config.name;
 
@@ -61,7 +64,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     this.Service = api.hap.Service;
 
     // Add information service.
-    const informationService = new AirfiInformationService(this, config);
+    const informationService = new AirfiInformationService(this);
     this.services.push(informationService);
 
     // Add fan service
