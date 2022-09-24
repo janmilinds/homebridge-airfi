@@ -23,9 +23,15 @@ import { RegisterType, WriteQueue } from './types';
  * this plugin.
  */
 export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
+  private static readonly HOLDING_REGISTER_LENGTH = 51;
+
+  private static readonly INPUT_REGISTER_LENGTH = 40;
+
   private readonly airfiController: AirfiModbusController;
 
-  public readonly Characteristic: typeof Characteristic;
+  readonly Characteristic: typeof Characteristic;
+
+  readonly config: AccessoryConfig;
 
   private holdingRegister: number[] = [];
 
@@ -33,35 +39,37 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
 
   private isNetworking = false;
 
-  public readonly log: Logger;
+  readonly log: Logger;
 
   private readonly name: string;
 
-  public readonly Service: typeof Service;
+  readonly Service: typeof Service;
+
+  private queue: WriteQueue = {};
 
   private services: AirfiService[] = [];
 
-  private writeQueue: WriteQueue = {};
-
   constructor(log: Logger, config: AccessoryConfig, api: API) {
-    this.log = log;
-    this.name = config.name;
-
     if (!(config.host && config.port)) {
       throw new Error('No host and port configured.');
     }
 
+    this.Characteristic = api.hap.Characteristic;
+    this.config = config;
+    this.log = log;
+    this.name = config.name;
+    this.Service = api.hap.Service;
     this.airfiController = new AirfiModbusController(
       config.host,
       config.port,
       this.log
     );
 
-    this.Characteristic = api.hap.Characteristic;
-    this.Service = api.hap.Service;
+    // Initial modbus register read.
+    this.run();
 
     // Add information service.
-    const informationService = new AirfiInformationService(this, config);
+    const informationService = new AirfiInformationService(this);
     this.services.push(informationService);
 
     // Add fan service
@@ -103,9 +111,6 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     );
     this.services.push(thermostatService);
 
-    // Initial fetch.
-    this.run();
-
     // Run periodic operations into modbus.
     setTimeout(() => setInterval(() => this.run(), 1000), 2000);
 
@@ -118,7 +123,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
    * @param address
    *   Register address to get value.
    */
-  public getHoldingRegisterValue(address: number): number {
+  getHoldingRegisterValue(address: number): number {
     // Shift address to 0-based array index.
     const value = this.holdingRegister[address - 1];
 
@@ -131,11 +136,15 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
    * @param address
    *   Register address to get value.
    */
-  public getInputRegisterValue(address: number): number {
+  getInputRegisterValue(address: number): number {
     // Shift address to 0-based array index.
     const value = this.inputRegister[address - 1];
 
     return value ? value : 0;
+  }
+
+  getServices(): Service[] {
+    return this.services.map((service) => service.getService());
   }
 
   /**
@@ -150,7 +159,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
    * @param readRegisterType
    *   Which register to read: 3 = input register, 4 = holding register.
    */
-  public queueInsert(
+  queueInsert(
     address: number,
     value: number,
     readAddress = 0,
@@ -163,30 +172,11 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
         this.holdingRegister[readAddress - 1] = value;
       }
     }
-    this.writeQueue[address] = value;
+    this.queue[address] = value;
   }
 
   /**
-   * Write values from queue to the ventilation unit.
-   */
-  private runQueue(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      Object.entries(this.writeQueue).map(([address, value]) => {
-        this.airfiController
-          .write(parseInt(address), value)
-          .then()
-          .catch((error) => this.log.error(error as string))
-          .finally(() => {
-            delete this.writeQueue[address];
-          });
-      });
-
-      resolve();
-    });
-  }
-
-  /**
-   * Run write & read operations for each service.
+   * Run read & write operations for modbus registers.
    */
   private async run() {
     try {
@@ -200,17 +190,25 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
       await this.airfiController
         .open()
         .catch((error) => this.log.error(error as string));
-      await this.runQueue();
+
+      // Write holding register.
+      if (Object.keys(this.queue).length > 0) {
+        await this.writeQueue();
+      }
+
+      // Read and save holding register.
       await this.airfiController
-        .read(1, 40, 3)
-        .then((values) => {
-          this.inputRegister = values;
-        })
-        .catch((error) => this.log.error(error as string));
-      await this.airfiController
-        .read(1, 51, 4)
+        .read(1, AirfiVentilationUnitAccessory.HOLDING_REGISTER_LENGTH, 4)
         .then((values) => {
           this.holdingRegister = values;
+        })
+        .catch((error) => this.log.error(error as string));
+
+      // Read and save input register.
+      await this.airfiController
+        .read(1, AirfiVentilationUnitAccessory.INPUT_REGISTER_LENGTH, 3)
+        .then((values) => {
+          this.inputRegister = values;
         })
         .catch((error) => this.log.error(error as string));
     } catch (error) {
@@ -221,7 +219,23 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     }
   }
 
-  getServices(): Service[] {
-    return this.services.map((service) => service.getService());
+  /**
+   * Write values from queue to the ventilation unit.
+   */
+  private writeQueue(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      this.log.debug('Writing values to modbus');
+
+      Object.entries(this.queue).map(([address, value]) => {
+        this.airfiController
+          .write(parseInt(address), value)
+          .catch((error) => this.log.error(error as string))
+          .finally(() => {
+            delete this.queue[address];
+          });
+      });
+
+      resolve();
+    });
   }
 }

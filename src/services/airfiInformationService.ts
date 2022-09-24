@@ -1,7 +1,10 @@
-import { AccessoryConfig, CharacteristicValue } from 'homebridge';
+import { CharacteristicValue } from 'homebridge';
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
 import { AirfiService } from './airfiService';
 
+/**
+ * Provides the base information about accessory.
+ */
 export default class AirfiInformationService extends AirfiService {
   private static readonly READ_ADDRESS_FIRMWARE_REVISION = 2;
 
@@ -13,10 +16,7 @@ export default class AirfiInformationService extends AirfiService {
 
   private readonly manufacturer = 'Airfi';
 
-  constructor(
-    accessory: AirfiVentilationUnitAccessory,
-    config: AccessoryConfig
-  ) {
+  constructor(accessory: AirfiVentilationUnitAccessory) {
     super(accessory, new accessory.Service.AccessoryInformation(), 60);
 
     this.service
@@ -28,11 +28,11 @@ export default class AirfiInformationService extends AirfiService {
     );
     this.service.setCharacteristic(
       this.Characteristic.Model,
-      config.model
+      accessory.config.model
     );
     this.service.setCharacteristic(
       this.Characteristic.SerialNumber,
-      config.serialNumber
+      accessory.config.serialNumber
     );
     this.service
       .getCharacteristic(this.Characteristic.FirmwareRevision)

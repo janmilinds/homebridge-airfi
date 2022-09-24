@@ -35,7 +35,7 @@ export abstract class AirfiService {
     this.log = accessory.log;
     this.service = service;
 
-    if (updateFrequency !== 0) {
+    if (updateFrequency > 0) {
       setTimeout(() => {
         this.updateState();
         setInterval(() => this.updateState(), updateFrequency * 1000);
@@ -46,7 +46,7 @@ export abstract class AirfiService {
   /**
    * Rerturn the service created by this class for accessory to register.
    */
-  public getService() {
+  getService() {
     return this.service;
   }
 
