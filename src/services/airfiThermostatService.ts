@@ -13,6 +13,10 @@ export default class AirfiThermostatService extends AirfiService {
 
   private static readonly READ_ADDRESS_CURRENT_TEMPERATURE = 8;
 
+  private static readonly READ_ADDRESS_EXHAUST_AIR_TEMPERATURE = 7;
+
+  private static readonly READ_ADDRESS_EXTRACT_AIR_TEMPERATURE = 6;
+
   private static readonly READ_ADDRESS_TARGET_TEMPERATURE = 5;
 
   private static readonly WRITE_ADDRESS_TARGET_TEMPERATURE = 5;
@@ -68,7 +72,39 @@ export default class AirfiThermostatService extends AirfiService {
     this.log.debug('Airfi Thermostat service initialized.');
   }
 
-  private async getCurrentHeatingCoolingState() {
+  private getCurrentHeatingCoolingState() {
+    const exhaustAirTemperature =
+      AirfiTemperatureSensorService.convertTemperature(
+        this.accessory.getInputRegisterValue(
+          AirfiThermostatService.READ_ADDRESS_EXHAUST_AIR_TEMPERATURE
+        )
+      );
+    const extractAirTemperature =
+      AirfiTemperatureSensorService.convertTemperature(
+        this.accessory.getInputRegisterValue(
+          AirfiThermostatService.READ_ADDRESS_EXTRACT_AIR_TEMPERATURE
+        )
+      );
+    const currentTemperature = AirfiTemperatureSensorService.convertTemperature(
+      this.accessory.getInputRegisterValue(
+        AirfiThermostatService.READ_ADDRESS_CURRENT_TEMPERATURE
+      )
+    );
+    const targetTemperature = AirfiTemperatureSensorService.convertTemperature(
+      this.accessory.getHoldingRegisterValue(
+        AirfiThermostatService.READ_ADDRESS_TARGET_TEMPERATURE
+      )
+    );
+
+    // Determine heating state by the delta of extract and exhaust air.
+    // If Δ ≥ 1°C ⇒ heat is being extracted from extract air to supply air and
+    // thus the air is being heated.
+    const delta = extractAirTemperature - exhaustAirTemperature;
+
+    if (delta >= 1 && targetTemperature > currentTemperature) {
+      return this.Characteristic.CurrentHeatingCoolingState.HEAT;
+    }
+
     return this.Characteristic.CurrentHeatingCoolingState.OFF;
   }
 
@@ -123,5 +159,10 @@ export default class AirfiThermostatService extends AirfiService {
     this.service
       .getCharacteristic(this.Characteristic.TargetTemperature)
       .updateValue(this.targetTemperature);
+
+    // Set heating/cooling state.
+    this.service
+      .getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
+      .updateValue(this.getCurrentHeatingCoolingState());
   }
 }
