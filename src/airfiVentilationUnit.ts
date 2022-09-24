@@ -23,6 +23,10 @@ import { RegisterType, WriteQueue } from './types';
  * this plugin.
  */
 export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
+  private static readonly HOLDING_REGISTER_LENGTH = 51;
+
+  private static readonly INPUT_REGISTER_LENGTH = 40;
+
   private readonly airfiController: AirfiModbusController;
 
   readonly Characteristic: typeof Characteristic;
@@ -41,9 +45,9 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
 
   readonly Service: typeof Service;
 
-  private services: AirfiService[] = [];
+  private queue: WriteQueue = {};
 
-  private writeQueue: WriteQueue = {};
+  private services: AirfiService[] = [];
 
   constructor(log: Logger, config: AccessoryConfig, api: API) {
     if (!(config.host && config.port)) {
@@ -139,6 +143,10 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     return value ? value : 0;
   }
 
+  getServices(): Service[] {
+    return this.services.map((service) => service.getService());
+  }
+
   /**
    * Queue value to be written into holding register.
    *
@@ -168,26 +176,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   }
 
   /**
-   * Write values from queue to the ventilation unit.
-   */
-  private runQueue(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      Object.entries(this.writeQueue).map(([address, value]) => {
-        this.airfiController
-          .write(parseInt(address), value)
-          .then()
-          .catch((error) => this.log.error(error as string))
-          .finally(() => {
-            delete this.writeQueue[address];
-          });
-      });
-
-      resolve();
-    });
-  }
-
-  /**
-   * Run write & read operations for each service.
+   * Run read & write operations for modbus registers.
    */
   private async run() {
     try {
@@ -201,17 +190,25 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
       await this.airfiController
         .open()
         .catch((error) => this.log.error(error as string));
-      await this.runQueue();
+
+      // Write holding register.
+      if (Object.keys(this.queue).length > 0) {
+        await this.writeQueue();
+      }
+
+      // Read and save holding register.
       await this.airfiController
-        .read(1, 40, 3)
-        .then((values) => {
-          this.inputRegister = values;
-        })
-        .catch((error) => this.log.error(error as string));
-      await this.airfiController
-        .read(1, 51, 4)
+        .read(1, AirfiVentilationUnitAccessory.HOLDING_REGISTER_LENGTH, 4)
         .then((values) => {
           this.holdingRegister = values;
+        })
+        .catch((error) => this.log.error(error as string));
+
+      // Read and save input register.
+      await this.airfiController
+        .read(1, AirfiVentilationUnitAccessory.INPUT_REGISTER_LENGTH, 3)
+        .then((values) => {
+          this.inputRegister = values;
         })
         .catch((error) => this.log.error(error as string));
     } catch (error) {
@@ -222,7 +219,22 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     }
   }
 
-  getServices(): Service[] {
-    return this.services.map((service) => service.getService());
+  /**
+   * Write values from queue to the ventilation unit.
+   */
+  private writeQueue(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      Object.entries(this.queue).map(([address, value]) => {
+        this.airfiController
+          .write(parseInt(address), value)
+          .then()
+          .catch((error) => this.log.error(error as string))
+          .finally(() => {
+            delete this.queue[address];
+          });
+      });
+
+      resolve();
+    });
   }
 }
