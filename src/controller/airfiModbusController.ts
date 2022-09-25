@@ -89,7 +89,7 @@ export default class airfiModbusController {
       this.log.debug(`Reading from "${startAddress}" to "${length}"`);
 
       if (!this.isConnected) {
-        this.log.error('Not connected to device');
+        reject('Unable to read: no connection to modbus server');
       }
 
       const read =
@@ -113,7 +113,6 @@ export default class airfiModbusController {
           }
         )
         .catch(({ err, message }) => {
-          console.log(err);
           reject(`Unable to read register: ${err} - ${message}`);
         });
     });
@@ -130,7 +129,7 @@ export default class airfiModbusController {
   write(address: number, value: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (!this.isConnected) {
-        this.log.error('Not connected to device');
+        reject('Unable to write: no connection to modbus server');
       }
 
       this.client
@@ -141,9 +140,10 @@ export default class airfiModbusController {
           );
           resolve();
         })
-        .catch((error) => {
+        .catch(({ err, message }) => {
           reject(
-            `Unable to write value "${value}" register "${address}": ${error}`
+            `Unable to write value "${value}" register "${address}":` +
+              `${err} – ${message}`
           );
         });
     });
