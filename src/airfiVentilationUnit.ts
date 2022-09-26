@@ -181,7 +181,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   private async run() {
     try {
       if (this.isNetworking) {
-        this.log.info(`${this.name} is busy completing previous operations.`);
+        this.log.warn(`${this.name} is busy completing previous operations`);
         return;
       }
 

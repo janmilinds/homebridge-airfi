@@ -43,12 +43,20 @@ export default class airfiModbusController {
       };
 
       this.socket.once('error', rejectListener);
-      this.socket.connect(this.options, () => {
-        this.socket.removeListener('error', rejectListener);
-        this.isConnected = true;
-        this.log.debug(`Connected on ${Object.values(this.options).join(':')}`);
+
+      if (!this.isConnected) {
+        this.socket.connect(this.options, () => {
+          this.socket.removeListener('error', rejectListener);
+          this.isConnected = true;
+          this.log.debug(
+            `Connected on ${Object.values(this.options).join(':')}`
+          );
+          resolve();
+        });
+      } else {
+        this.log.warn('Already connected to modbus server');
         resolve();
-      });
+      }
     });
   }
 
