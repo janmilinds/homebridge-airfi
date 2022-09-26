@@ -17,6 +17,7 @@ import {
   AirfiThermostatService,
 } from './services';
 import { RegisterType, WriteQueue } from './types';
+import { sleep } from './utils';
 
 /**
  * Airfi Ventilation unit – accessory that defines services available through
@@ -27,6 +28,8 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
 
   private static readonly INPUT_REGISTER_LENGTH = 40;
 
+  private static readonly INTERVAL_FREQUENCY = 1000;
+
   private readonly airfiController: AirfiModbusController;
 
   readonly Characteristic: typeof Characteristic;
@@ -36,6 +39,8 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   private holdingRegister: number[] = [];
 
   private inputRegister: number[] = [];
+
+  private intervalId: NodeJS.Timer;
 
   private isNetworking = false;
 
@@ -112,7 +117,10 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     this.services.push(thermostatService);
 
     // Run periodic operations into modbus.
-    setTimeout(() => setInterval(() => this.run(), 1000), 2000);
+    this.intervalId = setInterval(
+      () => this.run(),
+      AirfiVentilationUnitAccessory.INTERVAL_FREQUENCY
+    );
 
     this.log.info(`${this.name} initialized.`);
   }
@@ -176,12 +184,30 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   }
 
   /**
+   * Pause interval execution and restart it after waiting time.
+   *
+   * @param seconds
+   *   Number of seconds to wait before restarting
+   */
+  private async restart(seconds: number) {
+    clearInterval(this.intervalId);
+    this.log.warn(`Restarting modbus read/write in ${seconds} seconds...`);
+    await sleep(seconds);
+    this.intervalId = setInterval(
+      () => this.run(),
+      AirfiVentilationUnitAccessory.INTERVAL_FREQUENCY
+    );
+    this.log.info('Modbus read/write operations restarted');
+  }
+
+  /**
    * Run read & write operations for modbus registers.
    */
   private async run() {
     try {
       if (this.isNetworking) {
         this.log.warn(`${this.name} is busy completing previous operations`);
+        this.restart(10);
         return;
       }
 
@@ -189,28 +215,31 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
 
       await this.airfiController
         .open()
-        .catch((error) => this.log.error(error as string));
+        .then(async () => {
+          // Write holding register.
+          if (Object.keys(this.queue).length > 0) {
+            await this.writeQueue();
+          }
 
-      // Write holding register.
-      if (Object.keys(this.queue).length > 0) {
-        await this.writeQueue();
-      }
+          // Read and save holding register.
+          await this.airfiController
+            .read(1, AirfiVentilationUnitAccessory.HOLDING_REGISTER_LENGTH, 4)
+            .then((values) => {
+              this.holdingRegister = values;
+            })
+            .catch((error) => this.log.error(error as string));
 
-      // Read and save holding register.
-      await this.airfiController
-        .read(1, AirfiVentilationUnitAccessory.HOLDING_REGISTER_LENGTH, 4)
-        .then((values) => {
-          this.holdingRegister = values;
+          // Read and save input register.
+          await this.airfiController
+            .read(1, AirfiVentilationUnitAccessory.INPUT_REGISTER_LENGTH, 3)
+            .then((values) => {
+              this.inputRegister = values;
+            })
+            .catch((error) => this.log.error(error as string));
         })
-        .catch((error) => this.log.error(error as string));
-
-      // Read and save input register.
-      await this.airfiController
-        .read(1, AirfiVentilationUnitAccessory.INPUT_REGISTER_LENGTH, 3)
-        .then((values) => {
-          this.inputRegister = values;
-        })
-        .catch((error) => this.log.error(error as string));
+        .catch((error) => {
+          this.log.error(error as string);
+        });
     } catch (error) {
       this.log.error(error as string);
     } finally {

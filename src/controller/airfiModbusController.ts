@@ -19,7 +19,7 @@ export default class airfiModbusController {
   private socket: Socket;
 
   constructor(host: string, port: number, log: Logger) {
-    const timeout = 10000;
+    const timeout = 5000;
 
     this.log = log;
     this.options = { host, port };
@@ -36,17 +36,16 @@ export default class airfiModbusController {
 
   open(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+      this.log.debug(`Connecting ${Object.values(this.options).join(':')}...`);
       const rejectListener = (error: Error) => {
-        reject(
-          `Error connecting ${Object.values(this.options).join(':')}: ${error}`
-        );
+        reject(error.toString());
       };
 
       this.socket.once('error', rejectListener);
 
       if (!this.isConnected) {
         this.socket.connect(this.options, () => {
-          this.socket.removeListener('error', rejectListener);
+          this.socket.off('error', rejectListener);
           this.isConnected = true;
           this.log.debug(
             `Connected on ${Object.values(this.options).join(':')}`
@@ -73,6 +72,7 @@ export default class airfiModbusController {
         this.socket.once('close', doneListener);
         this.socket.destroy();
       } else {
+        this.log.debug('Disconnected already');
         resolve();
       }
     });
