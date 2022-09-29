@@ -15,7 +15,6 @@ Homebridge plugin for controlling Airfi ventilation unit through Modbus TCP.
 - Fan control
   - Control fan speed
   - Control "At home"/"Away" states
-  - Supply air temperature control
 - Sensors
   - Humidity sensor
   - Temperature sensors
