@@ -269,20 +269,19 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   /**
    * Write values from queue to the ventilation unit.
    */
-  private writeQueue(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      this.log.debug('Writing values to modbus');
+  private async writeQueue(): Promise<void> {
+    this.log.debug('Writing values to modbus');
 
-      Object.entries(this.queue).map(([address, value]) => {
-        this.airfiController
-          .write(parseInt(address), value)
-          .catch((error) => this.log.error(error as string))
-          .finally(() => {
-            delete this.queue[address];
-          });
-      });
+    for (const queueItem of Object.entries(this.queue)) {
+      const [address, value] = queueItem;
+      await this.airfiController
+        .write(parseInt(address), value)
+        .catch((error) => this.log.error(error as string))
+        .finally(() => {
+          delete this.queue[address];
+        });
+    }
 
-      resolve();
-    });
+    return Promise.resolve();
   }
 }
