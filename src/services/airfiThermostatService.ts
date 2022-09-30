@@ -9,7 +9,7 @@ import AirfiTemperatureSensorService from './airfiTemperatureSensorService';
 export default class AirfiThermostatService extends AirfiService {
   private static readonly MINIMUM_TEMPERATURE = 15;
 
-  private static readonly MAXIMUM_TEMPERATURE = 22;
+  private static readonly MAXIMUM_TEMPERATURE = 21;
 
   private static readonly READ_ADDRESS_CURRENT_TEMPERATURE = 8;
 
@@ -17,9 +17,9 @@ export default class AirfiThermostatService extends AirfiService {
 
   private static readonly READ_ADDRESS_EXTRACT_AIR_TEMPERATURE = 6;
 
-  private static readonly READ_ADDRESS_TARGET_TEMPERATURE = 5;
+  private static readonly READ_WRITE_ADDRESS_TARGET_MIN_TEMPERATURE = 50;
 
-  private static readonly WRITE_ADDRESS_TARGET_TEMPERATURE = 5;
+  private static readonly READ_WRITE_ADDRESS_TARGET_TEMPERATURE = 5;
 
   private currentTemperature = 17;
 
@@ -102,7 +102,7 @@ export default class AirfiThermostatService extends AirfiService {
     );
     const targetTemperature = AirfiTemperatureSensorService.convertTemperature(
       this.accessory.getHoldingRegisterValue(
-        AirfiThermostatService.READ_ADDRESS_TARGET_TEMPERATURE
+        AirfiThermostatService.READ_WRITE_ADDRESS_TARGET_TEMPERATURE
       )
     );
 
@@ -136,9 +136,15 @@ export default class AirfiThermostatService extends AirfiService {
     this.log.info(`TargetTemperature ${this.targetTemperature}°C → ${value}°C`);
     this.targetTemperature = value as number;
     this.accessory.queueInsert(
-      AirfiThermostatService.WRITE_ADDRESS_TARGET_TEMPERATURE,
+      AirfiThermostatService.READ_WRITE_ADDRESS_TARGET_TEMPERATURE,
       (value as number) * 10,
-      AirfiThermostatService.READ_ADDRESS_TARGET_TEMPERATURE,
+      AirfiThermostatService.READ_WRITE_ADDRESS_TARGET_TEMPERATURE,
+      4
+    );
+    this.accessory.queueInsert(
+      AirfiThermostatService.READ_WRITE_ADDRESS_TARGET_MIN_TEMPERATURE,
+      value as number,
+      AirfiThermostatService.READ_WRITE_ADDRESS_TARGET_MIN_TEMPERATURE,
       4
     );
   }
@@ -164,7 +170,7 @@ export default class AirfiThermostatService extends AirfiService {
     // Read target temperature value.
     this.targetTemperature = AirfiTemperatureSensorService.convertTemperature(
       this.accessory.getHoldingRegisterValue(
-        AirfiThermostatService.READ_ADDRESS_TARGET_TEMPERATURE
+        AirfiThermostatService.READ_WRITE_ADDRESS_TARGET_TEMPERATURE
       )
     );
     this.service
