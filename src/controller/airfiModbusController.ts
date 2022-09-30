@@ -7,7 +7,9 @@ import { RegisterType } from '../types';
  * Modbus controller handling reading and writing registers in the Airfi
  * ventilation unit.
  */
-export default class airfiModbusController {
+export default class AirfiModbusController {
+  private static readonly MODBUS_READ_LIMIT = 30;
+
   private client: ModbusTCPClient;
 
   private isConnected = false;
@@ -88,24 +90,35 @@ export default class airfiModbusController {
    * @param registerType
    *   Which register to read: 3 = input register, 4 = holding register.
    */
-  read(
+  async read(
     startAddress: number,
     length = 1,
     registerType: RegisterType
   ): Promise<number[]> {
-    return new Promise((resolve, reject) => {
-      this.log.debug(`Reading from "${startAddress}" to "${length}"`);
+    if (!this.isConnected) {
+      return Promise.reject('Unable to read: no connection to modbus server');
+    }
 
-      if (!this.isConnected) {
-        reject('Unable to read: no connection to modbus server');
-      }
+    // Modbus read is restricted to certain amount of registers at a time so
+    // split reading into sequences.
+    const sequences = Array.from(
+      Array(Math.ceil(length / AirfiModbusController.MODBUS_READ_LIMIT)),
+      (e, i) => i
+    );
 
+    let result: number[] = [];
+    for (const i of sequences) {
+      const start = i * AirfiModbusController.MODBUS_READ_LIMIT + startAddress;
+      const readLength = Math.min(
+        AirfiModbusController.MODBUS_READ_LIMIT,
+        length - i * AirfiModbusController.MODBUS_READ_LIMIT
+      );
       const read =
         registerType === 4
-          ? this.client.readHoldingRegisters(startAddress, length)
-          : this.client.readInputRegisters(startAddress, length);
+          ? this.client.readHoldingRegisters(start, readLength)
+          : this.client.readInputRegisters(start, readLength);
 
-      read
+      await read
         .then(
           ({
             response: {
@@ -113,17 +126,29 @@ export default class airfiModbusController {
             },
           }) => {
             this.log.debug(
-              `Values for ${registerType === 4 ? 'holding' : 'input'}` +
-                ` register address "${startAddress}" for length ${length}: ` +
-                `"${values}"`
+              `Reading from "${start}" to "${start - 1 + readLength}"`
             );
-            resolve(values as number[]);
+            result = [...result, ...values];
           }
         )
         .catch(({ err, message }) => {
-          reject(`Unable to read register: ${err} - ${message}`);
+          return Promise.reject(`Unable to read register: ${err} - ${message}`);
         });
-    });
+    }
+
+    if (result.length === length) {
+      this.log.debug(
+        `Values for ${registerType === 4 ? 'holding' : 'input'}` +
+          ` register from "${startAddress}" to "${length}": ` +
+          `"${result}"`
+      );
+      return Promise.resolve(result);
+    }
+
+    return Promise.reject(
+      `Result length (${result.length}) does not match with query length` +
+        `(${length})`
+    );
   }
 
   /**
