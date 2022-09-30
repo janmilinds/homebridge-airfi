@@ -29,6 +29,8 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
 
   private static readonly INTERVAL_FREQUENCY = 1000;
 
+  private static readonly READ_FREQUENCY = 3;
+
   private readonly airfiController: AirfiModbusController;
 
   readonly Characteristic: typeof Characteristic;
@@ -52,6 +54,8 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   private queue: WriteQueue = {};
 
   private services: AirfiService[] = [];
+
+  private sequenceCount = 0;
 
   constructor(log: Logger, config: AccessoryConfig, api: API) {
     if (!(config.host && config.port)) {
@@ -183,7 +187,10 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
    */
   private async restart(seconds: number) {
     clearInterval(this.intervalId);
+
+    this.sequenceCount = 0;
     this.log.warn(`Restarting modbus read/write in ${seconds} seconds...`);
+
     await sleep(seconds);
     this.intervalId = setInterval(
       () => this.run(),
@@ -196,22 +203,42 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
    * Run read & write operations for modbus registers.
    */
   private async run() {
-    try {
-      if (this.isNetworking) {
-        this.log.warn(`${this.name} is busy completing previous operations`);
-        this.restart(10);
-        return;
-      }
+    const queueLength = Object.keys(this.queue).length;
 
-      this.isNetworking = true;
+    this.sequenceCount++;
+    if (this.sequenceCount > AirfiVentilationUnitAccessory.READ_FREQUENCY) {
+      this.sequenceCount = 1;
+    }
 
-      await this.airfiController
-        .open()
-        .then(async () => {
-          // Write holding register.
-          if (Object.keys(this.queue).length > 0) {
-            await this.writeQueue();
-          }
+    // Return if it's not a read sequence and there's nothing to write.
+    if (this.sequenceCount > 1 && queueLength === 0) {
+      return;
+    }
+
+    if (this.isNetworking) {
+      this.log.warn(`${this.name} is busy completing previous operations`);
+      this.restart(10);
+      return;
+    }
+
+    await this.airfiController
+      .open()
+      .then(async () => {
+        this.isNetworking = true;
+
+        // Write holding register.
+        if (queueLength > 0) {
+          await this.writeQueue();
+        }
+
+        if (this.sequenceCount === 1) {
+          // Read and save holding register.
+          await this.airfiController
+            .read(1, AirfiVentilationUnitAccessory.HOLDING_REGISTER_LENGTH, 4)
+            .then((values) => {
+              this.holdingRegister = values;
+            })
+            .catch((error) => this.log.error(error as string));
 
           // Read and save input register.
           await this.airfiController
@@ -220,16 +247,15 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
               this.inputRegister = values;
             })
             .catch((error) => this.log.error(error as string));
-        })
-        .catch((error) => {
-          this.log.error(error as string);
-        });
-    } catch (error) {
-      this.log.error(error as string);
-    } finally {
-      this.airfiController.close();
-      this.isNetworking = false;
-    }
+        }
+      })
+      .catch((error) => {
+        this.log.error(error as string);
+      })
+      .finally(() => {
+        this.airfiController.close();
+        this.isNetworking = false;
+      });
   }
 
   /**
