@@ -116,7 +116,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
     const thermostatService = new AirfiThermostatService(
       this,
       'Supply air temperature',
-      15
+      5
     );
     this.services.push(thermostatService);
 
