@@ -14,6 +14,7 @@ import {
   AirfiInformationService,
   AirfiService,
   AirfiTemperatureSensorService,
+  AirfiThermostatService,
 } from './services';
 import { RegisterType, WriteQueue } from './types';
 import { sleep } from './utils';
@@ -111,6 +112,13 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
       exhaustAirTemperatureSensorService,
       supplyAirTemperatureSensorService
     );
+
+    const thermostatService = new AirfiThermostatService(
+      this,
+      'Supply air temperature',
+      15
+    );
+    this.services.push(thermostatService);
 
     // Run periodic operations into modbus.
     this.intervalId = setInterval(
