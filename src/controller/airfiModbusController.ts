@@ -39,25 +39,25 @@ export default class AirfiModbusController {
   open(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       this.log.debug(`Connecting ${Object.values(this.options).join(':')}...`);
+
+      if (this.isConnected) {
+        this.log.warn('Already connected to modbus server');
+        resolve();
+        return;
+      }
+
       const rejectListener = (error: Error) => {
         reject(error.toString());
       };
 
-      this.socket.once('error', rejectListener);
-
-      if (!this.isConnected) {
-        this.socket.connect(this.options, () => {
-          this.socket.off('error', rejectListener);
-          this.isConnected = true;
-          this.log.debug(
-            `Connected on ${Object.values(this.options).join(':')}`
-          );
-          resolve();
-        });
-      } else {
-        this.log.warn('Already connected to modbus server');
+      this.socket.once('connect', () => {
+        this.socket.off('error', rejectListener);
+        this.isConnected = true;
+        this.log.debug(`Connected on ${Object.values(this.options).join(':')}`);
         resolve();
-      }
+      });
+      this.socket.once('error', rejectListener);
+      this.socket.connect(this.options);
     });
   }
 
