@@ -1,4 +1,5 @@
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
+import { RegisterAddress } from '../types';
 import { AirfiService } from './airfiService';
 
 /**
@@ -6,7 +7,7 @@ import { AirfiService } from './airfiService';
  * ventilation unit sensor.
  */
 export default class AirfiHumiditySensorService extends AirfiService {
-  static readonly READ_ADDRESS_RELATIVE_HUMIDITY = 23;
+  static readonly READ_ADDRESS_RELATIVE_HUMIDITY: RegisterAddress = '3x00023';
 
   private relativeHumidity = 0;
 
@@ -43,7 +44,7 @@ export default class AirfiHumiditySensorService extends AirfiService {
    */
   protected updateState() {
     // Read relative humidity value.
-    this.relativeHumidity = this.accessory.getInputRegisterValue(
+    this.relativeHumidity = this.accessory.getRegisterValue(
       AirfiHumiditySensorService.READ_ADDRESS_RELATIVE_HUMIDITY
     );
     this.service
