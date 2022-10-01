@@ -2,6 +2,7 @@ import { CharacteristicValue } from 'homebridge';
 
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
 import { FanActiveState, FanRotationSpeedState } from '../types';
+import { sleep } from '../utils';
 import { AirfiService } from './airfiService';
 
 /**
@@ -68,6 +69,11 @@ export default class AirfiFanService extends AirfiService {
         AirfiFanService.READ_ADDRESS_ACTIVE
       );
       this.log.info(`Fan Active ${this.active} → ${value}`);
+
+      // Delay state set if both speed and active is set at the same time.
+      if (value === 1) {
+        await sleep(0.25);
+      }
       this.active = value as FanActiveState;
     }
   }
@@ -81,6 +87,11 @@ export default class AirfiFanService extends AirfiService {
     // Airfi ventilation unit supports only speeds 1–5, so only change speed on
     // that range. Speed 0 anyway sets the fan inactive.
     if (value > 0) {
+      // Delay speed set if fan is not active.
+      if (this.active === 0) {
+        await sleep(1);
+      }
+
       this.log.info(`Fan RotationSpeed ${this.rotationSpeed} → ${value}`);
       this.rotationSpeed = value as number;
       this.accessory.queueInsert(
