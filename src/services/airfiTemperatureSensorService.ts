@@ -1,4 +1,5 @@
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
+import { RegisterAddress } from '../types';
 import { AirfiService } from './airfiService';
 
 /**
@@ -8,7 +9,7 @@ import { AirfiService } from './airfiService';
 export default class AirfiTemperatureSensorService extends AirfiService {
   private currentTemperature = 0;
 
-  private readonly readAddress: number;
+  private readonly readAddress: RegisterAddress;
 
   private readonly subtype: string;
 
@@ -26,7 +27,7 @@ export default class AirfiTemperatureSensorService extends AirfiService {
     accessory: AirfiVentilationUnitAccessory,
     displayName: string,
     subtype: string,
-    readAddress
+    readAddress: RegisterAddress
   ) {
     super(
       accessory,
@@ -74,7 +75,7 @@ export default class AirfiTemperatureSensorService extends AirfiService {
   protected updateState() {
     // Read temperature value.
     this.currentTemperature = AirfiTemperatureSensorService.convertTemperature(
-      this.accessory.getInputRegisterValue(this.readAddress)
+      this.accessory.getRegisterValue(this.readAddress)
     );
     this.service
       .getCharacteristic(this.Characteristic.CurrentTemperature)

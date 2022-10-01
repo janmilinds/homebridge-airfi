@@ -16,7 +16,7 @@ import {
   AirfiTemperatureSensorService,
   AirfiThermostatService,
 } from './services';
-import { RegisterType, WriteQueue } from './types';
+import { RegisterAddress, WriteQueue } from './types';
 import { sleep } from './utils';
 
 /**
@@ -95,16 +95,31 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
 
     // Temperature sensors
     const outdoorAirTemperatureSensorService =
-      new AirfiTemperatureSensorService(this, 'Outdoor air', '_outdoorAir', 4);
+      new AirfiTemperatureSensorService(
+        this,
+        'Outdoor air',
+        '_outdoorAir',
+        '3x00004'
+      );
     const extractAirTemperatureSensorService =
-      new AirfiTemperatureSensorService(this, 'Extract air', '_extractAir', 6);
+      new AirfiTemperatureSensorService(
+        this,
+        'Extract air',
+        '_extractAir',
+        '3x00006'
+      );
     const exhaustAirTemperatureSensorService =
-      new AirfiTemperatureSensorService(this, 'Exhaust air', '_exhaustAir', 7);
+      new AirfiTemperatureSensorService(
+        this,
+        'Exhaust air',
+        '_exhaustAir',
+        '3x00007'
+      );
     const supplyAirTemperatureSensorService = new AirfiTemperatureSensorService(
       this,
       'Supply air',
       '_supplyAir',
-      8
+      '3x00008'
     );
     this.services.push(
       outdoorAirTemperatureSensorService,
@@ -130,29 +145,19 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   }
 
   /**
-   * Return value from modbus holding register.
+   * Converts string representation of register address into register type and
+   * address.
    *
-   * @param address
-   *   Register address to get value.
+   * @param registerAddress
    */
-  getHoldingRegisterValue(address: number): number {
-    // Shift address to 0-based array index.
-    const value = this.holdingRegister[address - 1];
-
-    return value ? value : 0;
-  }
-
-  /**
-   * Return value from modbus input register.
-   *
-   * @param address
-   *   Register address to get value.
-   */
-  getInputRegisterValue(address: number): number {
-    // Shift address to 0-based array index.
-    const value = this.inputRegister[address - 1];
-
-    return value ? value : 0;
+  private getRegisterAddress(registerAddress: RegisterAddress): number[] {
+    if (!/^[3|4]x[\d]{5}$/.test(registerAddress)) {
+      this.log.error(
+        `Invalid register address format for "${registerAddress}"`
+      );
+      return [0, 0];
+    }
+    return registerAddress.split('x').map((value) => parseInt(value));
   }
 
   getServices(): Service[] {
@@ -160,31 +165,46 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
   }
 
   /**
+   * Return value from a register.
+   *
+   * @param registerAddress
+   *   String representation of register address including register type and
+   *   address
+   */
+  getRegisterValue(registerAddress: RegisterAddress): number {
+    const [register, address] = this.getRegisterAddress(registerAddress);
+
+    if (register === 3) {
+      return this.inputRegister[address - 1];
+    }
+
+    if (register === 4) {
+      return this.holdingRegister[address - 1];
+    }
+
+    return -1;
+  }
+
+  /**
    * Queue value to be written into holding register.
    *
-   * @param writeAddress
+   * @param registerAddress
    *   Register address to write.
    * @param value
    *   Value to be written.
-   * @param readAddress
-   *   Register read address to update immediately into the object state.
-   * @param readRegisterType
-   *   Which register to read: 3 = input register, 4 = holding register.
    */
-  queueInsert(
-    address: number,
-    value: number,
-    readAddress = 0,
-    readRegisterType: RegisterType = 3
-  ) {
-    if (readAddress > 0) {
-      if (readRegisterType === 3) {
-        this.inputRegister[readAddress - 1] = value;
-      } else if (readRegisterType === 4) {
-        this.holdingRegister[readAddress - 1] = value;
-      }
+  queueInsert(registerAddress: RegisterAddress, value: number) {
+    const [register, address] = this.getRegisterAddress(registerAddress);
+
+    if (register === 4) {
+      this.holdingRegister[address - 1] = value;
+      this.queue[address] = value;
+    } else {
+      this.log.error(
+        `Wrong write register type "${register}"` +
+          ' – only holding register is writable'
+      );
     }
-    this.queue[address] = value;
   }
 
   /**

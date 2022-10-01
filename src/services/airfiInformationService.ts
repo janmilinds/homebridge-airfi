@@ -1,14 +1,17 @@
 import { CharacteristicValue } from 'homebridge';
 import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
+import { RegisterAddress } from '../types';
 import { AirfiService } from './airfiService';
 
 /**
  * Provides the base information about accessory.
  */
 export default class AirfiInformationService extends AirfiService {
-  private static readonly READ_ADDRESS_FIRMWARE_REVISION = 2;
+  private static readonly READ_ADDRESS_FIRMWARE_REVISION: RegisterAddress =
+    '3x00002';
 
-  private static readonly READ_ADDRESS_HARDWARE_REVISION = 1;
+  private static readonly READ_ADDRESS_HARDWARE_REVISION: RegisterAddress =
+    '3x00001';
 
   private firmwareRevision = 'unknown';
 
@@ -68,7 +71,7 @@ export default class AirfiInformationService extends AirfiService {
   protected updateState() {
     // Update Firmware Revision.
     this.firmwareRevision = AirfiInformationService.getVersionString(
-      this.accessory.getInputRegisterValue(
+      this.accessory.getRegisterValue(
         AirfiInformationService.READ_ADDRESS_FIRMWARE_REVISION
       )
     );
@@ -78,7 +81,7 @@ export default class AirfiInformationService extends AirfiService {
 
     // Update Hardware Revision.
     this.hardwareRevision = AirfiInformationService.getVersionString(
-      this.accessory.getInputRegisterValue(
+      this.accessory.getRegisterValue(
         AirfiInformationService.READ_ADDRESS_HARDWARE_REVISION
       )
     );
