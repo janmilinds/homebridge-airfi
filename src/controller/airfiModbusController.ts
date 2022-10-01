@@ -46,16 +46,19 @@ export default class AirfiModbusController {
         return;
       }
 
+      const connectListener = () => {
+        this.log.debug(`Connected on ${Object.values(this.options).join(':')}`);
+        this.socket.off('error', rejectListener);
+        this.isConnected = true;
+        resolve();
+      };
+
       const rejectListener = (error: Error) => {
+        this.socket.off('connect', connectListener);
         reject(error.toString());
       };
 
-      this.socket.once('connect', () => {
-        this.socket.off('error', rejectListener);
-        this.isConnected = true;
-        this.log.debug(`Connected on ${Object.values(this.options).join(':')}`);
-        resolve();
-      });
+      this.socket.once('connect', connectListener);
       this.socket.once('error', rejectListener);
       this.socket.connect(this.options);
     });
