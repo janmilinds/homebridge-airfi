@@ -9,5 +9,5 @@ type RegisterAddress = `${3 | 4}x${number}${number}${number}${number}${number}`;
 type RegisterType = 3 | 4;
 
 type WriteQueue = {
-  [key: string]: number;
+  [key: RegisterAddress]: number;
 };
