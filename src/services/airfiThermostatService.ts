@@ -26,6 +26,8 @@ export default class AirfiThermostatService extends AirfiService {
 
   private targetTemperature = 17;
 
+  private targetMinTemperature = 17;
+
   /**
    * @param accessory
    *   Accessory object.
@@ -133,7 +135,7 @@ export default class AirfiThermostatService extends AirfiService {
 
   private async setTargetTemperature(value: CharacteristicValue) {
     this.log.info(`TargetTemperature ${this.targetTemperature}°C → ${value}°C`);
-    this.targetTemperature = value as number;
+    this.targetTemperature = this.targetMinTemperature = value as number;
     this.accessory.queueInsert(
       AirfiThermostatService.TARGET_TEMPERATURE,
       (value as number) * 10
@@ -166,13 +168,30 @@ export default class AirfiThermostatService extends AirfiService {
     this.targetTemperature = AirfiTemperatureSensorService.convertTemperature(
       this.accessory.getRegisterValue(AirfiThermostatService.TARGET_TEMPERATURE)
     );
+    this.targetMinTemperature = this.accessory.getRegisterValue(
+      AirfiThermostatService.TARGET_MIN_TEMPERATURE
+    );
     this.service
       .getCharacteristic(this.Characteristic.TargetTemperature)
       .updateValue(this.targetTemperature);
+
+    if (this.targetTemperature !== this.targetMinTemperature) {
+      this.syncTargetMinTemperature();
+    }
 
     // Set heating/cooling state.
     this.service
       .getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
       .updateValue(this.getCurrentHeatingCoolingState());
+  }
+
+  /**
+   * Sync heat exchanger bypass minimum temperature with set target temperature.
+   */
+  private syncTargetMinTemperature() {
+    this.accessory.queueInsert(
+      AirfiThermostatService.TARGET_MIN_TEMPERATURE,
+      this.targetTemperature
+    );
   }
 }
