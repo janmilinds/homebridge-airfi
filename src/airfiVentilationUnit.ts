@@ -249,11 +249,11 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
       return;
     }
 
+    this.isNetworking = true;
+
     await this.airfiController
       .open()
       .then(async () => {
-        this.isNetworking = true;
-
         // Write holding register.
         if (queueLength > 0) {
           await this.writeQueue();
