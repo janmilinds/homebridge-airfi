@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge Airfi",
   "name": "homebridge-airfi",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Controls Airfi ventilation unit through modbus interface.",
   "license": "Apache-2.0",
   "author": {
