@@ -16,8 +16,8 @@
   },
   "homepage": "https://github.com/janmilinds/homebridge-airfi#readme",
   "engines": {
-    "node": ">=14.18.1",
-    "homebridge": ">=1.3.5"
+    "node": ">=18.13.0",
+    "homebridge": ">=1.6.0"
   },
   "main": "dist/index.js",
   "scripts": {
@@ -35,16 +35,16 @@
     "jsmodbus": "^4.0.6"
   },
   "devDependencies": {
-    "@types/node": "^16.10.9",
+    "@types/node": "^18.13.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "eslint": "^8.0.1",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "homebridge": "^1.3.5",
+    "homebridge": "^1.6.0",
     "nodemon": "^2.0.13",
     "prettier": "^2.7.1",
-    "rimraf": "^3.0.2",
+    "rimraf": "^4.1.2",
     "ts-node": "^10.3.0",
     "typescript": "^4.4.4"
   }
