@@ -85,7 +85,7 @@ export default class AirfiFanService extends AirfiService {
   private async setRotationSpeed(value: CharacteristicValue) {
     // Airfi ventilation unit supports only speeds 1–5, so only change speed on
     // that range. Speed 0 anyway sets the fan inactive.
-    if (value > 0 && value !== this.rotationSpeed) {
+    if ((value as number) > 0 && value !== this.rotationSpeed) {
       // Delay speed set if fan is not active.
       if (this.active === 0) {
         await sleep(1);
