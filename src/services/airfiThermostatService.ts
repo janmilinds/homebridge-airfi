@@ -8,7 +8,7 @@ import AirfiTemperatureSensorService from './airfiTemperatureSensorService';
  * Defines the thermostat service to set the target temperature for supply air.
  */
 export default class AirfiThermostatService extends AirfiService {
-  private static readonly MINIMUM_TEMPERATURE = 15;
+  private static readonly MINIMUM_TEMPERATURE = 10;
 
   private static readonly MAXIMUM_TEMPERATURE = 21;
 
