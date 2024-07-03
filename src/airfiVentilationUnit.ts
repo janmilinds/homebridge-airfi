@@ -75,6 +75,8 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
       this.log
     );
 
+    this.log.debug('Config:', this.config);
+
     // Initial modbus register read.
     this.run();
 
