@@ -24,7 +24,7 @@ import { sleep } from './utils';
  * this plugin.
  */
 export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
-  private static readonly HOLDING_REGISTER_LENGTH = 51;
+  private static readonly HOLDING_REGISTER_LENGTH = 58;
 
   private static readonly INPUT_REGISTER_LENGTH = 40;
 

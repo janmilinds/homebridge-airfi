@@ -38,7 +38,7 @@ This plugin supports ventilation units Model 60, 100, 130, 150, 250, 350 manufac
 
 - Node.js >= 20.15.0
 - Homebridge >= 1.8.0
-- Modbus map v2.1 on the ventilation unit
+- Modbus map v2.5 on the ventilation unit
 
 ### Configuration
 
