@@ -42,7 +42,7 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
 
   private inputRegister: number[] = [];
 
-  private intervalId: NodeJS.Timer;
+  private intervalId: NodeJS.Timeout;
 
   private isNetworking = false;
 

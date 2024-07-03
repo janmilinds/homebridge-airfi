@@ -1,7 +1,7 @@
 
 <p align="center">
 
-<img src="https://github.com/homebridge/branding/raw/master/logos/homebridge-wordmark-logo-vertical.png" width="150">
+<img src="https://github.com/homebridge/branding/raw/latest/logos/homebridge-wordmark-logo-vertical.png" width="150">
 
 </p>
 
@@ -36,8 +36,8 @@ npm install -g homebrigde-airfi
 
 This plugin supports ventilation units Model 60, 100, 130, 150, 250, 350 manufactured by Airfi.
 
-- Node.js >= 18.13.0
-- Homebridge >= 1.6.0
+- Node.js >= 20.15.0
+- Homebridge >= 1.8.0
 - Modbus map v2.1 on the ventilation unit
 
 ### Configuration
