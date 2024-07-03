@@ -13,6 +13,7 @@ import {
   AirfiHumiditySensorService,
   AirfiInformationService,
   AirfiService,
+  AirfiSwitchService,
   AirfiTemperatureSensorService,
   AirfiThermostatService,
 } from './services';
@@ -134,6 +135,36 @@ export default class AirfiVentilationUnitAccessory implements AccessoryPlugin {
       5
     );
     this.services.push(thermostatService);
+
+    if (this.config.exposeFireplaceSwitch) {
+      const fireplaceSwitchService = new AirfiSwitchService(
+        this,
+        'Fireplace mode',
+        '_fireplace',
+        '4x00058'
+      );
+      this.services.push(fireplaceSwitchService);
+    }
+
+    if (this.config.exposePowerCoolingSwitch) {
+      const powerCoolingSwitchService = new AirfiSwitchService(
+        this,
+        'Power cooling',
+        '_powerCooling',
+        '4x00051'
+      );
+      this.services.push(powerCoolingSwitchService);
+    }
+
+    if (this.config.exposeSaunaSwitch) {
+      const saunaSwitchService = new AirfiSwitchService(
+        this,
+        'Sauna mode',
+        '_sauna',
+        '4x00057'
+      );
+      this.services.push(saunaSwitchService);
+    }
 
     // Run periodic operations into modbus.
     this.intervalId = setInterval(
