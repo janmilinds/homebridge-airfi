@@ -41,7 +41,42 @@
         "title": "Serial number",
         "type": "string",
         "required": true
+      },
+      "exposeFireplaceSwitch": {
+        "title": "Expose Fireplace mode switch",
+        "type": "boolean",
+        "default": false,
+        "description": "Creates an overpressure for 30 min."
+      },
+      "exposePowerCoolingSwitch": {
+        "title": "Expose Power cooling switch",
+        "type": "boolean",
+        "default": false,
+        "description": "Allows increasing the ventilation power when outdoor temperature is lower than extract air."
+      },
+      "exposeSaunaSwitch": {
+        "title": "Expose Sauna mode switch",
+        "type": "boolean",
+        "default": false,
+        "description": "Prevents ventilation power increase when humidity level increases for 30 min."
       }
     }
-  }
+  },
+  "layout": [
+    {
+        "type": "section",
+        "items": ["name", "host", "port", "model", "serialNumber"]
+    },
+    {
+        "title": "Ventilation unit features",
+        "type": "section",
+        "expandable": true,
+        "expanded": false,
+        "items": [
+          "exposeSaunaSwitch",
+          "exposeFireplaceSwitch",
+          "exposePowerCoolingSwitch"
+        ]
+    }
+  ]
 }
