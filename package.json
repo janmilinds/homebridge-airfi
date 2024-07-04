@@ -16,8 +16,8 @@
   },
   "homepage": "https://github.com/janmilinds/homebridge-airfi#readme",
   "engines": {
-    "node": ">=20.15.0",
-    "homebridge": ">=1.6.0"
+    "node": "^18.17.0 || ^20.15.0",
+    "homebridge": "^1.6.0"
   },
   "main": "dist/index.js",
   "scripts": {
