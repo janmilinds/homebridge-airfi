@@ -75,7 +75,7 @@ export default class AirfiInformationService extends AirfiService {
     this.log.debug('Triggered SET Identify:', value);
   }
 
-  private static getVersionString(value: CharacteristicValue): string {
+  public static getVersionString(value: CharacteristicValue): string {
     return value.toString().split('').join('.');
   }
 

@@ -32,7 +32,8 @@
     "modbus"
   ],
   "dependencies": {
-    "jsmodbus": "^4.0.6"
+    "jsmodbus": "^4.0.6",
+    "semver": "^7.6.2"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",

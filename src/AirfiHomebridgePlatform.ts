@@ -7,8 +7,10 @@ import {
   Service,
   Characteristic,
 } from 'homebridge';
+import semverGte from 'semver/functions/gte';
 
 import { AirfiModbusController } from './controller';
+import { AirfiInformationService } from './services';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { RegisterAddress, WriteQueue } from './types';
 import { sleep } from './utils';
@@ -27,6 +29,8 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   private static readonly INTERVAL_FREQUENCY = 1000;
 
   private static readonly READ_FREQUENCY = 3;
+
+  private static readonly minModbusVersion = '2.5.0';
 
   public readonly Service: typeof Service;
 
@@ -85,16 +89,21 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
 
     // Initial modbus register read.
     this.run().then(() => {
-      const deviceModbusMapVersion = this.getRegisterValue('3x00003')
-        .toString()
-        .split('')
-        .join('.');
+      const deviceModbusMapVersion = AirfiInformationService.getVersionString(
+        this.getRegisterValue('3x00003')
+      );
 
       this.log.info('Device Modbus map version:', deviceModbusMapVersion);
 
-      if (deviceModbusMapVersion !== '2.5.0') {
+      if (
+        semverGte(
+          deviceModbusMapVersion,
+          AirfiHomebridgePlatform.minModbusVersion
+        ) === false
+      ) {
         this.log.error(
-          `The device Modbus map version ${deviceModbusMapVersion} is not supported. Please update the device firmware.`
+          `The device Modbus map version ${deviceModbusMapVersion} is not supported. ` +
+            `Minimun required Modbus map version is ${AirfiHomebridgePlatform.minModbusVersion}. Please update the device firmware.`
         );
         return;
       }
