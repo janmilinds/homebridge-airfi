@@ -16,19 +16,23 @@ export abstract class AirfiService {
   protected service: Service;
 
   /**
-   * Defines the Airfi platform service.
-   *
+   * @param accessory
+   *   Accessory object.
    * @param platform
    *   Platform object.
-   * @param service
-   *   Service object to define platform service.
+   * @param AccessoryService
+   *   Service class to define an accessory service.
+   * @param displayName
+   *   Name shown on the service.
+   * @param subType
+   *   Subtype name to differentiate different services.
    * @param updateFrequency
    *   Number of seconds to run periodic updates on service charasterictics.
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
-    service: typeof Service,
+    AccessoryService: typeof Service,
     displayName: string,
     subType: string = '',
     updateFrequency = 0
@@ -38,11 +42,10 @@ export abstract class AirfiService {
     this.platform = platform;
     this.service =
       accessory.getService(displayName) ||
-      accessory.addService(service, displayName, subType);
+      accessory.addService(new AccessoryService(displayName, subType));
 
     if (updateFrequency > 0) {
       setTimeout(() => {
-        this.updateState();
         setInterval(() => this.updateState(), updateFrequency * 1000);
       }, 5000);
     }

@@ -9,28 +9,26 @@ import {
 } from 'homebridge';
 import semverGte from 'semver/functions/gte';
 
+import { AirfiPlatformAccessory } from './AirfiPlatformAccessory';
 import { AirfiModbusController } from './controller';
 import { AirfiInformationService } from './services';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { RegisterAddress, WriteQueue } from './types';
 import { sleep } from './utils';
 
-import { AirfiVentilationUnitPlatformAccessory } from './AirfiVentilationUnitPlatformAccessory';
 /**
- * HomebridgePlatform
- * This class is the main constructor for your plugin, this is where you should
- * parse the user config and discover/register accessories with Homebridge.
+ * Homebridge platform for the Airfi ventilation unit.
  */
 export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   private static readonly HOLDING_REGISTER_LENGTH = 58;
+
+  private static readonly MIN_MODBUS_VERSION = '2.5.0';
 
   private static readonly INPUT_REGISTER_LENGTH = 40;
 
   private static readonly INTERVAL_FREQUENCY = 1000;
 
   private static readonly READ_FREQUENCY = 3;
-
-  private static readonly minModbusVersion = '2.5.0';
 
   public readonly Service: typeof Service;
 
@@ -98,12 +96,14 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
       if (
         semverGte(
           deviceModbusMapVersion,
-          AirfiHomebridgePlatform.minModbusVersion
+          AirfiHomebridgePlatform.MIN_MODBUS_VERSION
         ) === false
       ) {
         this.log.error(
-          `The device Modbus map version ${deviceModbusMapVersion} is not supported. ` +
-            `Minimun required Modbus map version is ${AirfiHomebridgePlatform.minModbusVersion}. Please update the device firmware.`
+          `The device Modbus map version ${deviceModbusMapVersion} is not ` +
+            'supported. Minimun required Modbus map version is ' +
+            `${AirfiHomebridgePlatform.MIN_MODBUS_VERSION}. Please update ` +
+            'the device firmware.'
         );
         return;
       }
@@ -112,11 +112,6 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
       this.log.debug('Finished initializing platform:', this.config.name);
     });
 
-    // When this event is fired it means Homebridge has restored all cached
-    // accessories from disk. Dynamic Platform plugins should only register new
-    // accessories after this event was fired, in order to ensure they weren't
-    // added to homebridge already. This event can also be used to start
-    // discovery of new accessories.
     this.api.on('didFinishLaunching', () => {
       this.log.debug('Executed didFinishLaunching callback');
 
@@ -138,9 +133,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * This function is invoked when homebridge restores cached accessories from
-   * disk at startup. It should be used to set up event handlers for
-   * characteristics and update respective values.
+   * {@inheritDoc DynamicPlatformPlugin.configureAccessory}
    */
   configureAccessory(accessory: PlatformAccessory) {
     this.log.info('Loading accessory from cache:', accessory.displayName);
@@ -187,21 +180,9 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
           existingAccessory.displayName
         );
 
-        // if you need to update the accessory.context then you should run
-        // `api.updatePlatformAccessories`. e.g.:
-        // this.log.debug('Existing accessory:', existingAccessory);
-        // existingAccessory.context.device = device;
-        // this.api.updatePlatformAccessories([existingAccessory]);
-
         // create the accessory handler for the restored accessory
         // this is imported from `platformAccessory.ts`
-        new AirfiVentilationUnitPlatformAccessory(this, existingAccessory);
-
-        // it is possible to remove platform accessories at any time using
-        // `api.unregisterPlatformAccessories`, e.g.:
-        // remove platform accessories when no longer present
-        // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
-        // this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
+        new AirfiPlatformAccessory(this, existingAccessory);
       } else {
         // the accessory does not yet exist, so we need to create it
         this.log.info('Adding new accessory:', device.displayName);
@@ -218,8 +199,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
         accessory.context.device = device;
 
         // create the accessory handler for the newly create accessory
-        // this is imported from `platformAccessory.ts`
-        new AirfiVentilationUnitPlatformAccessory(this, accessory);
+        new AirfiPlatformAccessory(this, accessory);
 
         // link the accessory to your platform
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
@@ -324,7 +304,8 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
       this.queue[address] = value;
     } else {
       this.log.error(
-        `Wrong write register type "${register}" – only holding register is writable`
+        `Wrong write register type "${register}". ` +
+          'Only holding register is writable'
       );
     }
   }

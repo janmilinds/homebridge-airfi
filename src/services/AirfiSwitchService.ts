@@ -16,8 +16,10 @@ export default class AirfiSwitchService extends AirfiService {
   private readonly writeAddress: RegisterAddress;
 
   /**
-   * @param platform
+   * @param accessory
    *   Accessory object.
+   * @param platform
+   *   Platform object.
    * @param displayName
    *   Name shown on the switch.
    * @param subtype
@@ -73,7 +75,7 @@ export default class AirfiSwitchService extends AirfiService {
   }
 
   /**
-   * Run periodic updates to service state.
+   * {@inheritDoc AirfiService.updateState}
    */
   protected updateState() {
     // Read on state

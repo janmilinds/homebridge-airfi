@@ -11,11 +11,9 @@ import {
 } from './services';
 
 /**
- * Platform Accessory
- * An instance of this class is created for each accessory your platform registers
- * Each accessory may expose multiple services of different service types.
+ * Platform accessory for the Airfi ventilation unit.
  */
-export class AirfiVentilationUnitPlatformAccessory {
+export class AirfiPlatformAccessory {
   private readonly services: Service[] = [];
 
   constructor(
@@ -36,8 +34,7 @@ export class AirfiVentilationUnitPlatformAccessory {
       new AirfiFanService(
         this.accessory,
         this.platform,
-        'Ventilation',
-        1
+        'Ventilation'
       ).getService()
     );
     this.services.push(

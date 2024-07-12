@@ -16,15 +16,23 @@ export default class AirfiTemperatureSensorService extends AirfiService {
   private readonly subtype: string;
 
   /**
-   * {@inheritDoc AirfiService.constructor}
+   * @param accessory
+   *   Accessory object.
+   * @param platform
+   *   Platform object.
+   * @param displayName
+   *   Name shown on the switch.
+   * @param subtype
+   *   Subtype name to differentiate different temperature sensors.
+   * @param readAddress
+   *   Register read address to fetch temperature readings.
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
     displayName: string,
     subtype: string,
-    readAddress: RegisterAddress,
-    updateFrequency = 30
+    readAddress: RegisterAddress
   ) {
     super(
       accessory,
@@ -32,7 +40,7 @@ export default class AirfiTemperatureSensorService extends AirfiService {
       platform.Service.TemperatureSensor,
       displayName,
       subtype,
-      updateFrequency
+      30
     );
 
     this.readAddress = readAddress;
@@ -79,7 +87,7 @@ export default class AirfiTemperatureSensorService extends AirfiService {
   }
 
   /**
-   * Run periodic updates to service state.
+   * {@inheritDoc AirfiService.updateState}
    */
   protected updateState() {
     // Read temperature value.

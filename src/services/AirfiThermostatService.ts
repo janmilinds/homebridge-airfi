@@ -26,18 +26,17 @@ export default class AirfiThermostatService extends AirfiService {
   private targetMinTemperature = 0;
 
   /**
-   * @param platform
+   * @param accessory
    *   Accessory object.
+   * @param platform
+   *   Platform object.
    * @param displayName
    *   Name shown on the sensor.
-   * @param updateFrequency
-   *   Number of seconds to run periodic updates on service charasterictics.
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
-    displayName: string,
-    updateFrequency: number = 3
+    displayName: string
   ) {
     super(
       accessory,
@@ -45,7 +44,7 @@ export default class AirfiThermostatService extends AirfiService {
       platform.Service.Thermostat,
       displayName,
       '_thermostat',
-      updateFrequency
+      1
     );
 
     this.service.setCharacteristic(this.Characteristic.Name, displayName);
@@ -124,7 +123,7 @@ export default class AirfiThermostatService extends AirfiService {
   }
 
   /**
-   * Run periodic updates to service state.
+   * {@inheritDoc AirfiService.updateState}
    */
   protected updateState() {
     // Read current temperature value.

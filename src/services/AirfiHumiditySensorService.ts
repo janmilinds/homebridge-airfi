@@ -14,13 +14,19 @@ export default class AirfiHumiditySensorService extends AirfiService {
   private relativeHumidity = 0;
 
   /**
-   * {@inheritDoc AirfiService.constructor}
+   * Defines the Airfi platform service.
+   *
+   * @param accessory
+   *  Accessory object.
+   * @param platform
+   *   Platform object.
+   * @param displayName
+   *  Name shown on the service.
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
-    displayName: string,
-    updateFrequency = 30
+    displayName: string
   ) {
     super(
       accessory,
@@ -28,7 +34,7 @@ export default class AirfiHumiditySensorService extends AirfiService {
       platform.Service.HumiditySensor,
       displayName,
       '_humidity',
-      updateFrequency
+      30
     );
 
     this.service.setCharacteristic(this.Characteristic.Name, displayName);
@@ -48,7 +54,7 @@ export default class AirfiHumiditySensorService extends AirfiService {
   }
 
   /**
-   * Run periodic updates to service state.
+   * {@inheritDoc AirfiService.updateState}
    */
   protected updateState() {
     // Read relative humidity value.

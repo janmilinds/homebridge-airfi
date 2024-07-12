@@ -20,6 +20,14 @@ export default class AirfiInformationService extends AirfiService {
 
   private readonly manufacturer = 'Airfi';
 
+  /**
+   * @param accessory
+   *   Accessory object.
+   * @param platform
+   *   Platform object.
+   * @param displayName
+   *   Name shown on the service.
+   */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,

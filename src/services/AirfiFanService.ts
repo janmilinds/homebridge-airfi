@@ -25,22 +25,19 @@ export default class AirfiFanService extends AirfiService {
   private rotationSpeed = 0;
 
   /**
-   * {@inheritDoc AirfiService.constructor}
+   * @param accessory
+   *   Accessory object.
+   * @param platform
+   *  Platform object.
+   * @param displayName
+   *   Name shown on the sensor.
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
-    displayName: string,
-    updateFrequency = 0
+    displayName: string
   ) {
-    super(
-      accessory,
-      platform,
-      platform.Service.Fanv2,
-      displayName,
-      '_fan',
-      updateFrequency
-    );
+    super(accessory, platform, platform.Service.Fanv2, displayName, '_fan', 1);
 
     this.service.setCharacteristic(this.Characteristic.Name, displayName);
 
@@ -148,7 +145,7 @@ export default class AirfiFanService extends AirfiService {
   }
 
   /**
-   * Run periodic updates to service state.
+   * {@inheritDoc AirfiService.updateState}
    */
   protected updateState() {
     // Read active state
