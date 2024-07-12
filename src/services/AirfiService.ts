@@ -1,39 +1,44 @@
-import { Characteristic, Logger, Service } from 'homebridge';
+import { Characteristic, Logger, PlatformAccessory, Service } from 'homebridge';
 
-import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
+import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 
 /**
  * Accessory service class for defining services communicating on modbus
  * interface.
  */
 export abstract class AirfiService {
-  protected readonly accessory: AirfiVentilationUnitAccessory;
-
   protected readonly Characteristic: typeof Characteristic;
 
   protected readonly log: Logger;
 
+  protected readonly platform: AirfiHomebridgePlatform;
+
   protected service: Service;
 
   /**
-   * Defines the Airfi accessory service.
+   * Defines the Airfi platform service.
    *
-   * @param accessory
-   *   Accessory object.
+   * @param platform
+   *   Platform object.
    * @param service
-   *   Service object to define accessory service.
+   *   Service object to define platform service.
    * @param updateFrequency
    *   Number of seconds to run periodic updates on service charasterictics.
    */
   constructor(
-    accessory: AirfiVentilationUnitAccessory,
-    service: Service,
+    accessory: PlatformAccessory,
+    platform: AirfiHomebridgePlatform,
+    service: typeof Service,
+    displayName: string,
+    subType: string = '',
     updateFrequency = 0
   ) {
-    this.accessory = accessory;
-    this.Characteristic = accessory.Characteristic;
-    this.log = accessory.log;
-    this.service = service;
+    this.Characteristic = platform.Characteristic;
+    this.log = platform.log;
+    this.platform = platform;
+    this.service =
+      accessory.getService(displayName) ||
+      accessory.addService(service, displayName, subType);
 
     if (updateFrequency > 0) {
       setTimeout(() => {
@@ -43,10 +48,7 @@ export abstract class AirfiService {
     }
   }
 
-  /**
-   * Rerturn the service created by this class for accessory to register.
-   */
-  getService() {
+  public getService(): Service {
     return this.service;
   }
 

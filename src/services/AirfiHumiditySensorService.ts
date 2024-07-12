@@ -1,6 +1,8 @@
-import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
+import { PlatformAccessory } from 'homebridge';
+
+import { AirfiService } from './AirfiService';
+import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress } from '../types';
-import { AirfiService } from './airfiService';
 
 /**
  * Defines the humidity sensor service to read relative humidity from the
@@ -15,13 +17,17 @@ export default class AirfiHumiditySensorService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    accessory: AirfiVentilationUnitAccessory,
+    accessory: PlatformAccessory,
+    platform: AirfiHomebridgePlatform,
     displayName: string,
-    updateFrequency = 0
+    updateFrequency = 30
   ) {
     super(
       accessory,
-      new accessory.Service.HumiditySensor(displayName),
+      platform,
+      platform.Service.HumiditySensor,
+      displayName,
+      '_humidity',
       updateFrequency
     );
 
@@ -30,6 +36,8 @@ export default class AirfiHumiditySensorService extends AirfiService {
     this.service
       .getCharacteristic(this.Characteristic.CurrentRelativeHumidity)
       .onGet(this.getRelativeHumidity.bind(this));
+
+    this.updateState();
 
     this.log.debug('Airfi HumiditySensor service initialized.');
   }
@@ -44,7 +52,7 @@ export default class AirfiHumiditySensorService extends AirfiService {
    */
   protected updateState() {
     // Read relative humidity value.
-    this.relativeHumidity = this.accessory.getRegisterValue(
+    this.relativeHumidity = this.platform.getRegisterValue(
       AirfiHumiditySensorService.READ_ADDRESS_RELATIVE_HUMIDITY
     );
     this.service
