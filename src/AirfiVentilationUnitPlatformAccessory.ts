@@ -1,4 +1,4 @@
-import { PlatformAccessory } from 'homebridge';
+import { PlatformAccessory, Service } from 'homebridge';
 
 import { AirfiHomebridgePlatform } from './AirfiHomebridgePlatform';
 import {
@@ -16,104 +16,137 @@ import {
  * Each accessory may expose multiple services of different service types.
  */
 export class AirfiVentilationUnitPlatformAccessory {
+  private readonly services: Service[] = [];
+
   constructor(
     private readonly platform: AirfiHomebridgePlatform,
     private readonly accessory: PlatformAccessory
   ) {
     // Set accessory information
-    new AirfiInformationService(
-      this.accessory,
-      this.platform,
-      'Ventilation unit'
+    this.services.push(
+      new AirfiInformationService(
+        this.accessory,
+        this.platform,
+        'Ventilation unit'
+      ).getService()
     );
 
     // Setup accessory services
-    new AirfiFanService(this.accessory, this.platform, 'Ventilation', 1);
-    new AirfiHumiditySensorService(
-      this.accessory,
-      this.platform,
-      'Extract air humidity'
+    this.services.push(
+      new AirfiFanService(
+        this.accessory,
+        this.platform,
+        'Ventilation',
+        1
+      ).getService()
     );
-    new AirfiTemperatureSensorService(
-      this.accessory,
-      this.platform,
-      'Outdoor air',
-      '_outdoorAirTemp',
-      '3x00004'
+    this.services.push(
+      new AirfiHumiditySensorService(
+        this.accessory,
+        this.platform,
+        'Extract air humidity'
+      ).getService()
     );
-    new AirfiTemperatureSensorService(
-      this.accessory,
-      this.platform,
-      'Extract air',
-      '_extractAirTemp',
-      '3x00006'
+    this.services.push(
+      new AirfiTemperatureSensorService(
+        this.accessory,
+        this.platform,
+        'Outdoor air',
+        '_outdoorAirTemp',
+        '3x00004'
+      ).getService()
     );
-    new AirfiTemperatureSensorService(
-      this.accessory,
-      this.platform,
-      'Exhaust air',
-      '_exhaustAirTemp',
-      '3x00007'
+    this.services.push(
+      new AirfiTemperatureSensorService(
+        this.accessory,
+        this.platform,
+        'Extract air',
+        '_extractAirTemp',
+        '3x00006'
+      ).getService()
     );
-    new AirfiTemperatureSensorService(
-      this.accessory,
-      this.platform,
-      'Supply air',
-      '_supplyAirTemp',
-      '3x00008'
+    this.services.push(
+      new AirfiTemperatureSensorService(
+        this.accessory,
+        this.platform,
+        'Exhaust air',
+        '_exhaustAirTemp',
+        '3x00007'
+      ).getService()
     );
-    new AirfiThermostatService(
-      this.accessory,
-      this.platform,
-      'Supply air temperature'
+    this.services.push(
+      new AirfiTemperatureSensorService(
+        this.accessory,
+        this.platform,
+        'Supply air',
+        '_supplyAirTemp',
+        '3x00008'
+      ).getService()
+    );
+    this.services.push(
+      new AirfiThermostatService(
+        this.accessory,
+        this.platform,
+        'Supply air temperature'
+      ).getService()
     );
 
     if (this.platform.config.exposeFireplaceSwitch) {
-      new AirfiSwitchService(
-        this.accessory,
-        this.platform,
-        'Fireplace mode',
-        '_fireplace',
-        '4x00058'
+      this.services.push(
+        new AirfiSwitchService(
+          this.accessory,
+          this.platform,
+          'Fireplace mode',
+          '_fireplace',
+          '4x00058'
+        ).getService()
       );
-    } else {
-      const fireplaceSwitch = this.accessory.getService('Fireplace mode');
-
-      if (fireplaceSwitch) {
-        this.accessory.removeService(fireplaceSwitch);
-      }
     }
 
     if (this.platform.config.exposePowerCoolingSwitch) {
-      new AirfiSwitchService(
-        this.accessory,
-        this.platform,
-        'Power cooling',
-        '_powerCooling',
-        '4x00051'
+      this.services.push(
+        new AirfiSwitchService(
+          this.accessory,
+          this.platform,
+          'Power cooling',
+          '_powerCooling',
+          '4x00051'
+        ).getService()
       );
-    } else {
-      const powerCoolingSwitch = this.accessory.getService('Power cooling');
-
-      if (powerCoolingSwitch) {
-        this.accessory.removeService(powerCoolingSwitch);
-      }
     }
 
     if (this.platform.config.exposeSaunaSwitch) {
-      new AirfiSwitchService(
-        this.accessory,
-        this.platform,
-        'Sauna mode',
-        '_sauna',
-        '4x00057'
+      this.services.push(
+        new AirfiSwitchService(
+          this.accessory,
+          this.platform,
+          'Sauna mode',
+          '_sauna',
+          '4x00057'
+        ).getService()
       );
-    } else {
-      const saunaSwitch = this.accessory.getService('Sauna mode');
-
-      if (saunaSwitch) {
-        this.accessory.removeService(saunaSwitch);
-      }
     }
+
+    const accessoryServices = this.accessory.services.map(
+      (service) => service.displayName
+    );
+    const enabledServices = this.services.map((service) => service.displayName);
+    const removableServices = accessoryServices.filter(
+      (service) => !enabledServices.includes(service)
+    );
+
+    this.platform.log.debug('Accessory services:', accessoryServices);
+    this.platform.log.debug('Enabled services:', enabledServices);
+    this.platform.log.debug('Removable services:', removableServices);
+
+    // Remove any non-existing services
+    removableServices.forEach((service) => {
+      this.platform.log.info('Removing non-existing service:', service);
+      this.accessory.removeService(
+        this.accessory.services.find(
+          (accessoryService) => accessoryService.displayName === service
+        ) as Service
+      );
+    });
   }
 }
