@@ -1,6 +1,6 @@
 {
   "pluginAlias": "Homebridge Airfi",
-  "pluginType": "accessory",
+  "pluginType": "platform",
   "singular": true,
   "schema": {
     "type": "object",

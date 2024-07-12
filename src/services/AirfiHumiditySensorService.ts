@@ -1,6 +1,8 @@
-import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
+import { PlatformAccessory } from 'homebridge';
+
+import { AirfiService } from './AirfiService';
+import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress } from '../types';
-import { AirfiService } from './airfiService';
 
 /**
  * Defines the humidity sensor service to read relative humidity from the
@@ -12,17 +14,27 @@ export default class AirfiHumiditySensorService extends AirfiService {
   private relativeHumidity = 0;
 
   /**
-   * {@inheritDoc AirfiService.constructor}
+   * Defines the Airfi platform service.
+   *
+   * @param accessory
+   *  Accessory object.
+   * @param platform
+   *   Platform object.
+   * @param displayName
+   *  Name shown on the service.
    */
   constructor(
-    accessory: AirfiVentilationUnitAccessory,
-    displayName: string,
-    updateFrequency = 0
+    accessory: PlatformAccessory,
+    platform: AirfiHomebridgePlatform,
+    displayName: string
   ) {
     super(
       accessory,
-      new accessory.Service.HumiditySensor(displayName),
-      updateFrequency
+      platform,
+      platform.Service.HumiditySensor,
+      displayName,
+      '_humidity',
+      30
     );
 
     this.service.setCharacteristic(this.Characteristic.Name, displayName);
@@ -30,6 +42,8 @@ export default class AirfiHumiditySensorService extends AirfiService {
     this.service
       .getCharacteristic(this.Characteristic.CurrentRelativeHumidity)
       .onGet(this.getRelativeHumidity.bind(this));
+
+    this.updateState();
 
     this.log.debug('Airfi HumiditySensor service initialized.');
   }
@@ -40,11 +54,11 @@ export default class AirfiHumiditySensorService extends AirfiService {
   }
 
   /**
-   * Run periodic updates to service state.
+   * {@inheritDoc AirfiService.updateState}
    */
   protected updateState() {
     // Read relative humidity value.
-    this.relativeHumidity = this.accessory.getRegisterValue(
+    this.relativeHumidity = this.platform.getRegisterValue(
       AirfiHumiditySensorService.READ_ADDRESS_RELATIVE_HUMIDITY
     );
     this.service

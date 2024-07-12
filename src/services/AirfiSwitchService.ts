@@ -1,8 +1,8 @@
-import { CharacteristicValue } from 'homebridge';
+import { CharacteristicValue, PlatformAccessory } from 'homebridge';
 
-import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
+import { AirfiService } from './AirfiService';
+import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, SwitchOnState } from '../types';
-import { AirfiService } from './airfiService';
 
 /**
  * Defines the switch service to control ON/OFF characteristics of the
@@ -18,6 +18,8 @@ export default class AirfiSwitchService extends AirfiService {
   /**
    * @param accessory
    *   Accessory object.
+   * @param platform
+   *   Platform object.
    * @param displayName
    *   Name shown on the switch.
    * @param subtype
@@ -26,14 +28,18 @@ export default class AirfiSwitchService extends AirfiService {
    *   Register write address to set switch state.
    */
   constructor(
-    accessory: AirfiVentilationUnitAccessory,
+    accessory: PlatformAccessory,
+    platform: AirfiHomebridgePlatform,
     displayName: string,
     subtype: string,
     writeAddress: RegisterAddress
   ) {
     super(
       accessory,
-      new accessory.Service.Switch(displayName, subtype),
+      platform,
+      platform.Service.Switch,
+      displayName,
+      subtype,
       1
     );
 
@@ -47,9 +53,9 @@ export default class AirfiSwitchService extends AirfiService {
       .onGet(this.getOn.bind(this))
       .onSet(this.setOn.bind(this));
 
-    this.log.debug(
-      `Airfi Switch (${this.subtype}) service initialized.`
-    );
+    this.updateState();
+
+    this.log.debug(`Airfi Switch (${this.subtype}) service initialized.`);
   }
 
   private async getOn() {
@@ -60,24 +66,22 @@ export default class AirfiSwitchService extends AirfiService {
   private async setOn(value: CharacteristicValue) {
     // Only change on state if it differs from current state,
     if (value !== this.on) {
-      this.accessory.queueInsert(
+      this.platform.queueInsert(
         this.writeAddress,
-        value === true ? 1 : 0 as SwitchOnState
+        value === true ? 1 : (0 as SwitchOnState)
       );
       this.log.info(`Switch (${this.subtype}) On ${this.on} → ${value}`);
     }
   }
 
   /**
-   * Run periodic updates to service state.
+   * {@inheritDoc AirfiService.updateState}
    */
   protected updateState() {
     // Read on state
     this.on =
-      this.accessory.getRegisterValue(this.writeAddress) as SwitchOnState === 1
-    ;
-    this.service
-      .getCharacteristic(this.Characteristic.On)
-      .updateValue(this.on);
+      (this.platform.getRegisterValue(this.writeAddress) as SwitchOnState) ===
+      1;
+    this.service.getCharacteristic(this.Characteristic.On).updateValue(this.on);
   }
 }
