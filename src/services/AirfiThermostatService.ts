@@ -46,7 +46,6 @@ export default class AirfiThermostatService extends AirfiService {
       '_thermostat',
       1
     );
-
     this.service
       .getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
       .onGet(this.getCurrentHeatingCoolingState.bind(this));
