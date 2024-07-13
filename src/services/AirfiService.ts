@@ -1,6 +1,7 @@
 import { Characteristic, Logger, PlatformAccessory, Service } from 'homebridge';
 
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
+import { ServiceOptions } from '../types';
 
 /**
  * Accessory service class for defining services communicating on modbus
@@ -22,41 +23,41 @@ export abstract class AirfiService {
    *   Platform object.
    * @param AccessoryService
    *   Service class to define an accessory service.
-   * @param displayName
-   *   Name shown on the service.
-   * @param subType
-   *   Subtype name to differentiate different services.
-   * @param updateFrequency
-   *   Number of seconds to run periodic updates on service charasterictics.
+   * @param serviceOptions
+   *   Various options defining the service characteristics.
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
     AccessoryService: typeof Service,
-    displayName: string,
-    subType: string = '',
-    updateFrequency = 0
+    serviceOptions: ServiceOptions
   ) {
     this.Characteristic = platform.Characteristic;
     this.log = platform.log;
     this.platform = platform;
     this.service =
-      accessory.getService(displayName) ||
-      accessory.addService(new AccessoryService(displayName, subType));
+      accessory.getService(serviceOptions.name) ||
+      accessory.addService(
+        new AccessoryService(serviceOptions.name, serviceOptions?.subtype || '')
+      );
 
-    if (!this.service.getCharacteristic(this.Characteristic.ConfiguredName)) {
-      this.service.addCharacteristic(this.Characteristic.ConfiguredName);
-    }
+    const displayName = serviceOptions?.configuredNameKey
+      ? platform.t(serviceOptions.configuredNameKey)
+      : serviceOptions.name;
 
+    this.service.addOptionalCharacteristic(this.Characteristic.ConfiguredName);
     this.service.setCharacteristic(this.Characteristic.Name, displayName);
     this.service.setCharacteristic(
       this.Characteristic.ConfiguredName,
       displayName
     );
 
-    if (updateFrequency > 0) {
+    if (serviceOptions?.updateFrequency && serviceOptions.updateFrequency > 0) {
       setTimeout(() => {
-        setInterval(() => this.updateState(), updateFrequency * 1000);
+        setInterval(
+          () => this.updateState(),
+          (serviceOptions.updateFrequency as number) * 1000
+        );
       }, 5000);
     }
   }

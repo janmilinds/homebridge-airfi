@@ -1,0 +1,19 @@
+{
+  "service": {
+    "fan": "Ilmanvaihto",
+    "humiditySensor": "Poistoilma",
+    "information": "Ilmanvaihtokone",
+    "switch": {
+      "boostedCooling": "Tehostettu viilennys",
+      "fireplaceFunction": "Takkatoiminto",
+      "saunaFunction": "Saunatoiminto"
+    },
+    "temperatureSensor": {
+      "exhaustAir": "Jäteilma",
+      "extractAir": "Poistoilma",
+      "outdoorAir": "Ulkoilma",
+      "supplyAir": "Tuloilma"
+    },
+    "thermostat": "Tuloilman lämpötila"
+  }
+}

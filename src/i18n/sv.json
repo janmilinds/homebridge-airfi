@@ -1,0 +1,19 @@
+{
+  "service": {
+    "fan": "Ventilation",
+    "humiditySensor": "Frånluft",
+    "information": "Ventilationsaggregat",
+    "switch": {
+      "boostedCooling": "Smart svalkning",
+      "fireplaceFunction": "Eldstadsfunktion",
+      "saunaFunction": "Bastufunktion"
+    },
+    "temperatureSensor": {
+      "exhaustAir": "Avluft",
+      "extractAir": "Frånluft",
+      "outdoorAir": "Uteluft",
+      "supplyAir": "Tilluft"
+    },
+    "thermostat": "Tilluftstemperatur"
+  }
+}

@@ -3,7 +3,7 @@ import { CharacteristicValue, PlatformAccessory } from 'homebridge';
 import { AirfiService } from './AirfiService';
 import AirfiTemperatureSensorService from './AirfiTemperatureSensorService';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
-import { RegisterAddress } from '../types';
+import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
  * Defines the thermostat service to set the target temperature for supply air.
@@ -26,26 +26,15 @@ export default class AirfiThermostatService extends AirfiService {
   private targetMinTemperature = 0;
 
   /**
-   * @param accessory
-   *   Accessory object.
-   * @param platform
-   *   Platform object.
-   * @param displayName
-   *   Name shown on the sensor.
+   * {@inheritDoc AirfiService.constructor}
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
-    displayName: string
+    serviceOptions: ServiceOptions
   ) {
-    super(
-      accessory,
-      platform,
-      platform.Service.Thermostat,
-      displayName,
-      '_thermostat',
-      1
-    );
+    super(accessory, platform, platform.Service.Thermostat, serviceOptions);
+
     this.service
       .getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
       .onGet(this.getCurrentHeatingCoolingState.bind(this));

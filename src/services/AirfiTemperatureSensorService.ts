@@ -2,7 +2,7 @@ import { PlatformAccessory } from 'homebridge';
 
 import { AirfiService } from './AirfiService';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
-import { RegisterAddress } from '../types';
+import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
  * Defines the temperature sensor service to read temperature from the
@@ -16,35 +16,22 @@ export default class AirfiTemperatureSensorService extends AirfiService {
   private readonly subtype: string;
 
   /**
-   * @param accessory
-   *   Accessory object.
-   * @param platform
-   *   Platform object.
-   * @param displayName
-   *   Name shown on the switch.
-   * @param subtype
-   *   Subtype name to differentiate different temperature sensors.
-   * @param readAddress
-   *   Register read address to fetch temperature readings.
+   * {@inheritDoc AirfiService.constructor}
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
-    displayName: string,
-    subtype: string,
-    readAddress: RegisterAddress
+    serviceOptions: ServiceOptions
   ) {
     super(
       accessory,
       platform,
       platform.Service.TemperatureSensor,
-      displayName,
-      subtype,
-      30
+      serviceOptions
     );
 
-    this.readAddress = readAddress;
-    this.subtype = subtype;
+    this.readAddress = serviceOptions.readAddress as RegisterAddress;
+    this.subtype = serviceOptions.subtype as string;
 
     this.service
       .getCharacteristic(this.Characteristic.CurrentTemperature)

@@ -42,20 +42,31 @@
         "type": "string",
         "required": true
       },
+      "language": {
+        "title": "Language",
+        "type": "string",
+        "default": "en",
+        "oneOf": [
+          { "title": "English", "enum": ["en"] },
+          { "title": "Finnish", "enum": ["fi"] },
+          { "title": "Swedish", "enum": ["sv"] }
+        ],
+        "description": "Choose the language to display the default accessory names."
+      },
+      "exposeBoostedCoolingSwitch": {
+        "title": "Expose Boosted cooling switch",
+        "type": "boolean",
+        "default": false,
+        "description": "When activated, the unit monitors temperatures and boosts air volumes as needed depending on conditions."
+      },
       "exposeFireplaceSwitch": {
-        "title": "Expose Fireplace mode switch",
+        "title": "Expose Fireplace funtion switch",
         "type": "boolean",
         "default": false,
         "description": "Creates an overpressure for 30 min."
       },
-      "exposePowerCoolingSwitch": {
-        "title": "Expose Power cooling switch",
-        "type": "boolean",
-        "default": false,
-        "description": "Allows increasing the ventilation power when outdoor temperature is lower than extract air."
-      },
       "exposeSaunaSwitch": {
-        "title": "Expose Sauna mode switch",
+        "title": "Expose Sauna funtion switch",
         "type": "boolean",
         "default": false,
         "description": "Prevents ventilation power increase when humidity level increases for 30 min."
@@ -65,7 +76,7 @@
   "layout": [
     {
         "type": "section",
-        "items": ["name", "host", "port", "model", "serialNumber"]
+        "items": ["name", "host", "port", "model", "serialNumber", "language"]
     },
     {
         "title": "Ventilation unit features",
@@ -75,7 +86,7 @@
         "items": [
           "exposeSaunaSwitch",
           "exposeFireplaceSwitch",
-          "exposePowerCoolingSwitch"
+          "exposeBoostedCoolingSwitch"
         ]
     }
   ]

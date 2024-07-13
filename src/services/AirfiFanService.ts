@@ -1,13 +1,14 @@
 import { CharacteristicValue, PlatformAccessory } from 'homebridge';
 
+import { AirfiService } from './AirfiService';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import {
   FanActiveState,
   FanRotationSpeedState,
   RegisterAddress,
+  ServiceOptions,
 } from '../types';
 import { sleep } from '../utils';
-import { AirfiService } from './AirfiService';
 
 /**
  * Defines the fan service for controlling speed and "At home"/"Away" states of
@@ -25,19 +26,14 @@ export default class AirfiFanService extends AirfiService {
   private rotationSpeed = 0;
 
   /**
-   * @param accessory
-   *   Accessory object.
-   * @param platform
-   *  Platform object.
-   * @param displayName
-   *   Name shown on the sensor.
+   * {@inheritDoc AirfiService.constructor}
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
-    displayName: string
+    serviceOptions: ServiceOptions
   ) {
-    super(accessory, platform, platform.Service.Fanv2, displayName, '_fan', 1);
+    super(accessory, platform, platform.Service.Fanv2, serviceOptions);
 
     this.service
       .getCharacteristic(this.Characteristic.Active)

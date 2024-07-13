@@ -11,6 +11,7 @@ import semverGte from 'semver/functions/gte';
 
 import { AirfiPlatformAccessory } from './AirfiPlatformAccessory';
 import { AirfiModbusController } from './controller';
+import i18n from './i18n';
 import { AirfiInformationService } from './services';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { RegisterAddress, WriteQueue } from './types';
@@ -76,6 +77,10 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
     }
 
     this.log.debug('Config:', this.config);
+
+    if (this.config.language) {
+      i18n.changeLanguage(this.config.language);
+    }
 
     this.airfiController = new AirfiModbusController(
       this.config.host,
@@ -365,6 +370,10 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
         this.airfiController.close();
         this.isNetworking = false;
       });
+  }
+
+  public t(key: string, options?: Record<string, unknown>): string {
+    return i18n.t(key, options) as string;
   }
 
   /**

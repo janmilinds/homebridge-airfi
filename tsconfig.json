@@ -16,10 +16,12 @@
     "strict": true,
     "esModuleInterop": true,
     "noImplicitAny": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
   },
   "include": [
-    "src/"
+    "src/",
+    "src/**/*.json"
   ],
   "exclude": [
     "**/*.spec.ts"

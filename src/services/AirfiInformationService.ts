@@ -2,7 +2,7 @@ import { CharacteristicValue, PlatformAccessory } from 'homebridge';
 
 import { AirfiService } from './AirfiService';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
-import { RegisterAddress } from '../types';
+import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
  * Provides the base information about platform.
@@ -21,25 +21,18 @@ export default class AirfiInformationService extends AirfiService {
   private readonly manufacturer = 'Airfi';
 
   /**
-   * @param accessory
-   *   Accessory object.
-   * @param platform
-   *   Platform object.
-   * @param displayName
-   *   Name shown on the service.
+   * {@inheritDoc AirfiService.constructor}
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
-    displayName: string
+    serviceOptions: ServiceOptions
   ) {
     super(
       accessory,
       platform,
       platform.Service.AccessoryInformation,
-      displayName,
-      '_info',
-      60
+      serviceOptions
     );
 
     this.service

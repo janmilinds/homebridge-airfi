@@ -24,8 +24,8 @@ Homebridge plugin for controlling Airfi ventilation unit through Modbus TCP.
     - Extract air
     - Exhaust air
 - Switches (configurable)
+  - Boosted cooling mode
   - Fireplace mode
-  - Power cooling mode
   - Sauna mode
 
 ## Upgrading from version 1.x
