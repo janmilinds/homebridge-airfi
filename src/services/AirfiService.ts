@@ -36,7 +36,7 @@ export abstract class AirfiService {
     this.log = platform.log;
     this.platform = platform;
     this.service =
-      accessory.getService(serviceOptions.name) ||
+      accessory.getService(serviceOptions?.service || serviceOptions.name) ||
       accessory.addService(
         new AccessoryService(serviceOptions.name, serviceOptions?.subtype || '')
       );
