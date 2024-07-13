@@ -23,6 +23,16 @@ Homebridge plugin for controlling Airfi ventilation unit through Modbus TCP.
     - Supply air
     - Extract air
     - Exhaust air
+- Switches (configurable)
+  - Fireplace mode
+  - Power cooling mode
+  - Sauna mode
+
+## Upgrading from version 1.x
+
+It's recommended to completely uninstall the previous version of Homebridge Airfi and perform a clean install of the version 2.x.
+
+Unpair the accessory/child bridge from Home app and uninstall Homebridge Airfi plugin. Previous configuration is not compatible with the new version since plugin has changed from accessory plugin to platform plugin. In case the new version is not detected correctly as a platform plugin it might be necessary to remove files associated with the previous plugin version in the `persist` and `accessories` directories in homebridge.
 
 ## Installation
 
@@ -36,9 +46,9 @@ npm install -g homebrigde-airfi
 
 This plugin supports ventilation units Model 60, 100, 130, 150, 250, 350 manufactured by Airfi.
 
-- Node.js >= 20.15.0
-- Homebridge >= 1.8.0
-- Modbus map v2.5 on the ventilation unit
+- Node.js >= 18.17.0
+- Homebridge >= 1.6.0
+- Modbus map v2.5 or greater on the ventilation unit
 
 ### Configuration
 
@@ -46,14 +56,14 @@ Plugin configuration is available through Homebridge UI. Example config.json:
 
 ```json
 {
-    "accessories": [
+    "platforms": [
         {
             "name": "Homebrige Airfi",
             "host": "127.0.0.1",
             "port": 502,
             "model": "Model 60",
             "serialNumber": "1234567",
-            "accessory": "Homebridge Airfi"
+            "platform": "Homebridge Airfi"
         }
     ]
 }
