@@ -1,7 +1,7 @@
 {
   "service": {
     "fan": "Ventilation",
-    "humiditySensor": "Extract air",
+    "humiditySensor": "Extract air humidity",
     "information": "Ventilation unit",
     "switch": {
       "boostedCooling": "Boosted cooling",
