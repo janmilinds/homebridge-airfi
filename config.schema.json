@@ -60,13 +60,13 @@
         "default": false,
         "description": "When activated, the unit monitors temperatures and boosts air volumes as needed depending on conditions."
       },
-      "exposeFireplaceSwitch": {
+      "exposeFireplaceFunctionSwitch": {
         "title": "Expose Fireplace funtion switch",
         "type": "boolean",
         "default": false,
         "description": "Creates an overpressure for 30 min."
       },
-      "exposeSaunaSwitch": {
+      "exposeSaunaFunctionSwitch": {
         "title": "Expose Sauna funtion switch",
         "type": "boolean",
         "default": false,
@@ -85,8 +85,8 @@
         "expandable": true,
         "expanded": false,
         "items": [
-          "exposeSaunaSwitch",
-          "exposeFireplaceSwitch",
+          "exposeSaunaFunctionSwitch",
+          "exposeFireplaceFunctionSwitch",
           "exposeBoostedCoolingSwitch"
         ]
     }

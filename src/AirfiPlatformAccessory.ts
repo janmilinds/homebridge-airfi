@@ -87,7 +87,7 @@ export class AirfiPlatformAccessory {
       }).getService()
     );
 
-    if (this.platform.config.exposeFireplaceSwitch) {
+    if (this.platform.config.exposeFireplaceFunctionSwitch) {
       this.services.push(
         new AirfiSwitchService(this.accessory, this.platform, {
           configuredNameKey: 'service.switch.fireplaceFunction',
@@ -111,7 +111,7 @@ export class AirfiPlatformAccessory {
       );
     }
 
-    if (this.platform.config.exposeSaunaSwitch) {
+    if (this.platform.config.exposeSaunaFunctionSwitch) {
       this.services.push(
         new AirfiSwitchService(this.accessory, this.platform, {
           configuredNameKey: 'service.switch.saunaFunction',
