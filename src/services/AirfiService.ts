@@ -45,8 +45,12 @@ export abstract class AirfiService {
       ? platform.t(serviceOptions.configuredNameKey)
       : serviceOptions.name;
 
-    this.service.addOptionalCharacteristic(this.Characteristic.ConfiguredName);
     this.service.setCharacteristic(this.Characteristic.Name, displayName);
+
+    // Add ConfiguredName characteristic if it's not already set.
+    if (!this.service.testCharacteristic(this.Characteristic.ConfiguredName)) {
+      this.service.addCharacteristic(this.Characteristic.ConfiguredName);
+    }
     this.service.setCharacteristic(
       this.Characteristic.ConfiguredName,
       displayName
