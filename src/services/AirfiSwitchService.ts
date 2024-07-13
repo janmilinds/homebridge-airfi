@@ -2,7 +2,7 @@ import { CharacteristicValue, PlatformAccessory } from 'homebridge';
 
 import { AirfiService } from './AirfiService';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
-import { RegisterAddress, SwitchOnState } from '../types';
+import { RegisterAddress, ServiceOptions, SwitchOnState } from '../types';
 
 /**
  * Defines the switch service to control ON/OFF characteristics of the
@@ -16,34 +16,17 @@ export default class AirfiSwitchService extends AirfiService {
   private readonly writeAddress: RegisterAddress;
 
   /**
-   * @param accessory
-   *   Accessory object.
-   * @param platform
-   *   Platform object.
-   * @param displayName
-   *   Name shown on the switch.
-   * @param subtype
-   *   Subtype name to differentiate different switches.
-   * @param writeAddress
-   *   Register write address to set switch state.
+   * {@inheritDoc AirfiService.constructor}
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
-    displayName: string,
-    subtype: string,
-    writeAddress: RegisterAddress
+    serviceOptions: ServiceOptions
   ) {
-    super(
-      accessory,
-      platform,
-      platform.Service.Switch,
-      displayName,
-      subtype,
-      1
-    );
-    this.subtype = subtype;
-    this.writeAddress = writeAddress;
+    super(accessory, platform, platform.Service.Switch, serviceOptions);
+
+    this.subtype = serviceOptions.subtype as string;
+    this.writeAddress = serviceOptions.writeAddress as RegisterAddress;
 
     this.service
       .getCharacteristic(this.Characteristic.On)

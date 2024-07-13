@@ -2,7 +2,7 @@ import { PlatformAccessory } from 'homebridge';
 
 import { AirfiService } from './AirfiService';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
-import { RegisterAddress } from '../types';
+import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
  * Defines the humidity sensor service to read relative humidity from the
@@ -14,30 +14,14 @@ export default class AirfiHumiditySensorService extends AirfiService {
   private relativeHumidity = 0;
 
   /**
-   * Defines the Airfi platform service.
-   *
-   * @param accessory
-   *  Accessory object.
-   * @param platform
-   *   Platform object.
-   * @param displayName
-   *  Name shown on the service.
+   * {@inheritDoc AirfiService.constructor}
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
-    displayName: string
+    serviceOptions: ServiceOptions
   ) {
-    super(
-      accessory,
-      platform,
-      platform.Service.HumiditySensor,
-      displayName,
-      '_humidity',
-      30
-    );
-
-    this.service.setCharacteristic(this.Characteristic.Name, displayName);
+    super(accessory, platform, platform.Service.HumiditySensor, serviceOptions);
 
     this.service
       .getCharacteristic(this.Characteristic.CurrentRelativeHumidity)
