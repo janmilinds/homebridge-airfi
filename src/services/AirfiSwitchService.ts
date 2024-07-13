@@ -42,11 +42,8 @@ export default class AirfiSwitchService extends AirfiService {
       subtype,
       1
     );
-
     this.subtype = subtype;
     this.writeAddress = writeAddress;
-
-    this.service.setCharacteristic(this.Characteristic.Name, displayName);
 
     this.service
       .getCharacteristic(this.Characteristic.On)

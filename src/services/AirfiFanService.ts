@@ -39,8 +39,6 @@ export default class AirfiFanService extends AirfiService {
   ) {
     super(accessory, platform, platform.Service.Fanv2, displayName, '_fan', 1);
 
-    this.service.setCharacteristic(this.Characteristic.Name, displayName);
-
     this.service
       .getCharacteristic(this.Characteristic.Active)
       .onGet(this.getActive.bind(this))
