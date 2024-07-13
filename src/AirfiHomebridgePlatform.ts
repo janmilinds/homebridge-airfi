@@ -202,29 +202,33 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   private validate() {
     let errors = 0;
 
-    if (!this.config.host) {
-      this.log.error('Missing required config parameter: host');
+    const setValidationError = (parameterName: string) => {
+      this.log.error(`Missing required config parameter: ${parameterName}`);
       errors++;
+    };
+
+    if (!this.config.host) {
+      setValidationError('host');
     }
 
     if (!this.config.port) {
-      this.log.error('Missing required config parameter: port');
-      errors++;
+      setValidationError('port');
     }
 
     if (!this.config.name) {
-      this.log.error('Missing required config parameter: name');
-      errors++;
+      setValidationError('name');
     }
 
     if (!this.config.model) {
-      this.log.error('Missing required config parameter: model');
-      errors++;
+      setValidationError('model');
     }
 
     if (!this.config.serialNumber) {
-      this.log.error('Missing required config parameter: serialNumber');
-      errors++;
+      setValidationError('serialNumber');
+    }
+
+    if (!this.config.language) {
+      setValidationError('language');
     }
 
     if (errors) {

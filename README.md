@@ -63,6 +63,7 @@ Plugin configuration is available through Homebridge UI. Example config.json:
             "port": 502,
             "model": "Model 60",
             "serialNumber": "1234567",
+            "language": "en",
             "platform": "Homebridge Airfi"
         }
     ]

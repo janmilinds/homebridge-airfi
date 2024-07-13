@@ -51,6 +51,7 @@
           { "title": "Finnish", "enum": ["fi"] },
           { "title": "Swedish", "enum": ["sv"] }
         ],
+        "required": true,
         "description": "Choose the language to display the default accessory names."
       },
       "exposeBoostedCoolingSwitch": {
