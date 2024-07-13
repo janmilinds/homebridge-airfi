@@ -44,6 +44,16 @@ export abstract class AirfiService {
       accessory.getService(displayName) ||
       accessory.addService(new AccessoryService(displayName, subType));
 
+    if (!this.service.getCharacteristic(this.Characteristic.ConfiguredName)) {
+      this.service.addCharacteristic(this.Characteristic.ConfiguredName);
+    }
+
+    this.service.setCharacteristic(this.Characteristic.Name, displayName);
+    this.service.setCharacteristic(
+      this.Characteristic.ConfiguredName,
+      displayName
+    );
+
     if (updateFrequency > 0) {
       setTimeout(() => {
         setInterval(() => this.updateState(), updateFrequency * 1000);

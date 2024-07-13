@@ -46,8 +46,6 @@ export default class AirfiTemperatureSensorService extends AirfiService {
     this.readAddress = readAddress;
     this.subtype = subtype;
 
-    this.service.setCharacteristic(this.Characteristic.Name, displayName);
-
     this.service
       .getCharacteristic(this.Characteristic.CurrentTemperature)
       .onGet(this.getCurrentTemperature.bind(this));

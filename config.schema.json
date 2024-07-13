@@ -9,7 +9,7 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Airfi ventilation unit"
+        "default": "Homebridge Airfi"
       },
       "host": {
         "title": "Host",
