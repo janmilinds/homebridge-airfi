@@ -15,11 +15,13 @@
         "title": "Host",
         "type": "string",
         "required": true,
-        "format": "hostname"
+        "format": "ipv4"
       },
       "port": {
         "title": "Port",
-        "type": "number",
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 65535,
         "default": 502,
         "required": true
       },
@@ -40,6 +42,7 @@
       "serialNumber": {
         "title": "Serial number",
         "type": "string",
+        "pattern": "^\\d{5,10}$",
         "required": true
       },
       "language": {
@@ -51,6 +54,7 @@
           { "title": "Finnish", "enum": ["fi"] },
           { "title": "Swedish", "enum": ["sv"] }
         ],
+        "required": true,
         "description": "Choose the language to display the default accessory names."
       },
       "exposeBoostedCoolingSwitch": {
@@ -59,13 +63,13 @@
         "default": false,
         "description": "When activated, the unit monitors temperatures and boosts air volumes as needed depending on conditions."
       },
-      "exposeFireplaceSwitch": {
+      "exposeFireplaceFunctionSwitch": {
         "title": "Expose Fireplace funtion switch",
         "type": "boolean",
         "default": false,
         "description": "Creates an overpressure for 30 min."
       },
-      "exposeSaunaSwitch": {
+      "exposeSaunaFunctionSwitch": {
         "title": "Expose Sauna funtion switch",
         "type": "boolean",
         "default": false,
@@ -76,7 +80,17 @@
   "layout": [
     {
         "type": "section",
-        "items": ["name", "host", "port", "model", "serialNumber", "language"]
+        "items": [
+          "name",
+          "host",
+          {
+            "key": "port",
+            "type": "number"
+          },
+          "model",
+          "serialNumber",
+          "language"
+        ]
     },
     {
         "title": "Ventilation unit features",
@@ -84,8 +98,8 @@
         "expandable": true,
         "expanded": false,
         "items": [
-          "exposeSaunaSwitch",
-          "exposeFireplaceSwitch",
+          "exposeSaunaFunctionSwitch",
+          "exposeFireplaceFunctionSwitch",
           "exposeBoostedCoolingSwitch"
         ]
     }

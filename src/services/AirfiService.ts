@@ -36,7 +36,7 @@ export abstract class AirfiService {
     this.log = platform.log;
     this.platform = platform;
     this.service =
-      accessory.getService(serviceOptions.name) ||
+      accessory.getService(serviceOptions?.service || serviceOptions.name) ||
       accessory.addService(
         new AccessoryService(serviceOptions.name, serviceOptions?.subtype || '')
       );
@@ -45,8 +45,12 @@ export abstract class AirfiService {
       ? platform.t(serviceOptions.configuredNameKey)
       : serviceOptions.name;
 
-    this.service.addOptionalCharacteristic(this.Characteristic.ConfiguredName);
     this.service.setCharacteristic(this.Characteristic.Name, displayName);
+
+    // Add ConfiguredName characteristic if it's not already set.
+    if (!this.service.testCharacteristic(this.Characteristic.ConfiguredName)) {
+      this.service.addCharacteristic(this.Characteristic.ConfiguredName);
+    }
     this.service.setCharacteristic(
       this.Characteristic.ConfiguredName,
       displayName

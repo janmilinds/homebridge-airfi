@@ -1,7 +1,7 @@
 {
   "service": {
     "fan": "Ilmanvaihto",
-    "humiditySensor": "Poistoilma",
+    "humiditySensor": "Poistoilman kosteus",
     "information": "Ilmanvaihtokone",
     "switch": {
       "boostedCooling": "Tehostettu viilennys",

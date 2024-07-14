@@ -21,14 +21,12 @@ export class AirfiPlatformAccessory {
     private readonly accessory: PlatformAccessory
   ) {
     // Set accessory information
-    this.services.push(
-      new AirfiInformationService(this.accessory, this.platform, {
-        configuredNameKey: 'service.information',
-        name: 'VentilationUnit',
-        subtype: '_info',
-        updateFrequency: 60,
-      }).getService()
-    );
+    new AirfiInformationService(this.accessory, this.platform, {
+      configuredNameKey: 'service.information',
+      name: 'VentilationUnit',
+      service: this.platform.Service.AccessoryInformation,
+      updateFrequency: 60,
+    });
 
     // Setup accessory services
     this.services.push(
@@ -89,7 +87,7 @@ export class AirfiPlatformAccessory {
       }).getService()
     );
 
-    if (this.platform.config.exposeFireplaceSwitch) {
+    if (this.platform.config.exposeFireplaceFunctionSwitch) {
       this.services.push(
         new AirfiSwitchService(this.accessory, this.platform, {
           configuredNameKey: 'service.switch.fireplaceFunction',
@@ -113,7 +111,7 @@ export class AirfiPlatformAccessory {
       );
     }
 
-    if (this.platform.config.exposeSaunaSwitch) {
+    if (this.platform.config.exposeSaunaFunctionSwitch) {
       this.services.push(
         new AirfiSwitchService(this.accessory, this.platform, {
           configuredNameKey: 'service.switch.saunaFunction',
@@ -125,9 +123,9 @@ export class AirfiPlatformAccessory {
       );
     }
 
-    const accessoryServices = this.accessory.services.map(
-      (service) => service.displayName
-    );
+    const accessoryServices = this.accessory.services
+      .filter((service) => service.displayName !== '')
+      .map((service) => service.displayName);
     const enabledServices = this.services.map((service) => service.displayName);
     const removableServices = accessoryServices.filter(
       (service) => !enabledServices.includes(service)

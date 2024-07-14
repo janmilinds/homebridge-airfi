@@ -1,3 +1,5 @@
+import { Service, WithUUID } from 'homebridge';
+
 export type FanActiveState = 0 | 1;
 
 export type FanRotationSpeedState = 0 | 1 | 2 | 3 | 4 | 5;
@@ -6,6 +8,7 @@ export type ServiceOptions = {
   configuredNameKey?: string;
   name: string;
   readAddress?: RegisterAddress;
+  service?: WithUUID<typeof Service>;
   subtype?: string;
   updateFrequency?: number;
   writeAddress?: RegisterAddress;

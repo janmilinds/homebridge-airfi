@@ -1,7 +1,7 @@
 {
   "service": {
     "fan": "Ventilation",
-    "humiditySensor": "Frånluft",
+    "humiditySensor": "Frånluft fuktighet",
     "information": "Ventilationsaggregat",
     "switch": {
       "boostedCooling": "Smart svalkning",

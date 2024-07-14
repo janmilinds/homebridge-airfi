@@ -32,7 +32,7 @@ Homebridge plugin for controlling Airfi ventilation unit through Modbus TCP.
 
 It's recommended to completely uninstall the previous version of Homebridge Airfi and perform a clean install of the version 2.x.
 
-Unpair the accessory/child bridge from Home app and uninstall Homebridge Airfi plugin. Previous configuration is not compatible with the new version since plugin has changed from accessory plugin to platform plugin. In case the new version is not detected correctly as a platform plugin it might be necessary to remove files associated with the previous plugin version in the `persist` and `accessories` directories in homebridge.
+Unpair the accessory/child bridge from Home app and uninstall Homebridge Airfi plugin. Previous configuration is not compatible with the new version since plugin has changed from accessory plugin to platform plugin. In case the new version is not detected correctly as a platform plugin (Showing "accessory" key instead of "platform" key JSON config editor) it might be necessary to remove `accessories` directory in homebridge to clear any cached accessories from previous version.
 
 ## Installation
 
@@ -63,6 +63,7 @@ Plugin configuration is available through Homebridge UI. Example config.json:
             "port": 502,
             "model": "Model 60",
             "serialNumber": "1234567",
+            "language": "en",
             "platform": "Homebridge Airfi"
         }
     ]
