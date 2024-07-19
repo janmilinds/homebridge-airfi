@@ -7,7 +7,7 @@ import { ServiceOptions } from '../types';
  * Accessory service class for defining services communicating on modbus
  * interface.
  */
-export abstract class AirfiService {
+export default abstract class AirfiService {
   protected readonly Characteristic: typeof Characteristic;
 
   protected readonly log: Logger;

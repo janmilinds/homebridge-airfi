@@ -1,6 +1,6 @@
 import { CharacteristicValue, PlatformAccessory } from 'homebridge';
 
-import { AirfiService } from './AirfiService';
+import AirfiService from './AirfiService';
 import AirfiTemperatureSensorService from './AirfiTemperatureSensorService';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';

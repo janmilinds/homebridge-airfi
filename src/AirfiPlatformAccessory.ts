@@ -14,12 +14,19 @@ import {
  * Platform accessory for the Airfi ventilation unit.
  */
 export class AirfiPlatformAccessory {
-  private readonly services: Service[] = [];
+  private readonly services: { [key: string]: Service } = {};
 
   constructor(
     private readonly platform: AirfiHomebridgePlatform,
     private readonly accessory: PlatformAccessory
   ) {
+    // Clear accessory services prior to any changes.
+    this.accessory.services
+      .filter((service) => service.constructor.name !== 'AccessoryInformation')
+      .forEach((service) => {
+        this.accessory.removeService(service);
+      });
+
     // Set accessory information
     new AirfiInformationService(this.accessory, this.platform, {
       configuredNameKey: 'service.information',
@@ -29,120 +36,139 @@ export class AirfiPlatformAccessory {
     });
 
     // Setup accessory services
-    this.services.push(
-      new AirfiFanService(this.accessory, this.platform, {
+    this.services.ventilation = new AirfiFanService(
+      this.accessory,
+      this.platform,
+      {
         configuredNameKey: 'service.fan',
         name: 'Ventilation',
         updateFrequency: 1,
-      }).getService()
-    );
-    this.services.push(
-      new AirfiHumiditySensorService(this.accessory, this.platform, {
+      }
+    ).getService();
+
+    this.services.ventilation.setPrimaryService(true);
+
+    this.services.thermostat = new AirfiThermostatService(
+      this.accessory,
+      this.platform,
+      {
+        configuredNameKey: 'service.thermostat',
+        name: 'SupplyAirTemperature',
+        updateFrequency: 1,
+      }
+    ).getService();
+    this.services.ventilation.addLinkedService(this.services.thermostat);
+
+    this.services.humiditySensor = new AirfiHumiditySensorService(
+      this.accessory,
+      this.platform,
+      {
         configuredNameKey: 'service.humiditySensor',
         name: 'ExtractAirHumidity',
         updateFrequency: 60,
-      }).getService()
-    );
-    this.services.push(
-      new AirfiTemperatureSensorService(this.accessory, this.platform, {
+      }
+    ).getService();
+    this.services.ventilation.addLinkedService(this.services.humiditySensor);
+
+    this.services.outdoorAirTemp = new AirfiTemperatureSensorService(
+      this.accessory,
+      this.platform,
+      {
         configuredNameKey: 'service.temperatureSensor.outdoorAir',
         name: 'OutdoorAir',
         readAddress: '3x00004',
         subtype: '_outdoorAirTemp',
         updateFrequency: 60,
-      }).getService()
-    );
-    this.services.push(
-      new AirfiTemperatureSensorService(this.accessory, this.platform, {
+      }
+    ).getService();
+    this.services.ventilation.addLinkedService(this.services.outdoorAirTemp);
+
+    this.services.extractAirTemp = new AirfiTemperatureSensorService(
+      this.accessory,
+      this.platform,
+      {
         configuredNameKey: 'service.temperatureSensor.extractAir',
         name: 'ExtractAir',
         readAddress: '3x00006',
         subtype: '_extractAirTemp',
         updateFrequency: 60,
-      }).getService()
-    );
-    this.services.push(
-      new AirfiTemperatureSensorService(this.accessory, this.platform, {
+      }
+    ).getService();
+    this.services.ventilation.addLinkedService(this.services.extractAirTemp);
+
+    this.services.exhaustAirTemp = new AirfiTemperatureSensorService(
+      this.accessory,
+      this.platform,
+      {
         configuredNameKey: 'service.temperatureSensor.exhaustAir',
         name: 'ExhaustAir',
         readAddress: '3x00007',
         subtype: '_exhaustAirTemp',
         updateFrequency: 60,
-      }).getService()
-    );
-    this.services.push(
-      new AirfiTemperatureSensorService(this.accessory, this.platform, {
+      }
+    ).getService();
+    this.services.ventilation.addLinkedService(this.services.exhaustAirTemp);
+
+    this.services.supplyAirTemp = new AirfiTemperatureSensorService(
+      this.accessory,
+      this.platform,
+      {
         configuredNameKey: 'service.temperatureSensor.supplyAir',
         name: 'SupplyAir',
         readAddress: '3x00008',
         subtype: '_supplyAirTemp',
         updateFrequency: 60,
-      }).getService()
-    );
-    this.services.push(
-      new AirfiThermostatService(this.accessory, this.platform, {
-        configuredNameKey: 'service.thermostat',
-        name: 'SupplyAirTemperature',
-        updateFrequency: 1,
-      }).getService()
-    );
+      }
+    ).getService();
+    this.services.ventilation.addLinkedService(this.services.supplyAirTemp);
 
     if (this.platform.config.exposeFireplaceFunctionSwitch) {
-      this.services.push(
-        new AirfiSwitchService(this.accessory, this.platform, {
+      this.services.fireplaceFunction = new AirfiSwitchService(
+        this.accessory,
+        this.platform,
+        {
           configuredNameKey: 'service.switch.fireplaceFunction',
           name: 'FireplaceFunction',
           subtype: '_fireplace',
           updateFrequency: 1,
           writeAddress: '4x00058',
-        }).getService()
+        }
+      ).getService();
+      this.services.ventilation.addLinkedService(
+        this.services.fireplaceFunction
       );
     }
 
     if (this.platform.config.exposeBoostedCoolingSwitch) {
-      this.services.push(
-        new AirfiSwitchService(this.accessory, this.platform, {
+      this.services.boostedCooling = new AirfiSwitchService(
+        this.accessory,
+        this.platform,
+        {
           configuredNameKey: 'service.switch.boostedCooling',
           name: 'BoostedCooling',
           subtype: '_boostedCooling',
           updateFrequency: 1,
           writeAddress: '4x00051',
-        }).getService()
-      );
+        }
+      ).getService();
+      this.services.ventilation.addLinkedService(this.services.boostedCooling);
     }
 
     if (this.platform.config.exposeSaunaFunctionSwitch) {
-      this.services.push(
-        new AirfiSwitchService(this.accessory, this.platform, {
+      this.services.saunaFunction = new AirfiSwitchService(
+        this.accessory,
+        this.platform,
+        {
           configuredNameKey: 'service.switch.saunaFunction',
           name: 'SaunaFunction',
           subtype: '_sauna',
           updateFrequency: 1,
           writeAddress: '4x00057',
-        }).getService()
-      );
+        }
+      ).getService();
+      this.services.ventilation.addLinkedService(this.services.saunaFunction);
     }
 
-    const accessoryServices = this.accessory.services
-      .filter((service) => service.displayName !== '')
-      .map((service) => service.displayName);
-    const enabledServices = this.services.map((service) => service.displayName);
-    const removableServices = accessoryServices.filter(
-      (service) => !enabledServices.includes(service)
-    );
-
-    this.platform.log.debug('Accessory services:', accessoryServices);
-    this.platform.log.debug('Enabled services:', enabledServices);
-    this.platform.log.debug('Removable services:', removableServices);
-
-    // Remove any non-existing services
-    removableServices.forEach((service) => {
-      this.platform.log.info('Removing non-existing service:', service);
-      this.accessory.removeService(
-        this.accessory.services.find(
-          (accessoryService) => accessoryService.displayName === service
-        ) as Service
-      );
-    });
+    this.platform.api.updatePlatformAccessories([this.accessory]);
   }
 }
