@@ -9,6 +9,7 @@ import {
   AirfiTemperatureSensorService,
   AirfiThermostatService,
 } from './services';
+import { AirfiDeviceContext } from './types';
 
 /**
  * Platform accessory for the Airfi ventilation unit.
@@ -18,7 +19,7 @@ export class AirfiPlatformAccessory {
 
   constructor(
     private readonly platform: AirfiHomebridgePlatform,
-    private readonly accessory: PlatformAccessory
+    private readonly accessory: PlatformAccessory<AirfiDeviceContext>
   ) {
     // Clear accessory services prior to any changes.
     this.accessory.services

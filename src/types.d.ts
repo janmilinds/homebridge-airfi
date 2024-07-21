@@ -1,3 +1,8 @@
+export type AirfiDeviceContext = {
+  displayName: string;
+  uniqueId: string;
+};
+
 export type FanActiveState = 0 | 1;
 
 export type FanRotationSpeedState = 0 | 1 | 2 | 3 | 4 | 5;
