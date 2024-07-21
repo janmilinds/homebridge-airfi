@@ -141,7 +141,10 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
    * {@inheritDoc DynamicPlatformPlugin.configureAccessory}
    */
   configureAccessory(accessory: PlatformAccessory<AirfiDeviceContext>) {
-    this.log.info('Loading accessory from cache:', accessory.displayName);
+    this.log.info(
+      'Loading accessory from cache:',
+      accessory.context.displayName
+    );
 
     // add the restored accessory to the accessories cache, so we can track if
     // it has already been registered
@@ -154,7 +157,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   discoverDevices() {
     const devices: AirfiDeviceContext[] = [
       {
-        displayName: 'Ventilation unit',
+        displayName: `Airfi #${this.serialNumber}`,
         uniqueId: this.serialNumber,
       },
     ];
@@ -164,6 +167,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
 
       this.log.debug('Discovered device:', {
         name: device.displayName,
+        uniqueId: device.uniqueId,
         uuid,
       });
 
@@ -174,7 +178,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
       if (existingAccessory) {
         this.log.info(
           'Restoring existing accessory from cache:',
-          existingAccessory.displayName
+          device.displayName
         );
 
         new AirfiPlatformAccessory(this, existingAccessory);
@@ -195,15 +199,24 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
         ]);
       }
 
-      // Remove any obsolete cached accessories.
-      this.api.unregisterPlatformAccessories(
-        PLUGIN_NAME,
-        PLATFORM_NAME,
-        this.accessories.filter(
-          ({ context: { uniqueId } }) =>
-            !devices.map(({ uniqueId }) => uniqueId).includes(uniqueId)
-        )
+      const obsoleteAccessories = this.accessories.filter(
+        ({ context: { uniqueId } }) =>
+          !devices.map(({ uniqueId }) => uniqueId).includes(uniqueId)
       );
+
+      if (obsoleteAccessories.length > 0) {
+        this.log.debug(
+          'Unregistering obsolete accessories:',
+          obsoleteAccessories.map(({ context: { displayName } }) => displayName)
+        );
+
+        // Remove any obsolete cached accessories.
+        this.api.unregisterPlatformAccessories(
+          PLUGIN_NAME,
+          PLATFORM_NAME,
+          obsoleteAccessories
+        );
+      }
     }
   }
 
