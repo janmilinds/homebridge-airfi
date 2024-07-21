@@ -23,12 +23,10 @@ export default class AirfiTemperatureSensorService extends AirfiService {
     platform: AirfiHomebridgePlatform,
     serviceOptions: ServiceOptions
   ) {
-    super(
-      accessory,
-      platform,
-      platform.Service.TemperatureSensor,
-      serviceOptions
-    );
+    super(accessory, platform, {
+      ...serviceOptions,
+      service: platform.Service.TemperatureSensor,
+    });
 
     this.readAddress = serviceOptions.readAddress as RegisterAddress;
     this.subtype = serviceOptions.subtype as string;

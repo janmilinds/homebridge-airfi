@@ -30,8 +30,7 @@ export class AirfiPlatformAccessory {
     // Set accessory information
     new AirfiInformationService(this.accessory, this.platform, {
       configuredNameKey: 'service.information',
-      name: 'VentilationUnit',
-      service: this.platform.Service.AccessoryInformation,
+      name: '',
       updateFrequency: 60,
     });
 
