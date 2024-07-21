@@ -1,4 +1,10 @@
-import { Characteristic, Logger, PlatformAccessory, Service } from 'homebridge';
+import {
+  Characteristic,
+  Logger,
+  PlatformAccessory,
+  Service,
+  WithUUID,
+} from 'homebridge';
 
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { ServiceOptions } from '../types';
@@ -21,24 +27,24 @@ export default abstract class AirfiService {
    *   Accessory object.
    * @param platform
    *   Platform object.
-   * @param AccessoryService
-   *   Service class to define an accessory service.
    * @param serviceOptions
    *   Various options defining the service characteristics.
    */
   constructor(
     accessory: PlatformAccessory,
     platform: AirfiHomebridgePlatform,
-    AccessoryService: typeof Service,
-    serviceOptions: ServiceOptions
+    serviceOptions: ServiceOptions<{ service: WithUUID<typeof Service> }>
   ) {
     this.Characteristic = platform.Characteristic;
     this.log = platform.log;
     this.platform = platform;
     this.service =
-      accessory.getService(serviceOptions?.service || serviceOptions.name) ||
+      accessory.getService(serviceOptions.name || serviceOptions.service) ||
       accessory.addService(
-        new AccessoryService(serviceOptions.name, serviceOptions?.subtype || '')
+        new serviceOptions.service(
+          serviceOptions.name,
+          serviceOptions?.subtype || ''
+        )
       );
 
     const displayName = serviceOptions?.configuredNameKey

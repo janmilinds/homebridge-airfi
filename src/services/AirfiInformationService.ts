@@ -28,12 +28,10 @@ export default class AirfiInformationService extends AirfiService {
     platform: AirfiHomebridgePlatform,
     serviceOptions: ServiceOptions
   ) {
-    super(
-      accessory,
-      platform,
-      platform.Service.AccessoryInformation,
-      serviceOptions
-    );
+    super(accessory, platform, {
+      ...serviceOptions,
+      service: platform.Service.AccessoryInformation,
+    });
 
     this.service
       .getCharacteristic(this.Characteristic.Identify)

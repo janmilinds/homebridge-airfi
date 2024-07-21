@@ -21,7 +21,10 @@ export default class AirfiHumiditySensorService extends AirfiService {
     platform: AirfiHomebridgePlatform,
     serviceOptions: ServiceOptions
   ) {
-    super(accessory, platform, platform.Service.HumiditySensor, serviceOptions);
+    super(accessory, platform, {
+      ...serviceOptions,
+      service: platform.Service.HumiditySensor,
+    });
 
     this.service
       .getCharacteristic(this.Characteristic.CurrentRelativeHumidity)

@@ -14,7 +14,7 @@ import { AirfiModbusController } from './controller';
 import i18n from './i18n';
 import { AirfiInformationService } from './services';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { RegisterAddress, WriteQueue } from './types';
+import { AirfiDeviceContext, RegisterAddress, WriteQueue } from './types';
 import { sleep } from './utils';
 
 /**
@@ -37,7 +37,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
 
   private readonly airfiController!: AirfiModbusController;
 
-  public readonly accessories: PlatformAccessory[] = [];
+  public readonly accessories: PlatformAccessory<AirfiDeviceContext>[] = [];
 
   private holdingRegister: number[] = [];
 
@@ -140,8 +140,11 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   /**
    * {@inheritDoc DynamicPlatformPlugin.configureAccessory}
    */
-  configureAccessory(accessory: PlatformAccessory) {
-    this.log.info('Loading accessory from cache:', accessory.displayName);
+  configureAccessory(accessory: PlatformAccessory<AirfiDeviceContext>) {
+    this.log.info(
+      'Loading accessory from cache:',
+      accessory.context.displayName
+    );
 
     // add the restored accessory to the accessories cache, so we can track if
     // it has already been registered
@@ -152,17 +155,21 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
    * Discover devices and register them as accessories.
    */
   discoverDevices() {
-    const devices = [
+    const devices: AirfiDeviceContext[] = [
       {
+        displayName: `Airfi #${this.serialNumber}`,
         uniqueId: this.serialNumber,
-        displayName: 'Ventilation unit',
       },
     ];
 
     for (const device of devices) {
       const uuid = this.api.hap.uuid.generate(device.uniqueId);
 
-      this.log.debug('Discovered device:', device.displayName);
+      this.log.debug('Discovered device:', {
+        name: device.displayName,
+        uniqueId: device.uniqueId,
+        uuid,
+      });
 
       const existingAccessory = this.accessories.find(
         (accessory) => accessory.UUID === uuid
@@ -171,25 +178,44 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
       if (existingAccessory) {
         this.log.info(
           'Restoring existing accessory from cache:',
-          existingAccessory.displayName
+          device.displayName
         );
 
         new AirfiPlatformAccessory(this, existingAccessory);
       } else {
         this.log.info('Adding new accessory:', device.displayName);
 
-        const accessory = new this.api.platformAccessory(
+        const accessory = new this.api.platformAccessory<AirfiDeviceContext>(
           device.displayName,
           uuid
         );
 
-        accessory.context.device = device;
+        accessory.context = device;
 
         new AirfiPlatformAccessory(this, accessory);
 
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
           accessory,
         ]);
+      }
+
+      const obsoleteAccessories = this.accessories.filter(
+        ({ context: { uniqueId } }) =>
+          !devices.map(({ uniqueId }) => uniqueId).includes(uniqueId)
+      );
+
+      if (obsoleteAccessories.length > 0) {
+        this.log.debug(
+          'Unregistering obsolete accessories:',
+          obsoleteAccessories.map(({ context: { displayName } }) => displayName)
+        );
+
+        // Remove any obsolete cached accessories.
+        this.api.unregisterPlatformAccessories(
+          PLUGIN_NAME,
+          PLATFORM_NAME,
+          obsoleteAccessories
+        );
       }
     }
   }

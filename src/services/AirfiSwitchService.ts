@@ -23,7 +23,10 @@ export default class AirfiSwitchService extends AirfiService {
     platform: AirfiHomebridgePlatform,
     serviceOptions: ServiceOptions
   ) {
-    super(accessory, platform, platform.Service.Switch, serviceOptions);
+    super(accessory, platform, {
+      ...serviceOptions,
+      service: platform.Service.Switch,
+    });
 
     this.subtype = serviceOptions.subtype as string;
     this.writeAddress = serviceOptions.writeAddress as RegisterAddress;

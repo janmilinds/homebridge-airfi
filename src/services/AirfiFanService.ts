@@ -33,7 +33,10 @@ export default class AirfiFanService extends AirfiService {
     platform: AirfiHomebridgePlatform,
     serviceOptions: ServiceOptions
   ) {
-    super(accessory, platform, platform.Service.Fanv2, serviceOptions);
+    super(accessory, platform, {
+      ...serviceOptions,
+      service: platform.Service.Fanv2,
+    });
 
     this.service
       .getCharacteristic(this.Characteristic.Active)
