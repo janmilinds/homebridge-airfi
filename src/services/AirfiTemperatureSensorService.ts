@@ -6,7 +6,7 @@ import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
  * Defines the temperature sensor service to read temperature from the
- * ventilation unit sensor.
+ * air handling unit's sensors.
  */
 export default class AirfiTemperatureSensorService extends AirfiService {
   private currentTemperature = 0;
@@ -51,10 +51,10 @@ export default class AirfiTemperatureSensorService extends AirfiService {
   }
 
   /**
-   * Converts temperature value from ventilation unit to celcius.
+   * Converts temperature value from air handling unit to celcius.
    *
    * @param value
-   *   Temperature value from ventilation unit.
+   *   Temperature value from air handling unit.
    *
    * @returns Temperature value in °C
    */

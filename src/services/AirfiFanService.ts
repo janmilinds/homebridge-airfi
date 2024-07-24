@@ -12,7 +12,7 @@ import { sleep } from '../utils';
 
 /**
  * Defines the fan service for controlling speed and "At home"/"Away" states of
- * the Airfi ventilation unit.
+ * the Airfi air handling unit.
  */
 export default class AirfiFanService extends AirfiService {
   static readonly ROTATION_SPEED_STEP = 20;
@@ -44,7 +44,7 @@ export default class AirfiFanService extends AirfiService {
       .onSet(this.setActive.bind(this));
 
     // Set RotationSpeed charasteristic to correspond with speed supported by
-    // the Airfi ventilation unit.
+    // the Airfi air handling unit.
     this.service
       .getCharacteristic(this.Characteristic.RotationSpeed)
       .setProps({ minStep: AirfiFanService.ROTATION_SPEED_STEP });
@@ -87,7 +87,7 @@ export default class AirfiFanService extends AirfiService {
   }
 
   private async setRotationSpeed(value: CharacteristicValue) {
-    // Airfi ventilation unit supports only speeds 1–5, so only change speed on
+    // Airfi air handling unit supports only speeds 1–5, so only change speed on
     // that range. Speed 0 anyway sets the fan inactive.
     if ((value as number) > 0 && value !== this.rotationSpeed) {
       // Delay speed set if fan is not active.
@@ -128,7 +128,7 @@ export default class AirfiFanService extends AirfiService {
    * @param direction
    *   Conversion direction read: speed → percentage, write: percentage → speed.
    *
-   * @returns Rotation speed as percentage or ventilation unit speed (1–5).
+   * @returns Rotation speed as percentage or air handling speed (1–5).
    */
   private static convertRotationSpeed(
     value: number | FanRotationSpeedState,

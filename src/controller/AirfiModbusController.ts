@@ -5,7 +5,7 @@ import { RegisterType } from '../types';
 
 /**
  * Modbus controller handling reading and writing registers in the Airfi
- * ventilation unit.
+ * air handling unit.
  */
 export default class AirfiModbusController {
   private static readonly MODBUS_READ_LIMIT = 30;

@@ -18,7 +18,7 @@ import { AirfiDeviceContext, RegisterAddress, WriteQueue } from './types';
 import { sleep } from './utils';
 
 /**
- * Homebridge platform for the Airfi ventilation unit.
+ * Homebridge platform for the Airfi air handling unit.
  */
 export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   private static readonly HOLDING_REGISTER_LENGTH = 58;
@@ -419,7 +419,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * Write values from queue to the ventilation unit.
+   * Write values from queue to the air handling unit.
    */
   private async writeQueue(): Promise<void> {
     this.log.debug('Writing values to modbus');

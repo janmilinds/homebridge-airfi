@@ -6,7 +6,7 @@ import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
  * Defines the humidity sensor service to read relative humidity from the
- * ventilation unit sensor.
+ * air handling unit's sensor.
  */
 export default class AirfiHumiditySensorService extends AirfiService {
   static readonly READ_ADDRESS_RELATIVE_HUMIDITY: RegisterAddress = '3x00023';
