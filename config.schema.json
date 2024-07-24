@@ -1,6 +1,6 @@
 {
   "pluginAlias": "Homebridge Airfi",
-  "pluginType": "accessory",
+  "pluginType": "platform",
   "singular": true,
   "schema": {
     "type": "object",
@@ -9,17 +9,19 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Airfi ventilation unit"
+        "default": "Homebridge Airfi"
       },
       "host": {
         "title": "Host",
         "type": "string",
         "required": true,
-        "format": "hostname"
+        "format": "ipv4"
       },
       "port": {
         "title": "Port",
-        "type": "number",
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 65535,
         "default": 502,
         "required": true
       },
@@ -40,22 +42,35 @@
       "serialNumber": {
         "title": "Serial number",
         "type": "string",
+        "pattern": "^\\d{5,10}$",
         "required": true
       },
-      "exposeFireplaceSwitch": {
-        "title": "Expose Fireplace mode switch",
+      "language": {
+        "title": "Language",
+        "type": "string",
+        "default": "en",
+        "oneOf": [
+          { "title": "English", "enum": ["en"] },
+          { "title": "Finnish", "enum": ["fi"] },
+          { "title": "Swedish", "enum": ["sv"] }
+        ],
+        "required": true,
+        "description": "Choose the language to display the default accessory names."
+      },
+      "exposeBoostedCoolingSwitch": {
+        "title": "Expose Boosted cooling switch",
+        "type": "boolean",
+        "default": false,
+        "description": "When activated, the unit monitors temperatures and boosts air volumes as needed depending on conditions."
+      },
+      "exposeFireplaceFunctionSwitch": {
+        "title": "Expose Fireplace funtion switch",
         "type": "boolean",
         "default": false,
         "description": "Creates an overpressure for 30 min."
       },
-      "exposePowerCoolingSwitch": {
-        "title": "Expose Power cooling switch",
-        "type": "boolean",
-        "default": false,
-        "description": "Allows increasing the ventilation power when outdoor temperature is lower than extract air."
-      },
-      "exposeSaunaSwitch": {
-        "title": "Expose Sauna mode switch",
+      "exposeSaunaFunctionSwitch": {
+        "title": "Expose Sauna funtion switch",
         "type": "boolean",
         "default": false,
         "description": "Prevents ventilation power increase when humidity level increases for 30 min."
@@ -65,7 +80,17 @@
   "layout": [
     {
         "type": "section",
-        "items": ["name", "host", "port", "model", "serialNumber"]
+        "items": [
+          "name",
+          "host",
+          {
+            "key": "port",
+            "type": "number"
+          },
+          "model",
+          "serialNumber",
+          "language"
+        ]
     },
     {
         "title": "Ventilation unit features",
@@ -73,9 +98,9 @@
         "expandable": true,
         "expanded": false,
         "items": [
-          "exposeSaunaSwitch",
-          "exposeFireplaceSwitch",
-          "exposePowerCoolingSwitch"
+          "exposeSaunaFunctionSwitch",
+          "exposeFireplaceFunctionSwitch",
+          "exposeBoostedCoolingSwitch"
         ]
     }
   ]

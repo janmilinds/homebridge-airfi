@@ -1,3 +1,3 @@
-import AirfiModbusController from './airfiModbusController';
+import AirfiModbusController from './AirfiModbusController';
 
 export { AirfiModbusController };

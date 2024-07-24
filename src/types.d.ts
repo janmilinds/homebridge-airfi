@@ -1,15 +1,28 @@
-import 'webrtc';
+export type AirfiDeviceContext = {
+  displayName: string;
+  uniqueId: string;
+};
 
-type FanActiveState = 0 | 1;
+export type FanActiveState = 0 | 1;
 
-type FanRotationSpeedState = 0 | 1 | 2 | 3 | 4 | 5;
+export type FanRotationSpeedState = 0 | 1 | 2 | 3 | 4 | 5;
 
-type SwitchOnState = 0 | 1;
+export type RegisterAddress =
+  `${3 | 4}x${number}${number}${number}${number}${number}`;
 
-type RegisterAddress = `${3 | 4}x${number}${number}${number}${number}${number}`;
+export type RegisterType = 3 | 4;
 
-type RegisterType = 3 | 4;
+export type ServiceOptions<T = { [key: string, unknown] }> = T & {
+  configuredNameKey?: string;
+  name: string;
+  readAddress?: RegisterAddress;
+  subtype?: string;
+  updateFrequency?: number;
+  writeAddress?: RegisterAddress;
+};
 
-type WriteQueue = {
+export type SwitchOnState = 0 | 1;
+
+export type WriteQueue = {
   [key: RegisterAddress]: number;
 };

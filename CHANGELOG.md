@@ -5,7 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### [1.7.0] - 2024-07-03
+## [2.0.0-beta-4] - 2024-07-21
+
+### Changed
+
+- Unregister obsolete cached accessories
+
+## [2.0.0-beta.3] - 2024-07-19
+
+### Changed
+
+- Accessory service improvements
+
+## [2.0.0-beta.2] - 2024-07-13
+
+### Added
+
+- Multilingual (English, Finnish, Swedish) support for displayed accessory names
+
+## [2.0.0-beta.1] - 2024-07-13
+
+### Added
+
+- ConfiguredName characteristic to service for default names in Homekit
+- Upgrade instructions to README
+
+## [2.0.0-beta.0] - 2024-07-12
+
+### Changed
+
+- Rewrite of the plugin as the preferred dynamic platform plugin
+
+## [1.7.0] - 2024-07-03
 
 ### Added
 
@@ -15,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update dependencies, Node.js 20, Homebridge 1.8
 
-### [1.6.0] - 2023-09-17
+## [1.6.0] - 2023-09-17
 
 ### Changed
 

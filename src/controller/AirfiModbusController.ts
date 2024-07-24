@@ -172,13 +172,13 @@ export default class AirfiModbusController {
         .writeSingleRegister(address, value)
         .then(() => {
           this.log.debug(
-            `Successfully written value "${value}" register "${address}"`
+            `Successfully written value "${value}" to register "${address}"`
           );
           resolve();
         })
         .catch(({ err, message }) => {
           reject(
-            `Unable to write value "${value}" register "${address}":` +
+            `Unable to write value "${value}" to register "${address}":` +
               `${err} – ${message}`
           );
         });
