@@ -92,6 +92,18 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
 
     // Initial modbus register read.
     this.run().then(() => {
+      if (
+        this.holdingRegister.length === 0 &&
+        this.inputRegister.length === 0
+      ) {
+        this.log.error(
+          'Failed to retrieve data from the device. ' +
+            'Please check your network settings, the device is powered on ' +
+            'and connected to a network. Then restart Homebridge and try again.'
+        );
+        return;
+      }
+
       const deviceModbusMapVersion = AirfiInformationService.getVersionString(
         this.getRegisterValue('3x00003')
       );
