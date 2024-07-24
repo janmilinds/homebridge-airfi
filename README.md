@@ -8,14 +8,16 @@
 
 # Homebridge Airfi
 
-Homebridge plugin for controlling Airfi ventilation unit through Modbus TCP.
+Homebridge plugin for controlling [Airfi air handling unit](https://airfi.fi/en/air-handling-units/) in the Apple Home app.
+
+The plugin communicates with the air handling unit through Modbus TCP interface.
 
 ## Features
 
 - Fan control
   - Control fan speed
   - Control "At home"/"Away" states
-  - Supply air temperature control
+- Supply air temperature control
 - Sensors
   - Humidity sensor
   - Temperature sensors
@@ -25,8 +27,8 @@ Homebridge plugin for controlling Airfi ventilation unit through Modbus TCP.
     - Exhaust air
 - Switches (configurable)
   - Boosted cooling mode
-  - Fireplace mode
-  - Sauna mode
+  - Fireplace function
+  - Sauna function
 
 ## Upgrading from version 1.x
 
@@ -44,11 +46,11 @@ npm install -g homebrigde-airfi
 
 ### Requirements
 
-This plugin supports ventilation units Model 60, 100, 130, 150, 250, 350 manufactured by Airfi.
+This plugin supports air handling units Model 60, 100, 130, 150, 250, 350 manufactured by Airfi.
 
 - Node.js >= 18.17.0
 - Homebridge >= 1.6.0
-- Modbus map v2.5 or greater on the ventilation unit
+- Modbus map v2.5 or greater on the air handling unit
 
 ### Configuration
 
