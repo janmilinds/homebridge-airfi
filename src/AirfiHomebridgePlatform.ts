@@ -74,7 +74,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
       log.success = log.info;
     }
 
-    if (!this.validate()) {
+    if (!this.validateConfig()) {
       this.log.error(
         'Plugin configuration is invalid. Please check the ' +
           'configuration and restart Homebridge.'
@@ -244,7 +244,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
    *
    * @returns Boolean whether the configuration is valid.
    */
-  private validate() {
+  private validateConfig() {
     const validator = new Validator();
     const errors = validator.validate(this.config, configSchema.schema).errors;
 
