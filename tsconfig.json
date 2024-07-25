@@ -18,6 +18,7 @@
     "noImplicitAny": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "removeComments": true
   },
   "include": [
     "src/",
