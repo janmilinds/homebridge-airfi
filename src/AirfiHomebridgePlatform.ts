@@ -7,8 +7,10 @@ import {
   Service,
   Characteristic,
 } from 'homebridge';
+import { Validator } from 'jsonschema';
 import semverGte from 'semver/functions/gte';
 
+import configSchema from '../config.schema.json';
 import { AirfiPlatformAccessory } from './AirfiPlatformAccessory';
 import { AirfiModbusController } from './controller';
 import i18n from './i18n';
@@ -73,6 +75,11 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
     }
 
     if (!this.validate()) {
+      this.log.error(
+        'Plugin configuration is invalid. Please check the ' +
+          'configuration and restart Homebridge.'
+      );
+
       return;
     }
 
@@ -233,43 +240,22 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * Check if all required parameters are present in the config.
+   * Validates the plugin configuration.
    *
    * @returns Boolean whether the configuration is valid.
    */
   private validate() {
-    let errors = 0;
+    const validator = new Validator();
+    const errors = validator.validate(this.config, configSchema.schema).errors;
 
-    const setValidationError = (parameterName: string) => {
-      this.log.error(`Missing required config parameter: ${parameterName}`);
-      errors++;
-    };
+    if (errors.length > 0) {
+      errors.forEach((error) => {
+        this.log.error(
+          'Error with plugin configuration. ' +
+            `Property "${error.property.split('.')[1]}" ${error.message}`
+        );
+      });
 
-    if (!this.config.host) {
-      setValidationError('host');
-    }
-
-    if (!this.config.port) {
-      setValidationError('port');
-    }
-
-    if (!this.config.name) {
-      setValidationError('name');
-    }
-
-    if (!this.config.model) {
-      setValidationError('model');
-    }
-
-    if (!this.config.serialNumber) {
-      setValidationError('serialNumber');
-    }
-
-    if (!this.config.language) {
-      setValidationError('language');
-    }
-
-    if (errors) {
       return false;
     }
 
