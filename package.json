@@ -29,7 +29,8 @@
   "keywords": [
     "homebridge-plugin",
     "airfi",
-    "modbus"
+    "air handling unit",
+    "ventilation unit"
   ],
   "dependencies": {
     "i18next": "^23.11.5",
