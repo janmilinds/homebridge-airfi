@@ -76,8 +76,8 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
 
     if (!this.validateConfig()) {
       this.log.error(
-        'Plugin configuration is invalid. Please check the ' +
-          'configuration and restart Homebridge.'
+        'Plugin configuration is invalid. Please check the configuration ' +
+          'and restart Homebridge.'
       );
 
       return;
@@ -104,10 +104,12 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
         this.inputRegister.length === 0
       ) {
         this.log.error(
-          'Failed to retrieve data from the device. ' +
-            'Please check your network settings, the device is powered on ' +
-            'and connected to a network. Then restart Homebridge and try again.'
+          'Failed to retrieve data from the air handling unit. ' +
+            'Please check your network settings, the air handling unit is ' +
+            'powered on and connected to a network. Then restart Homebridge ' +
+            'and try again.'
         );
+
         return;
       }
 
@@ -124,11 +126,12 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
         ) === false
       ) {
         this.log.error(
-          `The device Modbus map version ${deviceModbusMapVersion} is not ` +
-            'supported. Minimun required Modbus map version is ' +
+          `Modbus map version ${deviceModbusMapVersion} of the air handling ` +
+            'unit is not supported. Minimun required Modbus map version is ' +
             `${AirfiHomebridgePlatform.MIN_MODBUS_VERSION}. Please update ` +
-            'the device firmware.'
+            'firmware of the air handling unit.'
         );
+
         return;
       }
 
@@ -251,8 +254,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
     if (errors.length > 0) {
       errors.forEach((error) => {
         this.log.error(
-          'Error with plugin configuration. ' +
-            `Property "${error.property.split('.')[1]}" ${error.message}`
+          `Property "${error.property.split('.')[1]}" ${error.message}`
         );
       });
 

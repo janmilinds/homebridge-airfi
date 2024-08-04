@@ -129,7 +129,7 @@ export default class AirfiModbusController {
             },
           }) => {
             this.log.debug(
-              `Reading from "${start}" to "${start - 1 + readLength}"`
+              `Reading from ${start} to ${start - 1 + readLength}`
             );
             result = [...result, ...values];
           }
@@ -142,8 +142,15 @@ export default class AirfiModbusController {
     if (result.length === length) {
       this.log.debug(
         `Values for ${registerType === 4 ? 'holding' : 'input'}` +
-          ` register from "${startAddress}" to "${length}": ` +
-          `"${result}"`
+          ` register from ${startAddress} to ${length}:`,
+        result.reduce((result, value, i) => {
+          const address = `${startAddress + i}`;
+          return {
+            ...result,
+            [`${registerType}x${'00000'.substring(address.length)}${address}`]:
+              value,
+          };
+        }, {})
       );
       return Promise.resolve(result);
     }
@@ -158,7 +165,7 @@ export default class AirfiModbusController {
    * Writes value into the holding register.
    *
    * @param address
-   *   Holding register value to write value.
+   *   Holding register address to write value.
    * @param value
    *   Value to be written into the register.
    */
