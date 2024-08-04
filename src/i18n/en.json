@@ -2,7 +2,7 @@
   "service": {
     "fan": "Ventilation",
     "humiditySensor": "Extract air humidity",
-    "information": "Ventilation unit",
+    "information": "Air handling unit",
     "switch": {
       "boostedCooling": "Boosted cooling",
       "fireplaceFunction": "Fireplace function",

@@ -6,7 +6,7 @@ import { RegisterAddress, ServiceOptions, SwitchOnState } from '../types';
 
 /**
  * Defines the switch service to control ON/OFF characteristics of the
- * ventilation unit.
+ * air handling unit.
  */
 export default class AirfiSwitchService extends AirfiService {
   private on: boolean = false;

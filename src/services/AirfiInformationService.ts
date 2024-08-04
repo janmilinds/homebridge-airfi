@@ -75,7 +75,7 @@ export default class AirfiInformationService extends AirfiService {
   }
 
   public static getVersionString(value: CharacteristicValue): string {
-    return value.toString().split('').join('.');
+    return value ? value.toString().split('').join('.') : '0.0.0';
   }
 
   /**

@@ -12,7 +12,7 @@ import {
 import { AirfiDeviceContext } from './types';
 
 /**
- * Platform accessory for the Airfi ventilation unit.
+ * Platform accessory for the Airfi air handling unit.
  */
 export class AirfiPlatformAccessory {
   private readonly services: { [key: string]: Service } = {};
