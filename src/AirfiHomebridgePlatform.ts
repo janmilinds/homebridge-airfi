@@ -7,8 +7,10 @@ import {
   Service,
   Characteristic,
 } from 'homebridge';
+import { Validator } from 'jsonschema';
 import semverGte from 'semver/functions/gte';
 
+import configSchema from '../config.schema.json';
 import { AirfiPlatformAccessory } from './AirfiPlatformAccessory';
 import { AirfiModbusController } from './controller';
 import i18n from './i18n';
@@ -18,7 +20,7 @@ import { AirfiDeviceContext, RegisterAddress, WriteQueue } from './types';
 import { sleep } from './utils';
 
 /**
- * Homebridge platform for the Airfi ventilation unit.
+ * Homebridge platform for the Airfi air handling unit.
  */
 export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   private static readonly HOLDING_REGISTER_LENGTH = 58;
@@ -72,7 +74,12 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
       log.success = log.info;
     }
 
-    if (!this.validate()) {
+    if (!this.validateConfig()) {
+      this.log.error(
+        'Plugin configuration is invalid. Please check the configuration ' +
+          'and restart Homebridge.'
+      );
+
       return;
     }
 
@@ -92,6 +99,20 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
 
     // Initial modbus register read.
     this.run().then(() => {
+      if (
+        this.holdingRegister.length === 0 &&
+        this.inputRegister.length === 0
+      ) {
+        this.log.error(
+          'Failed to retrieve data from the air handling unit. ' +
+            'Please check your network settings, the air handling unit is ' +
+            'powered on and connected to a network. Then restart Homebridge ' +
+            'and try again.'
+        );
+
+        return;
+      }
+
       const deviceModbusMapVersion = AirfiInformationService.getVersionString(
         this.getRegisterValue('3x00003')
       );
@@ -105,11 +126,12 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
         ) === false
       ) {
         this.log.error(
-          `The device Modbus map version ${deviceModbusMapVersion} is not ` +
-            'supported. Minimun required Modbus map version is ' +
+          `Modbus map version ${deviceModbusMapVersion} of the air handling ` +
+            'unit is not supported. Minimun required Modbus map version is ' +
             `${AirfiHomebridgePlatform.MIN_MODBUS_VERSION}. Please update ` +
-            'the device firmware.'
+            'firmware of the air handling unit.'
         );
+
         return;
       }
 
@@ -221,43 +243,21 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * Check if all required parameters are present in the config.
+   * Validates the plugin configuration.
    *
    * @returns Boolean whether the configuration is valid.
    */
-  private validate() {
-    let errors = 0;
+  private validateConfig() {
+    const validator = new Validator();
+    const errors = validator.validate(this.config, configSchema.schema).errors;
 
-    const setValidationError = (parameterName: string) => {
-      this.log.error(`Missing required config parameter: ${parameterName}`);
-      errors++;
-    };
+    if (errors.length > 0) {
+      errors.forEach((error) => {
+        this.log.error(
+          `Property "${error.property.split('.')[1]}" ${error.message}`
+        );
+      });
 
-    if (!this.config.host) {
-      setValidationError('host');
-    }
-
-    if (!this.config.port) {
-      setValidationError('port');
-    }
-
-    if (!this.config.name) {
-      setValidationError('name');
-    }
-
-    if (!this.config.model) {
-      setValidationError('model');
-    }
-
-    if (!this.config.serialNumber) {
-      setValidationError('serialNumber');
-    }
-
-    if (!this.config.language) {
-      setValidationError('language');
-    }
-
-    if (errors) {
       return false;
     }
 
@@ -407,7 +407,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * Write values from queue to the ventilation unit.
+   * Write values from queue to the air handling unit.
    */
   private async writeQueue(): Promise<void> {
     this.log.debug('Writing values to modbus');

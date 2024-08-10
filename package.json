@@ -2,7 +2,7 @@
   "displayName": "Homebridge Airfi",
   "name": "homebridge-airfi",
   "version": "2.0.0-beta.4",
-  "description": "Controls Airfi ventilation unit through modbus interface.",
+  "description": "Controls Airfi air handling unit through modbus interface.",
   "license": "Apache-2.0",
   "author": {
     "name": "Jan Lindström"
@@ -17,7 +17,7 @@
   "homepage": "https://github.com/janmilinds/homebridge-airfi#readme",
   "engines": {
     "node": "^18.17.0 || ^20.15.0",
-    "homebridge": "^1.6.0"
+    "homebridge": "^1.7.0"
   },
   "main": "dist/index.js",
   "scripts": {
@@ -29,12 +29,14 @@
   "keywords": [
     "homebridge-plugin",
     "airfi",
-    "modbus"
+    "air handling unit",
+    "ventilation unit"
   ],
   "dependencies": {
     "i18next": "^23.11.5",
     "i18next-fs-backend": "^2.3.1",
     "jsmodbus": "^4.0.6",
+    "jsonschema": "^1.4.1",
     "semver": "^7.6.2"
   },
   "devDependencies": {
@@ -44,7 +46,7 @@
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
-    "homebridge": "^1.6.0",
+    "homebridge": "^1.7.0",
     "nodemon": "^3.0.1",
     "prettier": "^3.0.3",
     "rimraf": "^5.0.1",
