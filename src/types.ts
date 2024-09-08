@@ -12,7 +12,7 @@ export type RegisterAddress =
 
 export type RegisterType = 3 | 4;
 
-export type ServiceOptions<T = { [key: string, unknown] }> = T & {
+export type ServiceOptions<T = Record<string, unknown>> = T & {
   configuredNameKey?: string;
   name: string;
   readAddress?: RegisterAddress;
