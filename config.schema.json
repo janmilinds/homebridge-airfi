@@ -6,44 +6,10 @@
     "type": "object",
     "properties": {
       "name": {
-        "title": "Name",
+        "title": "Platform name",
         "type": "string",
         "required": true,
         "default": "Homebridge Airfi"
-      },
-      "host": {
-        "title": "Host",
-        "type": "string",
-        "required": true,
-        "format": "ipv4"
-      },
-      "port": {
-        "title": "Port",
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 65535,
-        "default": 502,
-        "required": true
-      },
-      "model": {
-        "title": "Model",
-        "type": "string",
-        "default": "Model 60",
-        "oneOf": [
-          { "title": "Model 60", "enum": ["Model 60"] },
-          { "title": "Model 100", "enum": ["Model 100"] },
-          { "title": "Model 130", "enum": ["Model 130"] },
-          { "title": "Model 150", "enum": ["Model 150"] },
-          { "title": "Model 250", "enum": ["Model 250"] },
-          { "title": "Model 350", "enum": ["Model 350"] }
-        ],
-        "required": true
-      },
-      "serialNumber": {
-        "title": "Serial number",
-        "type": "string",
-        "pattern": "^\\d{5,10}$",
-        "required": true
       },
       "language": {
         "title": "Language",
@@ -57,51 +23,103 @@
         "required": true,
         "description": "Choose the language to display the default accessory names."
       },
-      "exposeBoostedCoolingSwitch": {
-        "title": "Expose Boosted cooling switch",
-        "type": "boolean",
-        "default": false,
-        "description": "When activated, the unit monitors temperatures and boosts air volumes as needed depending on conditions."
-      },
-      "exposeFireplaceFunctionSwitch": {
-        "title": "Expose Fireplace funtion switch",
-        "type": "boolean",
-        "default": false,
-        "description": "Creates an overpressure for 30 min."
-      },
-      "exposeSaunaFunctionSwitch": {
-        "title": "Expose Sauna funtion switch",
-        "type": "boolean",
-        "default": false,
-        "description": "Prevents ventilation power increase when humidity level increases for 30 min."
+      "devices": {
+        "required": true,
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 1,
+        "items": {
+          "title": "Devices",
+          "type": "object",
+          "properties": {
+            "host": {
+              "title": "Host",
+              "type": "string",
+              "required": true,
+              "format": "ipv4"
+            },
+            "port": {
+              "title": "Port",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535,
+              "default": 502,
+              "required": true
+            },
+            "model": {
+              "title": "Model",
+              "type": "string",
+              "default": "Model 60",
+              "oneOf": [
+                { "title": "Model 60", "enum": ["Model 60"] },
+                { "title": "Model 100", "enum": ["Model 100"] },
+                { "title": "Model 130", "enum": ["Model 130"] },
+                { "title": "Model 150", "enum": ["Model 150"] },
+                { "title": "Model 250", "enum": ["Model 250"] },
+                { "title": "Model 350", "enum": ["Model 350"] }
+              ],
+              "required": true
+            },
+            "serialNumber": {
+              "title": "Serial number",
+              "type": "string",
+              "pattern": "^\\d{5,10}$",
+              "required": true
+            },
+            "exposeBoostedCoolingSwitch": {
+              "title": "Expose Boosted cooling switch",
+              "type": "boolean",
+              "default": false,
+              "description": "When activated, the unit monitors temperatures and boosts air volumes as needed depending on conditions."
+            },
+            "exposeFireplaceFunctionSwitch": {
+              "title": "Expose Fireplace funtion switch",
+              "type": "boolean",
+              "default": false,
+              "description": "Creates an overpressure for 30 min."
+            },
+            "exposeSaunaFunctionSwitch": {
+              "title": "Expose Sauna funtion switch",
+              "type": "boolean",
+              "default": false,
+              "description": "Prevents ventilation power increase for 30 min when unit detects sudden increase in humidity."
+            }
+          }
+        }
       }
     }
   },
   "layout": [
     {
-        "type": "section",
-        "items": [
-          "name",
-          "host",
-          {
-            "key": "port",
-            "type": "number"
-          },
-          "model",
-          "serialNumber",
-          "language"
-        ]
+      "type": "section",
+      "items": ["name", "language"]
     },
     {
-        "title": "Air handling unit features",
-        "type": "section",
-        "expandable": true,
-        "expanded": false,
-        "items": [
-          "exposeSaunaFunctionSwitch",
-          "exposeFireplaceFunctionSwitch",
-          "exposeBoostedCoolingSwitch"
-        ]
+      "key": "devices",
+      "type": "array",
+      "orderable": false,
+      "buttonText": "Add air handling unit",
+      "items": [
+        "devices[].host",
+        {
+          "key": "devices[].port",
+          "type": "number"
+        },
+        "devices[].model",
+        "devices[].serialNumber",
+        {
+          "key": "devices[]",
+          "title": "Air handling unit features",
+          "type": "section",
+          "expandable": true,
+          "expanded": false,
+          "items": [
+            "devices[].exposeSaunaFunctionSwitch",
+            "devices[].exposeFireplaceFunctionSwitch",
+            "devices[].exposeBoostedCoolingSwitch"
+          ]
+        }
+      ]
     }
   ]
 }
