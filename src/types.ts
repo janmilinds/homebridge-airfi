@@ -9,8 +9,6 @@ export type AirfiDeviceConfig = {
 
 export type AirfiDeviceContext = {
   config: AirfiDeviceConfig;
-  displayName: string;
-  uniqueId: string;
 };
 
 export interface AirfiPlatformConfig extends PlatformConfig {
