@@ -1,7 +1,21 @@
+import { PlatformConfig } from 'homebridge';
+
+export type AirfiDeviceConfig = {
+  host: string;
+  model: string;
+  port: number;
+  serialNumber: string;
+};
+
 export type AirfiDeviceContext = {
+  config: AirfiDeviceConfig;
   displayName: string;
   uniqueId: string;
 };
+
+export interface AirfiPlatformConfig extends PlatformConfig {
+  devices: AirfiDeviceConfig[];
+}
 
 export type FanActiveState = 0 | 1;
 
