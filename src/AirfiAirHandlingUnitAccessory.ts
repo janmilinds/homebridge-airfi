@@ -1,6 +1,7 @@
 import EventEmitter from 'events';
-import { Logger, PlatformAccessory } from 'homebridge';
+import { Logging, PlatformAccessory } from 'homebridge';
 
+import { AirfiHomebridgePlatform } from './AirfiHomebridgePlatform';
 import { AirfiModbusController } from './controller';
 import { AirfiDeviceContext, RegisterAddress, WriteQueue } from './types';
 import { sleep } from './utils';
@@ -37,13 +38,14 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
 
   constructor(
     private readonly accessory: PlatformAccessory<AirfiDeviceContext>,
-    public readonly log: Logger
+    private readonly platform: AirfiHomebridgePlatform
   ) {
     super();
 
     const {
       context: { config },
     } = accessory;
+    this.log = platform.log;
     this.airfiController = new AirfiModbusController(
       config.host,
       config.port,

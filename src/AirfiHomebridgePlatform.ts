@@ -93,7 +93,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
 
         const airHandlingUnitAccessory = new AirfiAirHandlingUnitAccessory(
           existingAccessory,
-          this.log
+          this
         );
 
         airHandlingUnitAccessory.once('initialized', () => {
@@ -110,7 +110,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
 
         const airHandlingUnitAccessory = new AirfiAirHandlingUnitAccessory(
           accessory,
-          this.log
+          this
         );
 
         airHandlingUnitAccessory.once('initialized', () => {
