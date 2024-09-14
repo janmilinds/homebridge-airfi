@@ -13,6 +13,7 @@ export type AirfiDeviceContext = {
 
 export interface AirfiPlatformConfig extends PlatformConfig {
   devices: AirfiDeviceConfig[];
+  language: 'en' | 'fi' | 'sv';
 }
 
 export type FanActiveState = 0 | 1;

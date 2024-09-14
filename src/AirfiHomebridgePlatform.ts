@@ -50,10 +50,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
     }
 
     this.log.debug('Config:', this.config);
-
-    if (this.config.language) {
-      i18n.changeLanguage(this.config.language);
-    }
+    i18n.changeLanguage(this.config.language);
 
     this.api.on('didFinishLaunching', () => {
       this.log.debug('Executed didFinishLaunching callback');
@@ -175,9 +172,5 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
     }
 
     return true;
-  }
-
-  public t(key: string, options?: Record<string, unknown>): string {
-    return i18n.t(key, options) as string;
   }
 }
