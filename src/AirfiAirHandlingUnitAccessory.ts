@@ -1,5 +1,6 @@
 import EventEmitter from 'events';
 import { Logging, PlatformAccessory } from 'homebridge';
+import semverGte from 'semver/functions/gte';
 
 import { AirfiHomebridgePlatform } from './AirfiHomebridgePlatform';
 import { AirfiModbusController } from './controller';
@@ -22,8 +23,6 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
 
   private readonly airfiController!: AirfiModbusController;
 
-  public readonly accessories: PlatformAccessory<AirfiDeviceContext>[] = [];
-
   private holdingRegister: number[] = [];
 
   private inputRegister: number[] = [];
@@ -32,12 +31,14 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
 
   private isNetworking = false;
 
+  public readonly log: Logging;
+
   private queue: WriteQueue = {};
 
   private sequenceCount = 0;
 
   constructor(
-    private readonly accessory: PlatformAccessory<AirfiDeviceContext>,
+    public readonly accessory: PlatformAccessory<AirfiDeviceContext>,
     private readonly platform: AirfiHomebridgePlatform
   ) {
     super();
@@ -54,18 +55,11 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
 
     // Initial modbus register read.
     this.run().then(() => {
-      if (
-        this.holdingRegister.length === 0 &&
-        this.inputRegister.length === 0
-      ) {
+      if (!this.validateDevice()) {
         this.log.error(
-          'Failed to retrieve data from the air handling unit ' +
-            `"${this.accessory.displayName}". ` +
-            'Please check your network settings, the air handling unit is ' +
-            'powered on and connected to a network. Then restart Homebridge ' +
-            'and try again.'
+          'Initialization could not be completed for accessory:',
+          this.accessory.displayName
         );
-
         return;
       }
 
@@ -234,6 +228,50 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
         this.airfiController.close();
         this.isNetworking = false;
       });
+  }
+
+  /**
+   * Checks whether data was retrieved from the air handling unit and whether
+   * the modbus map version is supported.
+   */
+  private validateDevice(): boolean {
+    // Verify that data was retrieved from the air handling unit.
+    if (this.holdingRegister.length === 0 && this.inputRegister.length === 0) {
+      this.log.error(
+        'Failed to retrieve data from the air handling unit ' +
+          `"${this.accessory.displayName}". ` +
+          'Please check your network settings, the air handling unit is ' +
+          'powered on and connected to a network. Then restart Homebridge ' +
+          'and try again.'
+      );
+
+      return false;
+    }
+
+    const deviceModbusMapVersion = AirfiInformationService.getVersionString(
+      this.getRegisterValue('3x00003')
+    );
+
+    this.log.info('Device Modbus map version:', deviceModbusMapVersion);
+
+    // Verify that the air handling unit has a supported modbus map version.
+    if (
+      semverGte(
+        deviceModbusMapVersion,
+        AirfiAirHandlingUnitAccessory.MIN_MODBUS_VERSION
+      ) === false
+    ) {
+      this.log.error(
+        `Modbus map version ${deviceModbusMapVersion} of the air handling ` +
+          'unit is not supported. Minimun required Modbus map version is ' +
+          `${AirfiAirHandlingUnitAccessory.MIN_MODBUS_VERSION}. Please ` +
+          'update firmware of the air handling unit.'
+      );
+
+      return false;
+    }
+
+    return true;
   }
 
   /**
