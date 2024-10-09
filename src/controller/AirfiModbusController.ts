@@ -1,7 +1,7 @@
 import { Logger } from 'homebridge';
 import { ModbusTCPClient } from 'jsmodbus';
 import { Socket, SocketConnectOpts } from 'net';
-import { RegisterType } from '../types';
+import { DebugOptions, RegisterType } from '../types';
 
 /**
  * Modbus controller handling reading and writing registers in the Airfi
@@ -14,24 +14,23 @@ export default class AirfiModbusController {
 
   private isConnected = false;
 
-  private log: Logger;
-
   private options: SocketConnectOpts;
 
   private socket: Socket;
 
-  constructor(host: string, port: number, log: Logger) {
+  constructor(
+    host: string,
+    port: number,
+    public readonly log: Logger,
+    private readonly debugOptions: DebugOptions = {}
+  ) {
     const timeout = 5000;
 
-    this.log = log;
     this.options = { host, port };
     this.socket = new Socket();
     this.socket.setTimeout(timeout);
     this.socket.on('timeout', () => {
       this.socket.emit('error', new Error('Timeout'));
-    });
-    this.socket.on('error', (err) => {
-      this.log.error(`Socket error: ${err.message}`);
     });
     this.client = new ModbusTCPClient(this.socket, 1, timeout);
   }
@@ -143,14 +142,20 @@ export default class AirfiModbusController {
       this.log.debug(
         `Values for ${registerType === 4 ? 'holding' : 'input'}` +
           ` register from ${startAddress} to ${length}:`,
-        result.reduce((result, value, i) => {
-          const address = `${startAddress + i}`;
-          return {
-            ...result,
-            [`${registerType}x${'00000'.substring(address.length)}${address}`]:
-              value,
-          };
-        }, {})
+
+        this.debugOptions.printModbusMap
+          ? result.reduce((result, value, i) => {
+              const address = `${startAddress + i}`;
+              const registerAddress =
+                `${registerType}x` +
+                `${'00000'.substring(address.length)}${address}`;
+
+              return {
+                ...result,
+                [registerAddress]: value,
+              };
+            }, {})
+          : result
       );
       return Promise.resolve(result);
     }

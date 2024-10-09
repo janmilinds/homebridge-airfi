@@ -15,10 +15,15 @@ export type AirfiDeviceContext = {
 };
 
 export interface AirfiPlatformConfig extends PlatformConfig {
+  debug?: DebugOptions;
   devices: AirfiDeviceConfig[];
   language: 'en' | 'fi' | 'sv';
   name: string;
 }
+
+export type DebugOptions = {
+  printModbusMap?: boolean;
+};
 
 export type FanActiveState = 0 | 1;
 

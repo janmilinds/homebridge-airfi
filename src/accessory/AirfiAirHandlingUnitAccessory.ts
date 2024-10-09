@@ -58,7 +58,8 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
     this.airfiController = new AirfiModbusController(
       config.host,
       config.port,
-      this.log
+      this.log,
+      this.platform.config.debug
     );
 
     // Initial modbus register read.
