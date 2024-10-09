@@ -1,6 +1,7 @@
-import { CharacteristicValue, PlatformAccessory } from 'homebridge';
+import { CharacteristicValue } from 'homebridge';
 
 import AirfiService from './AirfiService';
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
 import AirfiTemperatureSensorService from './AirfiTemperatureSensorService';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';
@@ -29,11 +30,11 @@ export default class AirfiThermostatService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    accessory: PlatformAccessory,
+    device: AirfiAirHandlingUnitAccessory,
     platform: AirfiHomebridgePlatform,
     serviceOptions: ServiceOptions
   ) {
-    super(accessory, platform, {
+    super(device, platform, {
       ...serviceOptions,
       service: platform.Service.Thermostat,
     });
@@ -101,11 +102,11 @@ export default class AirfiThermostatService extends AirfiService {
   private async setTargetTemperature(value: CharacteristicValue) {
     this.log.info(`TargetTemperature ${this.targetTemperature}°C → ${value}°C`);
     this.targetTemperature = this.targetMinTemperature = value as number;
-    this.platform.queueInsert(
+    this.device.queueInsert(
       AirfiThermostatService.TARGET_TEMPERATURE,
       (value as number) * 10
     );
-    this.platform.queueInsert(
+    this.device.queueInsert(
       AirfiThermostatService.TARGET_MIN_TEMPERATURE,
       value as number
     );
@@ -121,7 +122,7 @@ export default class AirfiThermostatService extends AirfiService {
   protected updateState() {
     // Read current temperature value.
     this.currentTemperature = AirfiTemperatureSensorService.convertTemperature(
-      this.platform.getRegisterValue(AirfiThermostatService.CURRENT_TEMPERATURE)
+      this.device.getRegisterValue(AirfiThermostatService.CURRENT_TEMPERATURE)
     );
     this.service
       .getCharacteristic(this.Characteristic.CurrentTemperature)
@@ -129,9 +130,9 @@ export default class AirfiThermostatService extends AirfiService {
 
     // Read target temperature value.
     this.targetTemperature = AirfiTemperatureSensorService.convertTemperature(
-      this.platform.getRegisterValue(AirfiThermostatService.TARGET_TEMPERATURE)
+      this.device.getRegisterValue(AirfiThermostatService.TARGET_TEMPERATURE)
     );
-    this.targetMinTemperature = this.platform.getRegisterValue(
+    this.targetMinTemperature = this.device.getRegisterValue(
       AirfiThermostatService.TARGET_MIN_TEMPERATURE
     );
     this.service
@@ -147,7 +148,7 @@ export default class AirfiThermostatService extends AirfiService {
    * Sync heat exchanger bypass minimum temperature with set target temperature.
    */
   private syncTargetMinTemperature() {
-    this.platform.queueInsert(
+    this.device.queueInsert(
       AirfiThermostatService.TARGET_MIN_TEMPERATURE,
       this.targetTemperature
     );

@@ -1,8 +1,9 @@
-import { CharacteristicValue, PlatformAccessory } from 'homebridge';
+import { CharacteristicValue } from 'homebridge';
 
 import AirfiService from './AirfiService';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
 
 /**
  * Provides the base information about platform.
@@ -24,11 +25,11 @@ export default class AirfiInformationService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    accessory: PlatformAccessory,
+    device: AirfiAirHandlingUnitAccessory,
     platform: AirfiHomebridgePlatform,
     serviceOptions: ServiceOptions
   ) {
-    super(accessory, platform, {
+    super(device, platform, {
       ...serviceOptions,
       service: platform.Service.AccessoryInformation,
     });
@@ -42,11 +43,11 @@ export default class AirfiInformationService extends AirfiService {
     );
     this.service.setCharacteristic(
       this.Characteristic.Model,
-      platform.config.model
+      device.accessory.context.config.model
     );
     this.service.setCharacteristic(
       this.Characteristic.SerialNumber,
-      platform.config.serialNumber
+      device.accessory.context.config.serialNumber
     );
     this.service
       .getCharacteristic(this.Characteristic.FirmwareRevision)
@@ -84,7 +85,7 @@ export default class AirfiInformationService extends AirfiService {
   protected updateState() {
     // Update Firmware Revision.
     this.firmwareRevision = AirfiInformationService.getVersionString(
-      this.platform.getRegisterValue(
+      this.device.getRegisterValue(
         AirfiInformationService.READ_ADDRESS_FIRMWARE_REVISION
       )
     );
@@ -94,7 +95,7 @@ export default class AirfiInformationService extends AirfiService {
 
     // Update Hardware Revision.
     this.hardwareRevision = AirfiInformationService.getVersionString(
-      this.platform.getRegisterValue(
+      this.device.getRegisterValue(
         AirfiInformationService.READ_ADDRESS_HARDWARE_REVISION
       )
     );

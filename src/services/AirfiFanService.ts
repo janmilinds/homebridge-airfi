@@ -1,6 +1,7 @@
-import { CharacteristicValue, PlatformAccessory } from 'homebridge';
+import { CharacteristicValue } from 'homebridge';
 
 import AirfiService from './AirfiService';
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import {
   FanActiveState,
@@ -29,11 +30,11 @@ export default class AirfiFanService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    accessory: PlatformAccessory,
+    device: AirfiAirHandlingUnitAccessory,
     platform: AirfiHomebridgePlatform,
     serviceOptions: ServiceOptions
   ) {
-    super(accessory, platform, {
+    super(device, platform, {
       ...serviceOptions,
       service: platform.Service.Fanv2,
     });
@@ -67,7 +68,7 @@ export default class AirfiFanService extends AirfiService {
   private async setActive(value: CharacteristicValue) {
     // Only change fan state if it differs from current state,
     if (value !== this.active) {
-      this.platform.queueInsert(
+      this.device.queueInsert(
         AirfiFanService.ACTIVE,
         AirfiFanService.convertActiveState(value as FanActiveState)
       );
@@ -97,7 +98,7 @@ export default class AirfiFanService extends AirfiService {
 
       this.log.info(`Fan RotationSpeed ${this.rotationSpeed} → ${value}`);
       this.rotationSpeed = value as number;
-      this.platform.queueInsert(
+      this.device.queueInsert(
         AirfiFanService.ROTATION_SPEED,
         AirfiFanService.convertRotationSpeed(this.rotationSpeed, 'write')
       );
@@ -147,7 +148,7 @@ export default class AirfiFanService extends AirfiService {
   protected updateState() {
     // Read active state
     this.active = AirfiFanService.convertActiveState(
-      this.platform.getRegisterValue(AirfiFanService.ACTIVE) as FanActiveState
+      this.device.getRegisterValue(AirfiFanService.ACTIVE) as FanActiveState
     );
     this.service
       .getCharacteristic(this.Characteristic.Active)
@@ -155,7 +156,7 @@ export default class AirfiFanService extends AirfiService {
 
     // Read rotation speed state
     this.rotationSpeed = AirfiFanService.convertRotationSpeed(
-      this.platform.getRegisterValue(AirfiFanService.ROTATION_SPEED),
+      this.device.getRegisterValue(AirfiFanService.ROTATION_SPEED),
       'read'
     );
     this.service

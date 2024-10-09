@@ -1,6 +1,7 @@
-import { CharacteristicValue, PlatformAccessory } from 'homebridge';
+import { CharacteristicValue } from 'homebridge';
 
 import AirfiService from './AirfiService';
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions, SwitchOnState } from '../types';
 
@@ -19,11 +20,11 @@ export default class AirfiSwitchService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    accessory: PlatformAccessory,
+    device: AirfiAirHandlingUnitAccessory,
     platform: AirfiHomebridgePlatform,
     serviceOptions: ServiceOptions
   ) {
-    super(accessory, platform, {
+    super(device, platform, {
       ...serviceOptions,
       service: platform.Service.Switch,
     });
@@ -49,7 +50,7 @@ export default class AirfiSwitchService extends AirfiService {
   private async setOn(value: CharacteristicValue) {
     // Only change on state if it differs from current state,
     if (value !== this.on) {
-      this.platform.queueInsert(
+      this.device.queueInsert(
         this.writeAddress,
         value === true ? 1 : (0 as SwitchOnState)
       );
@@ -63,8 +64,7 @@ export default class AirfiSwitchService extends AirfiService {
   protected updateState() {
     // Read on state
     this.on =
-      (this.platform.getRegisterValue(this.writeAddress) as SwitchOnState) ===
-      1;
+      (this.device.getRegisterValue(this.writeAddress) as SwitchOnState) === 1;
     this.service.getCharacteristic(this.Characteristic.On).updateValue(this.on);
   }
 }
