@@ -8,12 +8,11 @@ import {
 } from 'homebridge';
 import { Validator } from 'jsonschema';
 
+import { AirfiAirHandlingUnitAccessory } from './accessory';
 import configSchema from '../config.schema.json';
 import i18n from './i18n';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-
 import { AirfiDeviceContext, AirfiPlatformConfig } from './types';
-import { AirfiAirHandlingUnitAccessory } from './AirfiAirHandlingUnitAccessory';
 
 /**
  * Homebridge platform for the Airfi air handling unit.

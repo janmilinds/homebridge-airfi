@@ -1,9 +1,9 @@
 import { Characteristic, Logger, Service, WithUUID } from 'homebridge';
 
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import i18n from '../i18n';
 import { ServiceOptions } from '../types';
-import { AirfiAirHandlingUnitAccessory } from '../AirfiAirHandlingUnitAccessory';
 
 /**
  * Accessory service class for defining services communicating on modbus

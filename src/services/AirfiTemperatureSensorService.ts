@@ -1,5 +1,5 @@
 import AirfiService from './AirfiService';
-import { AirfiAirHandlingUnitAccessory } from '../AirfiAirHandlingUnitAccessory';
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';
 

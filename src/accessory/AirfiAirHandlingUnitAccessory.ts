@@ -2,8 +2,8 @@ import EventEmitter from 'events';
 import { Logging, PlatformAccessory } from 'homebridge';
 import semverGte from 'semver/functions/gte';
 
-import { AirfiHomebridgePlatform } from './AirfiHomebridgePlatform';
-import { AirfiModbusController } from './controller';
+import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
+import { AirfiModbusController } from '../controller';
 import {
   AirfiFanService,
   AirfiHumiditySensorService,
@@ -11,9 +11,9 @@ import {
   AirfiSwitchService,
   AirfiTemperatureSensorService,
   AirfiThermostatService,
-} from './services';
-import { AirfiDeviceContext, RegisterAddress, WriteQueue } from './types';
-import { sleep } from './utils';
+} from '../services';
+import { AirfiDeviceContext, RegisterAddress, WriteQueue } from '../types';
+import { sleep } from '../utils';
 
 /**
  * Platform accessory for the Airfi air handling unit.

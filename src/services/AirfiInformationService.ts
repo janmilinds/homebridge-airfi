@@ -3,7 +3,7 @@ import { CharacteristicValue } from 'homebridge';
 import AirfiService from './AirfiService';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';
-import { AirfiAirHandlingUnitAccessory } from '../AirfiAirHandlingUnitAccessory';
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
 
 /**
  * Provides the base information about platform.

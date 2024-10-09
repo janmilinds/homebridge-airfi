@@ -1,7 +1,7 @@
 import { CharacteristicValue } from 'homebridge';
 
-import { AirfiAirHandlingUnitAccessory } from '../AirfiAirHandlingUnitAccessory';
 import AirfiService from './AirfiService';
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions, SwitchOnState } from '../types';
 
