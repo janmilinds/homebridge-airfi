@@ -1,4 +1,4 @@
-import { Characteristic, Logger, Service, WithUUID } from 'homebridge';
+import { Characteristic, Logging, Service, WithUUID } from 'homebridge';
 
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
@@ -12,7 +12,7 @@ import { ServiceOptions } from '../types';
 export default abstract class AirfiService {
   protected readonly Characteristic: typeof Characteristic;
 
-  protected readonly log: Logger;
+  protected readonly log: Logging;
 
   protected service: Service;
 

@@ -1,4 +1,4 @@
-import { Logger } from 'homebridge';
+import { Logging } from 'homebridge';
 import { ModbusTCPClient } from 'jsmodbus';
 import { Socket, SocketConnectOpts } from 'net';
 import { DebugOptions, RegisterType } from '../types';
@@ -21,7 +21,7 @@ export default class AirfiModbusController {
   constructor(
     host: string,
     port: number,
-    public readonly log: Logger,
+    public readonly log: Logging,
     private readonly debugOptions: DebugOptions = {}
   ) {
     const timeout = 5000;
