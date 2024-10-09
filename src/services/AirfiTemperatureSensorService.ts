@@ -1,6 +1,5 @@
-import { PlatformAccessory } from 'homebridge';
-
 import AirfiService from './AirfiService';
+import { AirfiAirHandlingUnitAccessory } from '../AirfiAirHandlingUnitAccessory';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';
 
@@ -19,11 +18,11 @@ export default class AirfiTemperatureSensorService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    accessory: PlatformAccessory,
+    device: AirfiAirHandlingUnitAccessory,
     platform: AirfiHomebridgePlatform,
     serviceOptions: ServiceOptions
   ) {
-    super(accessory, platform, {
+    super(device, platform, {
       ...serviceOptions,
       service: platform.Service.TemperatureSensor,
     });
@@ -75,7 +74,7 @@ export default class AirfiTemperatureSensorService extends AirfiService {
   protected updateState() {
     // Read temperature value.
     this.currentTemperature = AirfiTemperatureSensorService.convertTemperature(
-      this.platform.getRegisterValue(this.readAddress)
+      this.device.getRegisterValue(this.readAddress)
     );
     this.service
       .getCharacteristic(this.Characteristic.CurrentTemperature)

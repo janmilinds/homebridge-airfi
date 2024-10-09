@@ -1,6 +1,5 @@
-import { PlatformAccessory } from 'homebridge';
-
 import AirfiService from './AirfiService';
+import { AirfiAirHandlingUnitAccessory } from '../AirfiAirHandlingUnitAccessory';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';
 
@@ -17,11 +16,11 @@ export default class AirfiHumiditySensorService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    accessory: PlatformAccessory,
+    device: AirfiAirHandlingUnitAccessory,
     platform: AirfiHomebridgePlatform,
     serviceOptions: ServiceOptions
   ) {
-    super(accessory, platform, {
+    super(device, platform, {
       ...serviceOptions,
       service: platform.Service.HumiditySensor,
     });
@@ -45,7 +44,7 @@ export default class AirfiHumiditySensorService extends AirfiService {
    */
   protected updateState() {
     // Read relative humidity value.
-    this.relativeHumidity = this.platform.getRegisterValue(
+    this.relativeHumidity = this.device.getRegisterValue(
       AirfiHumiditySensorService.READ_ADDRESS_RELATIVE_HUMIDITY
     );
     this.service

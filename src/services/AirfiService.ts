@@ -1,13 +1,9 @@
-import {
-  Characteristic,
-  Logger,
-  PlatformAccessory,
-  Service,
-  WithUUID,
-} from 'homebridge';
+import { Characteristic, Logger, Service, WithUUID } from 'homebridge';
 
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
+import i18n from '../i18n';
 import { ServiceOptions } from '../types';
+import { AirfiAirHandlingUnitAccessory } from '../AirfiAirHandlingUnitAccessory';
 
 /**
  * Accessory service class for defining services communicating on modbus
@@ -18,26 +14,25 @@ export default abstract class AirfiService {
 
   protected readonly log: Logger;
 
-  protected readonly platform: AirfiHomebridgePlatform;
-
   protected service: Service;
 
   /**
-   * @param accessory
-   *   Accessory object.
+   * @param device
+   *   Air handling unit instance.
    * @param platform
    *   Platform object.
    * @param serviceOptions
    *   Various options defining the service characteristics.
    */
   constructor(
-    accessory: PlatformAccessory,
-    platform: AirfiHomebridgePlatform,
+    protected readonly device: AirfiAirHandlingUnitAccessory,
+    protected readonly platform: AirfiHomebridgePlatform,
     serviceOptions: ServiceOptions<{ service: WithUUID<typeof Service> }>
   ) {
+    const { accessory } = device;
+
     this.Characteristic = platform.Characteristic;
     this.log = platform.log;
-    this.platform = platform;
     this.service =
       accessory.getService(serviceOptions.name || serviceOptions.service) ||
       accessory.addService(
@@ -48,8 +43,10 @@ export default abstract class AirfiService {
       );
 
     const displayName = serviceOptions?.configuredNameKey
-      ? platform.t(serviceOptions.configuredNameKey)
-      : serviceOptions.name;
+      ? i18n.t(serviceOptions.configuredNameKey)
+      : serviceOptions.displayName
+        ? serviceOptions.displayName
+        : serviceOptions.name;
 
     this.service.setCharacteristic(this.Characteristic.Name, displayName);
 

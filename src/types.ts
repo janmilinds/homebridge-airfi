@@ -1,6 +1,9 @@
 import { PlatformConfig } from 'homebridge';
 
 export type AirfiDeviceConfig = {
+  exposeFireplaceFunctionSwitch?: boolean;
+  exposeBoostedCoolingSwitch?: boolean;
+  exposeSaunaFunctionSwitch?: boolean;
   host: string;
   model: string;
   port: number;
@@ -28,6 +31,7 @@ export type RegisterType = 3 | 4;
 
 export type ServiceOptions<T = Record<string, unknown>> = T & {
   configuredNameKey?: string;
+  displayName?: string;
   name: string;
   readAddress?: RegisterAddress;
   subtype?: string;

@@ -4,6 +4,14 @@ import semverGte from 'semver/functions/gte';
 
 import { AirfiHomebridgePlatform } from './AirfiHomebridgePlatform';
 import { AirfiModbusController } from './controller';
+import {
+  AirfiFanService,
+  AirfiHumiditySensorService,
+  AirfiInformationService,
+  AirfiSwitchService,
+  AirfiTemperatureSensorService,
+  AirfiThermostatService,
+} from './services';
 import { AirfiDeviceContext, RegisterAddress, WriteQueue } from './types';
 import { sleep } from './utils';
 
@@ -88,6 +96,99 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
       .forEach((service) => {
         this.accessory.removeService(service);
       });
+
+    // Set accessory information
+    new AirfiInformationService(this, this.platform, {
+      displayName: this.accessory.displayName,
+      name: '',
+      updateFrequency: 60,
+    });
+
+    new AirfiFanService(this, this.platform, {
+      configuredNameKey: 'service.fan',
+      name: 'Ventilation',
+      updateFrequency: 1,
+    });
+
+    new AirfiThermostatService(this, this.platform, {
+      configuredNameKey: 'service.thermostat',
+      name: 'SupplyAirTemperature',
+      updateFrequency: 1,
+    });
+
+    new AirfiHumiditySensorService(this, this.platform, {
+      configuredNameKey: 'service.humiditySensor',
+      name: 'ExtractAirHumidity',
+      updateFrequency: 60,
+    });
+
+    new AirfiTemperatureSensorService(this, this.platform, {
+      configuredNameKey: 'service.temperatureSensor.outdoorAir',
+      name: 'OutdoorAir',
+      readAddress: '3x00004',
+      subtype: '_outdoorAirTemp',
+      updateFrequency: 60,
+    });
+
+    new AirfiTemperatureSensorService(this, this.platform, {
+      configuredNameKey: 'service.temperatureSensor.extractAir',
+      name: 'ExtractAir',
+      readAddress: '3x00006',
+      subtype: '_extractAirTemp',
+      updateFrequency: 60,
+    });
+
+    new AirfiTemperatureSensorService(this, this.platform, {
+      configuredNameKey: 'service.temperatureSensor.exhaustAir',
+      name: 'ExhaustAir',
+      readAddress: '3x00007',
+      subtype: '_exhaustAirTemp',
+      updateFrequency: 60,
+    });
+
+    new AirfiTemperatureSensorService(this, this.platform, {
+      configuredNameKey: 'service.temperatureSensor.supplyAir',
+      name: 'SupplyAir',
+      readAddress: '3x00008',
+      subtype: '_supplyAirTemp',
+      updateFrequency: 60,
+    });
+
+    const {
+      exposeFireplaceFunctionSwitch,
+      exposeBoostedCoolingSwitch,
+      exposeSaunaFunctionSwitch,
+    } = this.accessory.context.config;
+
+    if (exposeFireplaceFunctionSwitch) {
+      new AirfiSwitchService(this, this.platform, {
+        configuredNameKey: 'service.switch.fireplaceFunction',
+        name: 'FireplaceFunction',
+        subtype: '_fireplace',
+        updateFrequency: 1,
+        writeAddress: '4x00058',
+      });
+    }
+
+    if (exposeBoostedCoolingSwitch) {
+      new AirfiSwitchService(this, this.platform, {
+        configuredNameKey: 'service.switch.boostedCooling',
+        name: 'BoostedCooling',
+        subtype: '_boostedCooling',
+        updateFrequency: 1,
+        writeAddress: '4x00051',
+      });
+    }
+
+    if (exposeSaunaFunctionSwitch) {
+      new AirfiSwitchService(this, this.platform, {
+        configuredNameKey: 'service.switch.saunaFunction',
+        name: 'SaunaFunction',
+        subtype: '_sauna',
+        updateFrequency: 1,
+        writeAddress: '4x00057',
+      });
+    }
   }
 
   /**
