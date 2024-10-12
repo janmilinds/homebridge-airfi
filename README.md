@@ -61,11 +61,15 @@ Plugin configuration is available through Homebridge UI. Example config.json:
     "platforms": [
         {
             "name": "Homebrige Airfi",
-            "host": "127.0.0.1",
-            "port": 502,
-            "model": "Model 60",
-            "serialNumber": "1234567",
             "language": "en",
+            "devices": [
+              {
+                "host": "127.0.0.1",
+                "port": 502,
+                "model": "Model 60",
+                "serialNumber": "1234567"
+              }
+            ],
             "platform": "Homebridge Airfi"
         }
     ]
