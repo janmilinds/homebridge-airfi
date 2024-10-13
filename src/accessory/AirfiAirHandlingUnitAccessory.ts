@@ -5,7 +5,9 @@ import semverGte from 'semver/functions/gte';
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { AirfiModbusController } from '../controller';
 import {
+  AirfiAirPurifierService,
   AirfiFanService,
+  AirfiFilterMaintenanceService,
   AirfiHumiditySensorService,
   AirfiInformationService,
   AirfiSwitchService,
@@ -143,6 +145,13 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
    * Initialize the accessory services.
    */
   private initializeServices() {
+    const {
+      accessoryType,
+      exposeFireplaceFunctionSwitch,
+      exposeBoostedCoolingSwitch,
+      exposeSaunaFunctionSwitch,
+    } = this.accessory.context.config;
+
     // Clear accessory services prior to any changes.
     this.accessory.services
       .filter((service) => service.constructor.name !== 'AccessoryInformation')
@@ -157,11 +166,35 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
       updateFrequency: 60,
     });
 
-    new AirfiFanService(this, this.platform, {
-      configuredNameKey: 'service.fan',
-      name: 'Ventilation',
-      updateFrequency: 1,
-    });
+    if (accessoryType === 'airpurifier') {
+      const airPurifierService = new AirfiAirPurifierService(
+        this,
+        this.platform,
+        {
+          configuredNameKey: 'service.fan',
+          name: 'Ventilation',
+          updateFrequency: 1,
+        }
+      ).getService();
+
+      const filterMaintenanceService = new AirfiFilterMaintenanceService(
+        this,
+        this.platform,
+        {
+          configuredNameKey: 'service.filterMaintenance',
+          name: 'FilterMaintenance',
+          updateFrequency: 60,
+        }
+      ).getService();
+
+      airPurifierService.addLinkedService(filterMaintenanceService);
+    } else {
+      new AirfiFanService(this, this.platform, {
+        configuredNameKey: 'service.fan',
+        name: 'Ventilation',
+        updateFrequency: 1,
+      });
+    }
 
     new AirfiThermostatService(this, this.platform, {
       configuredNameKey: 'service.thermostat',
@@ -206,12 +239,6 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
       subtype: '_supplyAirTemp',
       updateFrequency: 60,
     });
-
-    const {
-      exposeFireplaceFunctionSwitch,
-      exposeBoostedCoolingSwitch,
-      exposeSaunaFunctionSwitch,
-    } = this.accessory.context.config;
 
     if (this.hasFeature('fireplaceFunction') && exposeFireplaceFunctionSwitch) {
       new AirfiSwitchService(this, this.platform, {
