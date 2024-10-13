@@ -1,6 +1,7 @@
 {
   "service": {
     "fan": "Ventilation",
+    "filterMaintenance": "Indikator för filterbyte",
     "humiditySensor": "Frånluft fuktighet",
     "information": "Ventilationsaggregat",
     "switch": {

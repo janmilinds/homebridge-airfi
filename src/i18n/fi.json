@@ -1,6 +1,7 @@
 {
   "service": {
     "fan": "Ilmanvaihto",
+    "filterMaintenance": "Suodatinvaihdon ilmaisin",
     "humiditySensor": "Poistoilman kosteus",
     "information": "Ilmanvaihtokone",
     "switch": {
