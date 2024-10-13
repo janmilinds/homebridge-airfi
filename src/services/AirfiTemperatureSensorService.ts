@@ -1,10 +1,11 @@
-import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
-import { RegisterAddress } from '../types';
-import { AirfiService } from './airfiService';
+import AirfiService from './AirfiService';
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
+import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
+import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
  * Defines the temperature sensor service to read temperature from the
- * ventilation unit sensor.
+ * air handling unit's sensors.
  */
 export default class AirfiTemperatureSensorService extends AirfiService {
   private currentTemperature = 0;
@@ -14,35 +15,26 @@ export default class AirfiTemperatureSensorService extends AirfiService {
   private readonly subtype: string;
 
   /**
-   * @param accessory
-   *   Accessory object.
-   * @param displayName
-   *   Name shown on the sensor.
-   * @param subtype
-   *   Subtype name to differentiate different temperature sensors.
-   * @param readAddress
-   *   Register read address to get temperature readings.
+   * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    accessory: AirfiVentilationUnitAccessory,
-    displayName: string,
-    subtype: string,
-    readAddress: RegisterAddress
+    device: AirfiAirHandlingUnitAccessory,
+    platform: AirfiHomebridgePlatform,
+    serviceOptions: ServiceOptions
   ) {
-    super(
-      accessory,
-      new accessory.Service.TemperatureSensor(displayName, subtype),
-      60
-    );
+    super(device, platform, {
+      ...serviceOptions,
+      service: platform.Service.TemperatureSensor,
+    });
 
-    this.readAddress = readAddress;
-    this.subtype = subtype;
-
-    this.service.setCharacteristic(this.Characteristic.Name, displayName);
+    this.readAddress = serviceOptions.readAddress as RegisterAddress;
+    this.subtype = serviceOptions.subtype as string;
 
     this.service
       .getCharacteristic(this.Characteristic.CurrentTemperature)
       .onGet(this.getCurrentTemperature.bind(this));
+
+    this.updateState();
 
     this.log.debug(
       `Airfi TemperatureSensor (${this.subtype}) service initialized.`
@@ -58,10 +50,10 @@ export default class AirfiTemperatureSensorService extends AirfiService {
   }
 
   /**
-   * Converts temperature value from ventilation unit to celcius.
+   * Converts temperature value from air handling unit to celcius.
    *
    * @param value
-   *   Temperature value from ventilation unit.
+   *   Temperature value from air handling unit.
    *
    * @returns Temperature value in °C
    */
@@ -77,12 +69,12 @@ export default class AirfiTemperatureSensorService extends AirfiService {
   }
 
   /**
-   * Run periodic updates to service state.
+   * {@inheritDoc AirfiService.updateState}
    */
   protected updateState() {
     // Read temperature value.
     this.currentTemperature = AirfiTemperatureSensorService.convertTemperature(
-      this.accessory.getRegisterValue(this.readAddress)
+      this.device.getRegisterValue(this.readAddress)
     );
     this.service
       .getCharacteristic(this.Characteristic.CurrentTemperature)

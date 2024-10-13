@@ -1,10 +1,12 @@
 import { CharacteristicValue } from 'homebridge';
-import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
-import { RegisterAddress } from '../types';
-import { AirfiService } from './airfiService';
+
+import AirfiService from './AirfiService';
+import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
+import { RegisterAddress, ServiceOptions } from '../types';
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
 
 /**
- * Provides the base information about accessory.
+ * Provides the base information about platform.
  */
 export default class AirfiInformationService extends AirfiService {
   private static readonly READ_ADDRESS_FIRMWARE_REVISION: RegisterAddress =
@@ -19,23 +21,33 @@ export default class AirfiInformationService extends AirfiService {
 
   private readonly manufacturer = 'Airfi';
 
-  constructor(accessory: AirfiVentilationUnitAccessory) {
-    super(accessory, new accessory.Service.AccessoryInformation(), 60);
+  /**
+   * {@inheritDoc AirfiService.constructor}
+   */
+  constructor(
+    device: AirfiAirHandlingUnitAccessory,
+    platform: AirfiHomebridgePlatform,
+    serviceOptions: ServiceOptions
+  ) {
+    super(device, platform, {
+      ...serviceOptions,
+      service: platform.Service.AccessoryInformation,
+    });
 
     this.service
       .getCharacteristic(this.Characteristic.Identify)
-      .onSet(this.setIdentify.bind(this));
+      .on('set', this.setIdentify.bind(this));
     this.service.setCharacteristic(
       this.Characteristic.Manufacturer,
       this.manufacturer
     );
     this.service.setCharacteristic(
       this.Characteristic.Model,
-      accessory.config.model
+      device.accessory.context.config.model
     );
     this.service.setCharacteristic(
       this.Characteristic.SerialNumber,
-      accessory.config.serialNumber
+      device.accessory.context.config.serialNumber
     );
     this.service
       .getCharacteristic(this.Characteristic.FirmwareRevision)
@@ -43,6 +55,8 @@ export default class AirfiInformationService extends AirfiService {
     this.service
       .getCharacteristic(this.Characteristic.HardwareRevision)
       .onGet(this.getHardwareRevision.bind(this));
+
+    this.updateState();
 
     this.log.debug('Airfi Information service initialized.');
   }
@@ -57,12 +71,15 @@ export default class AirfiInformationService extends AirfiService {
     return this.hardwareRevision;
   }
 
-  private async setIdentify(value: CharacteristicValue) {
-    this.log.debug('Triggered SET Identify:', value);
+  private async setIdentify() {
+    this.log.debug(
+      'Triggered SET Identify:',
+      this.service.getCharacteristic(this.Characteristic.ConfiguredName).value
+    );
   }
 
-  private static getVersionString(value: CharacteristicValue): string {
-    return value.toString().split('').join('.');
+  public static getVersionString(value: CharacteristicValue): string {
+    return value ? value.toString().split('').join('.') : '0.0.0';
   }
 
   /**
@@ -71,7 +88,7 @@ export default class AirfiInformationService extends AirfiService {
   protected updateState() {
     // Update Firmware Revision.
     this.firmwareRevision = AirfiInformationService.getVersionString(
-      this.accessory.getRegisterValue(
+      this.device.getRegisterValue(
         AirfiInformationService.READ_ADDRESS_FIRMWARE_REVISION
       )
     );
@@ -81,7 +98,7 @@ export default class AirfiInformationService extends AirfiService {
 
     // Update Hardware Revision.
     this.hardwareRevision = AirfiInformationService.getVersionString(
-      this.accessory.getRegisterValue(
+      this.device.getRegisterValue(
         AirfiInformationService.READ_ADDRESS_HARDWARE_REVISION
       )
     );

@@ -1,11 +1,11 @@
-import { Logger } from 'homebridge';
+import { Logging } from 'homebridge';
 import { ModbusTCPClient } from 'jsmodbus';
 import { Socket, SocketConnectOpts } from 'net';
-import { RegisterType } from '../types';
+import { DebugOptions, RegisterType } from '../types';
 
 /**
  * Modbus controller handling reading and writing registers in the Airfi
- * ventilation unit.
+ * air handling unit.
  */
 export default class AirfiModbusController {
   private static readonly MODBUS_READ_LIMIT = 30;
@@ -14,24 +14,23 @@ export default class AirfiModbusController {
 
   private isConnected = false;
 
-  private log: Logger;
-
   private options: SocketConnectOpts;
 
   private socket: Socket;
 
-  constructor(host: string, port: number, log: Logger) {
+  constructor(
+    host: string,
+    port: number,
+    public readonly log: Logging,
+    private readonly debugOptions: DebugOptions = {}
+  ) {
     const timeout = 5000;
 
-    this.log = log;
     this.options = { host, port };
     this.socket = new Socket();
     this.socket.setTimeout(timeout);
     this.socket.on('timeout', () => {
       this.socket.emit('error', new Error('Timeout'));
-    });
-    this.socket.on('error', (err) => {
-      this.log.error(`Socket error: ${err.message}`);
     });
     this.client = new ModbusTCPClient(this.socket, 1, timeout);
   }
@@ -129,7 +128,7 @@ export default class AirfiModbusController {
             },
           }) => {
             this.log.debug(
-              `Reading from "${start}" to "${start - 1 + readLength}"`
+              `Reading from ${start} to ${start - 1 + readLength}`
             );
             result = [...result, ...values];
           }
@@ -142,8 +141,21 @@ export default class AirfiModbusController {
     if (result.length === length) {
       this.log.debug(
         `Values for ${registerType === 4 ? 'holding' : 'input'}` +
-          ` register from "${startAddress}" to "${length}": ` +
-          `"${result}"`
+          ` register from ${startAddress} to ${length}:`,
+
+        this.debugOptions.printModbusMap
+          ? result.reduce((result, value, i) => {
+              const address = `${startAddress + i}`;
+              const registerAddress =
+                `${registerType}x` +
+                `${'00000'.substring(address.length)}${address}`;
+
+              return {
+                ...result,
+                [registerAddress]: value,
+              };
+            }, {})
+          : result
       );
       return Promise.resolve(result);
     }
@@ -158,7 +170,7 @@ export default class AirfiModbusController {
    * Writes value into the holding register.
    *
    * @param address
-   *   Holding register value to write value.
+   *   Holding register address to write value.
    * @param value
    *   Value to be written into the register.
    */
@@ -172,13 +184,13 @@ export default class AirfiModbusController {
         .writeSingleRegister(address, value)
         .then(() => {
           this.log.debug(
-            `Successfully written value "${value}" register "${address}"`
+            `Successfully written value "${value}" to register "${address}"`
           );
           resolve();
         })
         .catch(({ err, message }) => {
           reject(
-            `Unable to write value "${value}" register "${address}":` +
+            `Unable to write value "${value}" to register "${address}":` +
               `${err} – ${message}`
           );
         });
