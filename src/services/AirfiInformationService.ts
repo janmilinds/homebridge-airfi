@@ -36,7 +36,7 @@ export default class AirfiInformationService extends AirfiService {
 
     this.service
       .getCharacteristic(this.Characteristic.Identify)
-      .onSet(this.setIdentify.bind(this));
+      .on('set', this.setIdentify.bind(this));
     this.service.setCharacteristic(
       this.Characteristic.Manufacturer,
       this.manufacturer
@@ -71,8 +71,11 @@ export default class AirfiInformationService extends AirfiService {
     return this.hardwareRevision;
   }
 
-  private async setIdentify(value: CharacteristicValue) {
-    this.log.debug('Triggered SET Identify:', value);
+  private async setIdentify() {
+    this.log.debug(
+      'Triggered SET Identify:',
+      this.service.getCharacteristic(this.Characteristic.ConfiguredName).value
+    );
   }
 
   public static getVersionString(value: CharacteristicValue): string {
