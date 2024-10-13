@@ -73,12 +73,26 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   /**
+   * Creates a UUID for the given identifier strins.
+   *
+   * @param identifier
+   *  Identifier string.
+   * @param args
+   *   0..n additional identifier strings to distinguish the device.
+   *
+   * @returns The generated UUID.
+   */
+  private createUUID(identifier, ...args: string[]) {
+    return this.api.hap.uuid.generate([identifier, ...args].join('-'));
+  }
+
+  /**
    * Discover devices and register them as accessories.
    */
   private discoverDevices() {
     for (const device of this.config.devices) {
       const displayName = `Airfi ${device.model} #${device.serialNumber}`;
-      const uuid = this.api.hap.uuid.generate(device.serialNumber);
+      const uuid = this.createUUID(device.serialNumber);
 
       this.log.debug('Discovered device:', device);
 
@@ -126,20 +140,16 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
    * Remove any accessories that are no longer present in configuration.
    */
   private removeUnconfiguredAccessories() {
-    const configuredAccessories = this.config.devices.map(
-      ({ serialNumber }) => serialNumber
+    const configuredAccessoryUUIDs = this.config.devices.map(
+      ({ serialNumber }) => this.createUUID(serialNumber)
     );
 
     const obsoleteAccessories = this.accessories.filter(
-      ({
-        context: {
-          config: { serialNumber },
-        },
-      }) => !configuredAccessories.includes(serialNumber)
+      ({ UUID }) => !configuredAccessoryUUIDs.includes(UUID)
     );
 
     if (obsoleteAccessories.length > 0) {
-      this.log.debug(
+      this.log.info(
         'Unregistering obsolete accessories:',
         obsoleteAccessories.map(({ displayName }) => displayName)
       );
