@@ -75,7 +75,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
    *
    * @returns The generated UUID.
    */
-  private createUUID(identifier, ...args: string[]) {
+  private createUUID(identifier: string, ...args: string[]) {
     return this.api.hap.uuid.generate([identifier, ...args].join('-'));
   }
 
