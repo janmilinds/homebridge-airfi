@@ -7,16 +7,17 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist'],
+    ignores: ['dist/**'],
   },
-  eslint.configs.recommended,
-  ...tseslint.configs.strict,
-  ...tseslint.configs.stylistic,
-  eslintPluginPrettier,
-  eslintConfigPrettier,
+  {
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+    },
+  },
   {
     rules: {
-      'brace-style': ['warn'],
+      'brace-style': ['error'],
       'comma-dangle': [
         'error',
         {
@@ -27,9 +28,11 @@ export default tseslint.config(
           functions: 'never',
         },
       ],
-      curly: ['warn', 'all'],
-      'dot-notation': ['off'],
-      eqeqeq: ['warn'],
+      curly: ['error', 'all'],
+      'dot-notation': 'error',
+      eqeqeq: ['error', 'smart'],
+      indent: ['error', 2, { SwitchCase: 0 }],
+      'linebreak-style': ['error', 'unix'],
       'lines-between-class-members': [
         'warn',
         'always',
@@ -39,8 +42,21 @@ export default tseslint.config(
       'no-console': ['error'], // use the provided Homebridge log method instead
       'no-multi-spaces': ['warn', { ignoreEOLComments: true }],
       'no-trailing-spaces': ['warn'],
+      'no-use-before-define': 'off',
+      'object-curly-spacing': ['error', 'always'],
       'prefer-arrow-callback': ['warn'],
       quotes: ['error', 'single'],
+      semi: ['error', 'always'],
+      '@typescript-eslint/no-use-before-define': [
+        'error',
+        { classes: false, enums: false },
+      ],
+      '@typescript-eslint/no-unused-vars': ['error', { caughtErrors: 'none' }],
     },
-  }
+  },
+  eslint.configs.recommended,
+  ...tseslint.configs.strict,
+  ...tseslint.configs.stylistic,
+  eslintPluginPrettier,
+  eslintConfigPrettier
 );
