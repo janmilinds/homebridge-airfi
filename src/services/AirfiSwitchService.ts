@@ -10,7 +10,7 @@ import { RegisterAddress, ServiceOptions, SwitchOnState } from '../types';
  * air handling unit.
  */
 export default class AirfiSwitchService extends AirfiService {
-  private on: boolean = false;
+  private on = false;
 
   private readonly subtype: string;
 

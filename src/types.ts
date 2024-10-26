@@ -1,6 +1,6 @@
 import { PlatformConfig } from 'homebridge';
 
-export type AirfiDeviceConfig = {
+export interface AirfiDeviceConfig {
   exposeFireplaceFunctionSwitch?: boolean;
   exposeBoostedCoolingSwitch?: boolean;
   exposeSaunaFunctionSwitch?: boolean;
@@ -8,11 +8,11 @@ export type AirfiDeviceConfig = {
   model: string;
   port: number;
   serialNumber: string;
-};
+}
 
-export type AirfiDeviceContext = {
+export interface AirfiDeviceContext {
   config: AirfiDeviceConfig;
-};
+}
 
 export interface AirfiPlatformConfig extends PlatformConfig {
   debug?: DebugOptions;
@@ -21,9 +21,9 @@ export interface AirfiPlatformConfig extends PlatformConfig {
   name: string;
 }
 
-export type DebugOptions = {
+export interface DebugOptions {
   printModbusMap?: boolean;
-};
+}
 
 export type FanActiveState = 0 | 1;
 
