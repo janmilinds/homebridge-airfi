@@ -7,7 +7,7 @@ import { CurrentAirPurifierState, ServiceOptions } from '../types';
  * Defines the air purifier service for controlling speed and "At home"/"Away"
  * states of the Airfi air handling unit.
  */
-export default class AirfiAirPurifierService extends AirfiVentilationUnitService {
+class AirfiAirPurifierService extends AirfiVentilationUnitService {
   private currentAirPurifierState: CurrentAirPurifierState = 0;
 
   /**
@@ -70,3 +70,5 @@ export default class AirfiAirPurifierService extends AirfiVentilationUnitService
       .updateValue(this.currentAirPurifierState);
   }
 }
+
+export default AirfiAirPurifierService;
