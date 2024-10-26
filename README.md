@@ -48,8 +48,8 @@ npm install -g homebrigde-airfi
 
 This plugin supports air handling units Model 60, 100, 130, 150, 250, 350 manufactured by Airfi.
 
-- Node.js 18.17.0 or greater and 20.15.0 or greater
-- Homebridge 1.7.0 or greater and 2.0.0-beta.0 or greater
+- Node.js 18.20.4 or greater and 20.16.0 or greater and 22.5.1 and greater
+- Homebridge 1.8.0 or greater and 2.0.0-beta.0 or greater
 - Modbus map v2.5 or greater on the air handling unit
 
 ### Configuration
