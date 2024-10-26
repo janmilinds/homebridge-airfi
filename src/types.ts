@@ -46,6 +46,4 @@ export type ServiceOptions<T = Record<string, unknown>> = T & {
 
 export type SwitchOnState = 0 | 1;
 
-export type WriteQueue = {
-  [key: RegisterAddress]: number;
-};
+export type WriteQueue = Map<number, number>;

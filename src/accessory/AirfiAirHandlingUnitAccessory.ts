@@ -41,7 +41,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
 
   public readonly log: Logging;
 
-  private queue: WriteQueue = {};
+  private queue: WriteQueue = new Map();
 
   private sequenceCount = 0;
 
@@ -242,7 +242,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
 
     if (register === 4) {
       this.holdingRegister[address - 1] = value;
-      this.queue[address] = value;
+      this.queue.set(address, value);
     } else {
       this.log.error(
         `Wrong write register type "${register}". ` +
@@ -275,7 +275,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
    * Run read & write operations for modbus registers.
    */
   private async run() {
-    const queueLength = Object.keys(this.queue).length;
+    const queueLength = this.queue.size;
 
     this.sequenceCount++;
     if (this.sequenceCount > AirfiAirHandlingUnitAccessory.READ_FREQUENCY) {
@@ -382,13 +382,12 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
   private async writeQueue(): Promise<void> {
     this.log.debug('Writing values to modbus');
 
-    for (const queueItem of Object.entries(this.queue)) {
-      const [address, value] = queueItem;
+    for (const [address, value] of this.queue) {
       await this.airfiController
-        .write(parseInt(address), value)
+        .write(address, value)
         .catch((error) => this.log.error(error as string))
         .finally(() => {
-          delete this.queue[address];
+          this.queue.delete(address);
         });
     }
 
