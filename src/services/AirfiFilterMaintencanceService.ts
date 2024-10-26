@@ -32,6 +32,9 @@ export default class AirfiFilterMaintenanceService extends AirfiService {
     this.service
       .getCharacteristic(this.Characteristic.FilterChangeIndication)
       .onGet(this.getFilterChangeIndication.bind(this));
+    this.service
+      .getCharacteristic(this.Characteristic.ResetFilterIndication)
+      .onSet(this.resetFilterChangeIndication.bind(this));
 
     this.updateState();
 
@@ -41,6 +44,15 @@ export default class AirfiFilterMaintenanceService extends AirfiService {
   private async getFilterChangeIndication() {
     this.log.debug('FilterChangeIndication is', this.filterChangeIndication);
     return this.filterChangeIndication;
+  }
+
+  private async resetFilterChangeIndication() {
+    this.filterChangeIndication = 0;
+    this.device.queueInsert(
+      AirfiFilterMaintenanceService.FILTER_CHANGE_INDICATION,
+      0
+    );
+    this.log.info('FilterChangeIndication Reset');
   }
 
   /**
