@@ -34,13 +34,6 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
 
     log.prefix = config.name;
 
-    // Homebridge 1.8.0 introduced a `log.success` method that can be used to
-    // log success messages. For users that are on a version prior to 1.8.0, we
-    // need a 'polyfill' for this method.
-    if (!log.success) {
-      log.success = log.info;
-    }
-
     if (!this.validateConfig()) {
       this.log.error(
         'Plugin configuration is invalid. Please check the configuration ' +
@@ -82,7 +75,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
    *
    * @returns The generated UUID.
    */
-  private createUUID(identifier, ...args: string[]) {
+  private createUUID(identifier: string, ...args: string[]) {
     return this.api.hap.uuid.generate([identifier, ...args].join('-'));
   }
 
