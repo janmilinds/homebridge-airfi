@@ -35,7 +35,12 @@ export default class AirfiModbusController {
     this.socket = new Socket();
     this.socket.setTimeout(timeout);
     this.socket.on('timeout', () => {
-      this.socket.emit('error', new Error('Timeout'));
+      this.socket.emit(
+        'error',
+        new Error(
+          'Timeout while connecting to ' + Object.values(this.options).join(':')
+        )
+      );
     });
     this.client = new ModbusTCPClient(this.socket, 1, timeout);
   }
@@ -50,19 +55,18 @@ export default class AirfiModbusController {
         return;
       }
 
-      const connectListener = () => {
-        this.log.debug(`Connected on ${Object.values(this.options).join(':')}`);
-        this.isConnected = true;
-        resolve();
-      };
-
       const rejectListener = (error: Error) => {
+        this.socket.off('error', rejectListener);
         reject(error.toString());
       };
 
-      this.socket.once('connect', connectListener);
       this.socket.once('error', rejectListener);
-      this.socket.connect(this.options);
+      this.socket.connect(this.options, () => {
+        this.log.debug(`Connected on ${Object.values(this.options).join(':')}`);
+        this.isConnected = true;
+        this.socket.off('error', rejectListener);
+        resolve();
+      });
     });
   }
 
