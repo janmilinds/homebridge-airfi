@@ -57,7 +57,7 @@ export default class AirfiModbusController {
 
       const rejectListener = (error: Error) => {
         this.socket.off('error', rejectListener);
-        reject(error.toString());
+        reject(error);
       };
 
       this.socket.once('error', rejectListener);
@@ -105,7 +105,9 @@ export default class AirfiModbusController {
     registerType: RegisterType
   ): Promise<number[]> {
     if (!this.isConnected) {
-      return Promise.reject('Unable to read: no connection to modbus server');
+      return Promise.reject(
+        new Error('Unable to read: no connection to modbus server')
+      );
     }
 
     // Modbus read is restricted to certain amount of registers at a time so
@@ -148,7 +150,7 @@ export default class AirfiModbusController {
           }: UserRequestError<ModbusTCPResponse, ModbusTCPRequest>) => {
             this.log.debug('Modbus read error response:', response);
             return Promise.reject(
-              `Unable to read register: ${err} - ${message}`
+              new Error(`Unable to read register: ${err} - ${message}`)
             );
           }
         );
@@ -177,8 +179,10 @@ export default class AirfiModbusController {
     }
 
     return Promise.reject(
-      `Result length (${result.length}) does not match with query length` +
-        `(${length})`
+      new Error(
+        `Result length (${result.length}) does not match with query length` +
+          `(${length})`
+      )
     );
   }
 
@@ -193,7 +197,7 @@ export default class AirfiModbusController {
   write(address: number, value: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (!this.isConnected) {
-        reject('Unable to write: no connection to modbus server');
+        reject(new Error('Unable to write: no connection to modbus server'));
       }
 
       this.client
@@ -212,8 +216,10 @@ export default class AirfiModbusController {
           }: UserRequestError<ModbusTCPResponse, ModbusTCPRequest>) => {
             this.log.debug('Modbus write error response:', response);
             reject(
-              `Unable to write value "${value}" to register "${address}":` +
-                `${err} – ${message}`
+              new Error(
+                `Unable to write value "${value}" to register "${address}":` +
+                  `${err} – ${message}`
+              )
             );
           }
         );

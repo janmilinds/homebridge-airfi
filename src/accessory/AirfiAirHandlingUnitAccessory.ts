@@ -312,7 +312,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
             .then((values) => {
               this.holdingRegister = values;
             })
-            .catch((error: string) => this.log.error(error));
+            .catch((error: Error) => this.log.error(error.toString()));
 
           // Read and save input register.
           await this.airfiController
@@ -320,11 +320,11 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
             .then((values) => {
               this.inputRegister = values;
             })
-            .catch((error: string) => this.log.error(error));
+            .catch((error: Error) => this.log.error(error.toString()));
         }
       })
-      .catch((error: string) => {
-        this.log.error(error);
+      .catch((error: Error) => {
+        this.log.error(error.toString());
       })
       .finally(() => {
         this.airfiController.close();
@@ -385,7 +385,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
     for (const [address, value] of this.queue) {
       await this.airfiController
         .write(address, value)
-        .catch((error: string) => this.log.error(error))
+        .catch((error: Error) => this.log.error(error.toString()))
         .finally(() => {
           this.queue.delete(address);
         });
