@@ -146,7 +146,7 @@ export default class AirfiModbusController {
             message,
             response,
           }: UserRequestError<ModbusTCPResponse, ModbusTCPRequest>) => {
-            this.log.debug('Modbus read error:', response);
+            this.log.debug('Modbus read error response:', response);
             return Promise.reject(
               `Unable to read register: ${err} - ${message}`
             );
@@ -208,7 +208,9 @@ export default class AirfiModbusController {
           ({
             err,
             message,
+            response,
           }: UserRequestError<ModbusTCPResponse, ModbusTCPRequest>) => {
+            this.log.debug('Modbus write error response:', response);
             reject(
               `Unable to write value "${value}" to register "${address}":` +
                 `${err} – ${message}`
