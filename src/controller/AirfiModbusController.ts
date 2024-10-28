@@ -1,5 +1,10 @@
 import { Logging } from 'homebridge';
-import { ModbusTCPClient } from 'jsmodbus';
+import {
+  ModbusTCPClient,
+  ModbusTCPRequest,
+  ModbusTCPResponse,
+  UserRequestError,
+} from 'jsmodbus';
 import { Socket, SocketConnectOpts } from 'net';
 import { DebugOptions, RegisterType } from '../types';
 
@@ -30,7 +35,12 @@ export default class AirfiModbusController {
     this.socket = new Socket();
     this.socket.setTimeout(timeout);
     this.socket.on('timeout', () => {
-      this.socket.emit('error', new Error('Timeout'));
+      this.socket.emit(
+        'error',
+        new Error(
+          'Timeout while connecting to ' + Object.values(this.options).join(':')
+        )
+      );
     });
     this.client = new ModbusTCPClient(this.socket, 1, timeout);
   }
@@ -45,19 +55,18 @@ export default class AirfiModbusController {
         return;
       }
 
-      const connectListener = () => {
+      const rejectListener = (error: Error) => {
+        this.socket.off('error', rejectListener);
+        reject(error);
+      };
+
+      this.socket.once('error', rejectListener);
+      this.socket.connect(this.options, () => {
         this.log.debug(`Connected on ${Object.values(this.options).join(':')}`);
         this.isConnected = true;
+        this.socket.off('error', rejectListener);
         resolve();
-      };
-
-      const rejectListener = (error: Error) => {
-        reject(error.toString());
-      };
-
-      this.socket.once('connect', connectListener);
-      this.socket.once('error', rejectListener);
-      this.socket.connect(this.options);
+      });
     });
   }
 
@@ -96,7 +105,9 @@ export default class AirfiModbusController {
     registerType: RegisterType
   ): Promise<number[]> {
     if (!this.isConnected) {
-      return Promise.reject('Unable to read: no connection to modbus server');
+      return Promise.reject(
+        new Error('Unable to read: no connection to modbus server')
+      );
     }
 
     // Modbus read is restricted to certain amount of registers at a time so
@@ -131,9 +142,18 @@ export default class AirfiModbusController {
             result = [...result, ...values];
           }
         )
-        .catch(({ err, message }) => {
-          return Promise.reject(`Unable to read register: ${err} - ${message}`);
-        });
+        .catch(
+          ({
+            err,
+            message,
+            response,
+          }: UserRequestError<ModbusTCPResponse, ModbusTCPRequest>) => {
+            this.log.debug('Modbus read error response:', response);
+            return Promise.reject(
+              new Error(`Unable to read register: ${err} - ${message}`)
+            );
+          }
+        );
     }
 
     if (result.length === length) {
@@ -159,8 +179,10 @@ export default class AirfiModbusController {
     }
 
     return Promise.reject(
-      `Result length (${result.length}) does not match with query length` +
-        `(${length})`
+      new Error(
+        `Result length (${result.length}) does not match with query length` +
+          `(${length})`
+      )
     );
   }
 
@@ -175,7 +197,7 @@ export default class AirfiModbusController {
   write(address: number, value: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (!this.isConnected) {
-        reject('Unable to write: no connection to modbus server');
+        reject(new Error('Unable to write: no connection to modbus server'));
       }
 
       this.client
@@ -186,12 +208,21 @@ export default class AirfiModbusController {
           );
           resolve();
         })
-        .catch(({ err, message }) => {
-          reject(
-            `Unable to write value "${value}" to register "${address}":` +
-              `${err} – ${message}`
-          );
-        });
+        .catch(
+          ({
+            err,
+            message,
+            response,
+          }: UserRequestError<ModbusTCPResponse, ModbusTCPRequest>) => {
+            this.log.debug('Modbus write error response:', response);
+            reject(
+              new Error(
+                `Unable to write value "${value}" to register "${address}":` +
+                  `${err} – ${message}`
+              )
+            );
+          }
+        );
     });
   }
 }

@@ -312,7 +312,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
             .then((values) => {
               this.holdingRegister = values;
             })
-            .catch((error) => this.log.error(error as string));
+            .catch((error: Error) => this.log.error(error.toString()));
 
           // Read and save input register.
           await this.airfiController
@@ -320,11 +320,11 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
             .then((values) => {
               this.inputRegister = values;
             })
-            .catch((error) => this.log.error(error as string));
+            .catch((error: Error) => this.log.error(error.toString()));
         }
       })
-      .catch((error) => {
-        this.log.error(error as string);
+      .catch((error: Error) => {
+        this.log.error(error.toString());
       })
       .finally(() => {
         this.airfiController.close();
@@ -338,7 +338,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
    */
   private validateDevice(): boolean {
     // Verify that data was retrieved from the air handling unit.
-    if (this.holdingRegister.length === 0 && this.inputRegister.length === 0) {
+    if (this.holdingRegister.length === 0 || this.inputRegister.length === 0) {
       this.log.error(
         'Failed to retrieve data from the air handling unit ' +
           `"${this.accessory.displayName}". ` +
@@ -385,7 +385,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
     for (const [address, value] of this.queue) {
       await this.airfiController
         .write(address, value)
-        .catch((error) => this.log.error(error as string))
+        .catch((error: Error) => this.log.error(error.toString()))
         .finally(() => {
           this.queue.delete(address);
         });
