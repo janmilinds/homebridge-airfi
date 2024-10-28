@@ -1,5 +1,10 @@
 import { Logging } from 'homebridge';
-import { ModbusTCPClient } from 'jsmodbus';
+import {
+  ModbusTCPClient,
+  ModbusTCPRequest,
+  ModbusTCPResponse,
+  UserRequestError,
+} from 'jsmodbus';
 import { Socket, SocketConnectOpts } from 'net';
 import { DebugOptions, RegisterType } from '../types';
 
@@ -131,9 +136,18 @@ export default class AirfiModbusController {
             result = [...result, ...values];
           }
         )
-        .catch(({ err, message }) => {
-          return Promise.reject(`Unable to read register: ${err} - ${message}`);
-        });
+        .catch(
+          ({
+            err,
+            message,
+            response,
+          }: UserRequestError<ModbusTCPResponse, ModbusTCPRequest>) => {
+            this.log.debug('Modbus read error:', response);
+            return Promise.reject(
+              `Unable to read register: ${err} - ${message}`
+            );
+          }
+        );
     }
 
     if (result.length === length) {
@@ -186,12 +200,17 @@ export default class AirfiModbusController {
           );
           resolve();
         })
-        .catch(({ err, message }) => {
-          reject(
-            `Unable to write value "${value}" to register "${address}":` +
-              `${err} – ${message}`
-          );
-        });
+        .catch(
+          ({
+            err,
+            message,
+          }: UserRequestError<ModbusTCPResponse, ModbusTCPRequest>) => {
+            reject(
+              `Unable to write value "${value}" to register "${address}":` +
+                `${err} – ${message}`
+            );
+          }
+        );
     });
   }
 }
