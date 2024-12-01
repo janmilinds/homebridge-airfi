@@ -31,6 +31,13 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
 
   private readonly airfiController!: AirfiModbusController;
 
+  private readonly featureFlags = {
+    fireplaceFunction: false,
+    boostedCooling: false,
+    minimumTemperatureSet: false,
+    saunaFunction: false,
+  };
+
   private holdingRegister: number[] = [];
 
   private inputRegister: number[] = [];
@@ -62,29 +69,58 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
       this.platform.config.debug
     );
 
-    // Initial modbus register read.
-    this.run().then(() => {
-      if (!this.validateDevice()) {
+    this.deviceLookup()
+      .then(() => {
+        if (!this.validateDevice()) {
+          return Promise.reject();
+        }
+
+        this.setFeatureFlags();
+        return this.run();
+      })
+      .then(() => {
+        this.initializeServices();
+        this.emit('initialized');
+        this.log.debug(
+          'Finished initializing accessory:',
+          this.accessory.displayName
+        );
+
+        // Run periodic operations into modbus.
+        this.intervalId = setInterval(
+          () => this.run(),
+          AirfiAirHandlingUnitAccessory.INTERVAL_FREQUENCY
+        );
+      })
+      .catch(() => {
         this.log.error(
           'Initialization could not be completed for accessory:',
           this.accessory.displayName
         );
-        return;
-      }
+      });
+  }
 
-      this.initializeServices();
-      this.emit('initialized');
-      this.log.debug(
-        'Finished initializing accessory:',
-        this.accessory.displayName
-      );
-
-      // Run periodic operations into modbus.
-      this.intervalId = setInterval(
-        () => this.run(),
-        AirfiAirHandlingUnitAccessory.INTERVAL_FREQUENCY
-      );
-    });
+  /**
+   *
+   */
+  private async deviceLookup() {
+    await this.airfiController
+      .open()
+      .then(async () => {
+        await this.airfiController
+          .read(1, 3, 3)
+          .then((values) => {
+            this.inputRegister = values;
+          })
+          .catch((error: Error) => this.log.error(error.toString()));
+      })
+      .catch((error: Error) => {
+        this.log.error(error.toString());
+      })
+      .finally(() => {
+        this.airfiController.close();
+        this.isNetworking = false;
+      });
   }
 
   /**
@@ -333,41 +369,46 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
   }
 
   /**
+   * Set feature flags based on the modbus map version.
+   */
+  private setFeatureFlags() {
+    const deviceFirmwareVersion = AirfiInformationService.getVersionString(
+      this.getRegisterValue('3x00002')
+    );
+    const deviceModbusMapVersion = AirfiInformationService.getVersionString(
+      this.getRegisterValue('3x00003')
+    );
+
+    const deviceInfoHeadline = `----- ${this.accessory.displayName} -----`;
+    this.log.info(deviceInfoHeadline);
+    this.log.info('  Firmware version:', deviceFirmwareVersion);
+    this.log.info('  Modbus map version:', deviceModbusMapVersion);
+    this.log.info(deviceInfoHeadline.replace(/./g, '-'));
+
+    if (semverGte(deviceModbusMapVersion, '2.1.0')) {
+      this.featureFlags.minimumTemperatureSet = true;
+    }
+
+    if (semverGte(deviceModbusMapVersion, '2.5.0')) {
+      this.featureFlags.fireplaceFunction = true;
+      this.featureFlags.boostedCooling = true;
+      this.featureFlags.saunaFunction = true;
+    }
+  }
+
+  /**
    * Checks whether data was retrieved from the air handling unit and whether
    * the modbus map version is supported.
    */
   private validateDevice(): boolean {
     // Verify that data was retrieved from the air handling unit.
-    if (this.holdingRegister.length === 0 || this.inputRegister.length === 0) {
+    if (this.inputRegister.length === 0) {
       this.log.error(
         'Failed to retrieve data from the air handling unit ' +
           `"${this.accessory.displayName}". ` +
           'Please check your network settings, the air handling unit is ' +
           'powered on and connected to a network. Then restart Homebridge ' +
           'and try again.'
-      );
-
-      return false;
-    }
-
-    const deviceModbusMapVersion = AirfiInformationService.getVersionString(
-      this.getRegisterValue('3x00003')
-    );
-
-    this.log.info('Device Modbus map version:', deviceModbusMapVersion);
-
-    // Verify that the air handling unit has a supported modbus map version.
-    if (
-      semverGte(
-        deviceModbusMapVersion,
-        AirfiAirHandlingUnitAccessory.MIN_MODBUS_VERSION
-      ) === false
-    ) {
-      this.log.error(
-        `Modbus map version ${deviceModbusMapVersion} of the air handling ` +
-          'unit is not supported. Minimun required Modbus map version is ' +
-          `${AirfiAirHandlingUnitAccessory.MIN_MODBUS_VERSION}. Please ` +
-          'update firmware of the air handling unit.'
       );
 
       return false;
