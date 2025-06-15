@@ -106,10 +106,13 @@ export default class AirfiThermostatService extends AirfiService {
       AirfiThermostatService.TARGET_TEMPERATURE,
       (value as number) * 10
     );
-    this.device.queueInsert(
-      AirfiThermostatService.TARGET_MIN_TEMPERATURE,
-      value as number
-    );
+
+    if (this.device.hasFeature('minimumTemperatureSet')) {
+      this.device.queueInsert(
+        AirfiThermostatService.TARGET_MIN_TEMPERATURE,
+        value as number
+      );
+    }
   }
 
   private async getTemperatureDisplayUnits() {
@@ -132,14 +135,21 @@ export default class AirfiThermostatService extends AirfiService {
     this.targetTemperature = AirfiTemperatureSensorService.convertTemperature(
       this.device.getRegisterValue(AirfiThermostatService.TARGET_TEMPERATURE)
     );
-    this.targetMinTemperature = this.device.getRegisterValue(
-      AirfiThermostatService.TARGET_MIN_TEMPERATURE
-    );
+
+    if (this.device.hasFeature('minimumTemperatureSet')) {
+      this.targetMinTemperature = this.device.getRegisterValue(
+        AirfiThermostatService.TARGET_MIN_TEMPERATURE
+      );
+    }
+
     this.service
       .getCharacteristic(this.Characteristic.TargetTemperature)
       .updateValue(this.targetTemperature);
 
-    if (this.targetTemperature !== this.targetMinTemperature) {
+    if (
+      this.device.hasFeature('minimumTemperatureSet') &&
+      this.targetTemperature !== this.targetMinTemperature
+    ) {
       this.syncTargetMinTemperature();
     }
   }
