@@ -214,7 +214,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
       exposeSaunaFunctionSwitch,
     } = this.accessory.context.config;
 
-    if (exposeFireplaceFunctionSwitch) {
+    if (this.hasFeature('fireplaceFunction') && exposeFireplaceFunctionSwitch) {
       new AirfiSwitchService(this, this.platform, {
         configuredNameKey: 'service.switch.fireplaceFunction',
         name: 'FireplaceFunction',
@@ -224,7 +224,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
       });
     }
 
-    if (exposeBoostedCoolingSwitch) {
+    if (this.hasFeature('boostedCooling') && exposeBoostedCoolingSwitch) {
       new AirfiSwitchService(this, this.platform, {
         configuredNameKey: 'service.switch.boostedCooling',
         name: 'BoostedCooling',
@@ -234,7 +234,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
       });
     }
 
-    if (exposeSaunaFunctionSwitch) {
+    if (this.hasFeature('saunaFunction') && exposeSaunaFunctionSwitch) {
       new AirfiSwitchService(this, this.platform, {
         configuredNameKey: 'service.switch.saunaFunction',
         name: 'SaunaFunction',
