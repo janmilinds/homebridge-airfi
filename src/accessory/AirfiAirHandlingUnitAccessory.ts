@@ -19,11 +19,7 @@ import { sleep } from '../utils';
  * Platform accessory for the Airfi air handling unit.
  */
 export class AirfiAirHandlingUnitAccessory extends EventEmitter {
-  private static readonly HOLDING_REGISTER_LENGTH = 58;
-
-  private static readonly MIN_MODBUS_VERSION = '2.5.0';
-
-  private static readonly INPUT_REGISTER_LENGTH = 40;
+  private static readonly MIN_MODBUS_VERSION = '1.5.0';
 
   private static readonly INTERVAL_FREQUENCY = 1000;
 
@@ -38,15 +34,23 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
     saunaFunction: false,
   };
 
+  private firmwareVersion = '';
+
   private holdingRegister: number[] = [];
 
+  private holdingRegisterLength = 12;
+
   private inputRegister: number[] = [];
+
+  private inputRegisterLength = 31;
 
   private intervalId: NodeJS.Timeout | undefined;
 
   private isNetworking = false;
 
   public readonly log: Logging;
+
+  private modbusMapVersion = '';
 
   private queue: WriteQueue = new Map();
 
@@ -75,6 +79,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
           return Promise.reject();
         }
 
+        this.setRegisterLengths();
         this.setFeatureFlags();
         return this.run();
       })
@@ -101,7 +106,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
   }
 
   /**
-   *
+   * Tests connection to the air handling unit and reads version information.
    */
   private async deviceLookup() {
     await this.airfiController
@@ -121,6 +126,18 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
         this.airfiController.close();
         this.isNetworking = false;
       });
+  }
+
+  /**
+   * Check whether the feature is supported by the air handling unit.
+   *
+   * @param key
+   *   Feature key to check.
+   *
+   * @returns Whether the feature is enabled.
+   */
+  public hasFeature(key: keyof typeof this.featureFlags): boolean {
+    return this.featureFlags[key] ?? false;
   }
 
   /**
@@ -344,7 +361,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
         if (this.sequenceCount === 1) {
           // Read and save holding register.
           await this.airfiController
-            .read(1, AirfiAirHandlingUnitAccessory.HOLDING_REGISTER_LENGTH, 4)
+            .read(1, this.holdingRegisterLength, 4)
             .then((values) => {
               this.holdingRegister = values;
             })
@@ -352,7 +369,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
 
           // Read and save input register.
           await this.airfiController
-            .read(1, AirfiAirHandlingUnitAccessory.INPUT_REGISTER_LENGTH, 3)
+            .read(1, this.inputRegisterLength, 3)
             .then((values) => {
               this.inputRegister = values;
             })
@@ -372,28 +389,54 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
    * Set feature flags based on the modbus map version.
    */
   private setFeatureFlags() {
-    const deviceFirmwareVersion = AirfiInformationService.getVersionString(
-      this.getRegisterValue('3x00002')
-    );
-    const deviceModbusMapVersion = AirfiInformationService.getVersionString(
-      this.getRegisterValue('3x00003')
-    );
-
     const deviceInfoHeadline = `----- ${this.accessory.displayName} -----`;
     this.log.info(deviceInfoHeadline);
-    this.log.info('  Firmware version:', deviceFirmwareVersion);
-    this.log.info('  Modbus map version:', deviceModbusMapVersion);
+    this.log.info('  Firmware version:', this.firmwareVersion);
+    this.log.info('  Modbus map version:', this.modbusMapVersion);
     this.log.info(deviceInfoHeadline.replace(/./g, '-'));
 
-    if (semverGte(deviceModbusMapVersion, '2.1.0')) {
+    if (semverGte(this.modbusMapVersion, '2.1.0')) {
       this.featureFlags.minimumTemperatureSet = true;
     }
 
-    if (semverGte(deviceModbusMapVersion, '2.5.0')) {
+    if (semverGte(this.modbusMapVersion, '2.5.0')) {
       this.featureFlags.fireplaceFunction = true;
       this.featureFlags.boostedCooling = true;
       this.featureFlags.saunaFunction = true;
     }
+
+    this.log.debug('Feature flags:', this.featureFlags);
+  }
+
+  /**
+   * Set the input and holding register lengths based on the modbus map version.
+   */
+  private setRegisterLengths() {
+    const registerLenghts = {
+      '2.7.0': [42, 59],
+      '2.5.0': [40, 58],
+      '2.3.0': [40, 55],
+      '2.1.0': [40, 51],
+      '2.0.0': [40, 34],
+      '1.5.0': [31, 12],
+    };
+
+    Object.entries(registerLenghts).every(
+      ([version, [inputRegisterLength, holdingRegisterLength]]) => {
+        if (semverGte(this.modbusMapVersion, version)) {
+          this.inputRegisterLength = inputRegisterLength;
+          this.holdingRegisterLength = holdingRegisterLength;
+          this.log.debug(
+            `Setting input register length to ${this.inputRegisterLength} and ` +
+              `holding register length to ${this.holdingRegisterLength}`
+          );
+
+          return false;
+        }
+
+        return true;
+      }
+    );
   }
 
   /**
@@ -409,6 +452,37 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
           'Please check your network settings, the air handling unit is ' +
           'powered on and connected to a network. Then restart Homebridge ' +
           'and try again.'
+      );
+
+      return false;
+    }
+
+    this.firmwareVersion = AirfiInformationService.getVersionString(
+      this.getRegisterValue('3x00002')
+    );
+
+    this.modbusMapVersion = AirfiInformationService.getVersionString(
+      this.getRegisterValue('3x00003')
+    );
+
+    if (
+      !semverGte(
+        this.modbusMapVersion,
+        AirfiAirHandlingUnitAccessory.MIN_MODBUS_VERSION
+      )
+    ) {
+      this.log.error(
+        `Device firmware version ${this.firmwareVersion} is unsupported. ` +
+          'Please upgrade to a newer version.'
+      );
+
+      return false;
+    }
+
+    if (this.firmwareVersion === '3.2.0') {
+      this.log.error(
+        'Air handling unit firmware version 3.2.0 is unsupported. ' +
+          'Please downgrade or upgrade to another version.'
       );
 
       return false;
