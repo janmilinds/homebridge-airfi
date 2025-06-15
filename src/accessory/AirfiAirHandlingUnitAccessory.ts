@@ -76,7 +76,9 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
     this.deviceLookup()
       .then(() => {
         if (!this.validateDevice()) {
-          return Promise.reject();
+          return Promise.reject(
+            new Error('Device validation failed during initialization')
+          );
         }
 
         this.setRegisterLengths();
@@ -97,11 +99,8 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
           AirfiAirHandlingUnitAccessory.INTERVAL_FREQUENCY
         );
       })
-      .catch(() => {
-        this.log.error(
-          'Initialization could not be completed for accessory:',
-          this.accessory.displayName
-        );
+      .catch((error: Error) => {
+        this.log.error(`${error.message} for "${this.accessory.displayName}"`);
       });
   }
 
