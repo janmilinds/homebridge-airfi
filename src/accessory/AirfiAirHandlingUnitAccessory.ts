@@ -421,22 +421,21 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
       '1.5.0': [31, 12],
     };
 
-    Object.entries(registerLengths).every(
-      ([version, [inputRegisterLength, holdingRegisterLength]]) => {
-        if (semverGte(this.modbusMapVersion, version)) {
-          this.inputRegisterLength = inputRegisterLength;
-          this.holdingRegisterLength = holdingRegisterLength;
-          this.log.debug(
-            `Setting input register length to ${this.inputRegisterLength} and ` +
-              `holding register length to ${this.holdingRegisterLength}`
-          );
+    for (const [
+      version,
+      [inputRegisterLength, holdingRegisterLength],
+    ] of Object.entries(registerLengths)) {
+      if (semverGte(this.modbusMapVersion, version)) {
+        this.inputRegisterLength = inputRegisterLength;
+        this.holdingRegisterLength = holdingRegisterLength;
+        this.log.debug(
+          `Setting input register length to ${this.inputRegisterLength} and ` +
+            `holding register length to ${this.holdingRegisterLength}`
+        );
 
-          return false;
-        }
-
-        return true;
+        break;
       }
-    );
+    }
   }
 
   /**
