@@ -412,7 +412,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
    * Set the input and holding register lengths based on the modbus map version.
    */
   private setRegisterLengths() {
-    const registerLenghts = {
+    const registerLengths = {
       '2.7.0': [42, 59],
       '2.5.0': [40, 58],
       '2.3.0': [40, 55],
@@ -421,7 +421,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
       '1.5.0': [31, 12],
     };
 
-    Object.entries(registerLenghts).every(
+    Object.entries(registerLengths).every(
       ([version, [inputRegisterLength, holdingRegisterLength]]) => {
         if (semverGte(this.modbusMapVersion, version)) {
           this.inputRegisterLength = inputRegisterLength;
