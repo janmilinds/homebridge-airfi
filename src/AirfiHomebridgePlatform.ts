@@ -168,7 +168,8 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
     if (errors.length > 0) {
       errors.forEach((error) => {
         this.log.error(
-          `Property "${error.property.split('.')[1]}" ${error.message}`
+          `Property "${error.property.replace('instance.', '')}" ` +
+            `${error.message}`
         );
       });
 

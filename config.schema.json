@@ -35,7 +35,6 @@
             "host": {
               "title": "Host",
               "type": "string",
-              "required": true,
               "format": "ipv4"
             },
             "port": {
@@ -43,8 +42,7 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 65535,
-              "default": 502,
-              "required": true
+              "default": 502
             },
             "model": {
               "title": "Model",
@@ -57,14 +55,12 @@
                 { "title": "Model 150", "enum": ["Model 150"] },
                 { "title": "Model 250", "enum": ["Model 250"] },
                 { "title": "Model 350", "enum": ["Model 350"] }
-              ],
-              "required": true
+              ]
             },
             "serialNumber": {
               "title": "Serial number",
               "type": "string",
-              "pattern": "^\\d{5,10}$",
-              "required": true
+              "pattern": "^\\d{5,10}$"
             },
             "exposeBoostedCoolingSwitch": {
               "title": "Expose Boosted cooling switch",
@@ -84,7 +80,8 @@
               "default": false,
               "description": "Prevents ventilation power increase for 30 min when unit detects sudden increase in humidity."
             }
-          }
+          },
+          "required": ["host", "port", "model", "serialNumber"]
         }
       }
     }
