@@ -100,18 +100,22 @@ export default class AirfiThermostatService extends AirfiService {
   }
 
   private async setTargetTemperature(value: CharacteristicValue) {
-    this.log.info(`TargetTemperature ${this.targetTemperature}°C → ${value}°C`);
-    this.targetTemperature = this.targetMinTemperature = value as number;
-    this.device.queueInsert(
-      AirfiThermostatService.TARGET_TEMPERATURE,
-      (value as number) * 10
-    );
-
-    if (this.device.hasFeature('minimumTemperatureSet')) {
-      this.device.queueInsert(
-        AirfiThermostatService.TARGET_MIN_TEMPERATURE,
-        value as number
+    if ((value as number) !== this.targetTemperature) {
+      this.log.info(
+        `TargetTemperature ${this.targetTemperature}°C → ${value}°C`
       );
+      this.targetTemperature = this.targetMinTemperature = value as number;
+      this.device.queueInsert(
+        AirfiThermostatService.TARGET_TEMPERATURE,
+        (value as number) * 10
+      );
+
+      if (this.device.hasFeature('minimumTemperatureSet')) {
+        this.device.queueInsert(
+          AirfiThermostatService.TARGET_MIN_TEMPERATURE,
+          value as number
+        );
+      }
     }
   }
 
