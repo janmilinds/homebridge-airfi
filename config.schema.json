@@ -73,13 +73,13 @@
               "description": "When activated, the unit monitors temperatures and boosts air volumes as needed depending on conditions."
             },
             "exposeFireplaceFunctionSwitch": {
-              "title": "Expose Fireplace funtion switch",
+              "title": "Expose Fireplace function switch",
               "type": "boolean",
               "default": false,
               "description": "Creates an overpressure for 30 min."
             },
             "exposeSaunaFunctionSwitch": {
-              "title": "Expose Sauna funtion switch",
+              "title": "Expose Sauna function switch",
               "type": "boolean",
               "default": false,
               "description": "Prevents ventilation power increase for 30 min when unit detects sudden increase in humidity."

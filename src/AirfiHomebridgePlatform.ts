@@ -66,7 +66,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * Creates a UUID for the given identifier strins.
+   * Creates a UUID for the given identifier strings.
    *
    * @param identifier
    *  Identifier string.
