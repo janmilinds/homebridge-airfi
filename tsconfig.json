@@ -16,10 +16,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "removeComments": true,
-    "typeRoots": [
-      "./node_modules/@types",
-      "./node_modules/hap-nodejs/@types"
-    ],
+    "skipLibCheck": true
   },
   "include": [
     "src",
