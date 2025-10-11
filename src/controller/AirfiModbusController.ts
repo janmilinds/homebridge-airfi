@@ -13,19 +13,15 @@ export default class AirfiModbusController {
 
   private isConnected = false;
 
-  private host!: string;
-
-  private port!: number;
-
   constructor(
-    host: string,
-    port: number,
+    private readonly host: string,
+    private readonly port: number,
     public readonly log: Logging,
     private readonly debugOptions: DebugOptions = {}
   ) {
-    this.host = host;
-    this.port = port;
     this.client = new ModbusRTU();
+    this.client.setID(1);
+    this.client.setTimeout(2000);
   }
 
   open(): Promise<void> {
@@ -41,15 +37,11 @@ export default class AirfiModbusController {
       this.client
         .connectTCP(this.host, { port: this.port })
         .then(() => {
-          this.client.setID(1);
-          this.client.setTimeout(2000);
-        })
-        .then(() => {
           this.log.debug(`Connected on ${this.host}:${this.port}`);
           this.isConnected = true;
           resolve();
         })
-        .catch((error) => {
+        .catch((error: Error) => {
           reject(error);
         });
     });
@@ -174,7 +166,7 @@ export default class AirfiModbusController {
           );
           resolve();
         })
-        .catch(({ message }) => {
+        .catch(({ message }: Error) => {
           reject(
             new Error(
               `Unable to write value "${value}" to register "${address}":` +
