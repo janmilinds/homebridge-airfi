@@ -75,7 +75,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
 
     this.deviceLookup()
       .then(() => {
-        if (!this.validateDevice()) {
+        if (!this.isSupportedDevice()) {
           return Promise.reject(
             new Error('Device validation failed during initialization')
           );
@@ -108,6 +108,8 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
    * Tests connection to the air handling unit and reads version information.
    */
   private async deviceLookup() {
+    this.isNetworking = true;
+
     await this.airfiController
       .open()
       .then(async () => {
@@ -282,6 +284,60 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
   }
 
   /**
+   * Checks whether data was retrieved from the air handling unit and whether
+   * the modbus map version is supported.
+   */
+  private isSupportedDevice(): boolean {
+    // Verify that data was retrieved from the air handling unit.
+    if (this.inputRegister.length === 0) {
+      this.log.error(
+        'Failed to retrieve data from the air handling unit ' +
+          `"${this.accessory.displayName}". ` +
+          'Please check your network settings, the air handling unit is ' +
+          'powered on and connected to a network. Then restart Homebridge ' +
+          'and try again.'
+      );
+
+      return false;
+    }
+
+    this.firmwareVersion = AirfiInformationService.getVersionString(
+      this.getRegisterValue('3x00002')
+    );
+
+    this.modbusMapVersion = AirfiInformationService.getVersionString(
+      this.getRegisterValue('3x00003')
+    );
+
+    if (
+      !semverGte(
+        this.modbusMapVersion,
+        AirfiAirHandlingUnitAccessory.MIN_MODBUS_VERSION
+      )
+    ) {
+      this.log.error(
+        `Device firmware version ${this.firmwareVersion} is unsupported. ` +
+          'Please upgrade to a newer version.'
+      );
+
+      return false;
+    }
+
+    // Firmware 3.2.0 has a hidden register address causing issues with the
+    // plugin; therefore, it is not supported.
+    if (this.firmwareVersion === '3.2.0') {
+      this.log.error(
+        'Air handling unit firmware version 3.2.0 is unsupported. ' +
+          'Please downgrade or upgrade to another version.'
+      );
+
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Queue value to be written into holding register.
    *
    * @param registerAddress
@@ -435,58 +491,6 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
         break;
       }
     }
-  }
-
-  /**
-   * Checks whether data was retrieved from the air handling unit and whether
-   * the modbus map version is supported.
-   */
-  private validateDevice(): boolean {
-    // Verify that data was retrieved from the air handling unit.
-    if (this.inputRegister.length === 0) {
-      this.log.error(
-        'Failed to retrieve data from the air handling unit ' +
-          `"${this.accessory.displayName}". ` +
-          'Please check your network settings, the air handling unit is ' +
-          'powered on and connected to a network. Then restart Homebridge ' +
-          'and try again.'
-      );
-
-      return false;
-    }
-
-    this.firmwareVersion = AirfiInformationService.getVersionString(
-      this.getRegisterValue('3x00002')
-    );
-
-    this.modbusMapVersion = AirfiInformationService.getVersionString(
-      this.getRegisterValue('3x00003')
-    );
-
-    if (
-      !semverGte(
-        this.modbusMapVersion,
-        AirfiAirHandlingUnitAccessory.MIN_MODBUS_VERSION
-      )
-    ) {
-      this.log.error(
-        `Device firmware version ${this.firmwareVersion} is unsupported. ` +
-          'Please upgrade to a newer version.'
-      );
-
-      return false;
-    }
-
-    if (this.firmwareVersion === '3.2.0') {
-      this.log.error(
-        'Air handling unit firmware version 3.2.0 is unsupported. ' +
-          'Please downgrade or upgrade to another version.'
-      );
-
-      return false;
-    }
-
-    return true;
   }
 
   /**

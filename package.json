@@ -35,8 +35,8 @@
   "dependencies": {
     "i18next": "^25.2.1",
     "i18next-fs-backend": "^2.3.1",
-    "jsmodbus": "^4.0.6",
     "jsonschema": "^1.4.1",
+    "modbus-serial": "^8.0.23",
     "semver": "^7.6.2"
   },
   "devDependencies": {
@@ -45,7 +45,6 @@
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/node": "^24.7.1",
     "@types/semver": "^7.5.8",
-    "@types/serialport": "^8.0.5",
     "eslint": "^9.13.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.0.0",

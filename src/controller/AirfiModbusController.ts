@@ -1,11 +1,5 @@
 import { Logging } from 'homebridge';
-import {
-  ModbusTCPClient,
-  ModbusTCPRequest,
-  ModbusTCPResponse,
-  UserRequestError,
-} from 'jsmodbus';
-import { Socket, SocketConnectOpts } from 'net';
+import ModbusRTU from 'modbus-serial';
 import { DebugOptions, RegisterType } from '../types';
 
 /**
@@ -15,39 +9,24 @@ import { DebugOptions, RegisterType } from '../types';
 export default class AirfiModbusController {
   private static readonly MODBUS_READ_LIMIT = 30;
 
-  private client: ModbusTCPClient;
+  private client: ModbusRTU;
 
   private isConnected = false;
 
-  private options: SocketConnectOpts;
-
-  private socket: Socket;
-
   constructor(
-    host: string,
-    port: number,
+    private readonly host: string,
+    private readonly port: number,
     public readonly log: Logging,
     private readonly debugOptions: DebugOptions = {}
   ) {
-    const timeout = 5000;
-
-    this.options = { host, port };
-    this.socket = new Socket();
-    this.socket.setTimeout(timeout);
-    this.socket.on('timeout', () => {
-      this.socket.emit(
-        'error',
-        new Error(
-          'Timeout while connecting to ' + Object.values(this.options).join(':')
-        )
-      );
-    });
-    this.client = new ModbusTCPClient(this.socket, 1, timeout);
+    this.client = new ModbusRTU();
+    this.client.setID(1);
+    this.client.setTimeout(2000);
   }
 
   open(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      this.log.debug(`Connecting ${Object.values(this.options).join(':')}...`);
+      this.log.debug(`Connecting ${this.host}:${this.port}...`);
 
       if (this.isConnected) {
         this.log.warn('Already connected to modbus server');
@@ -55,18 +34,16 @@ export default class AirfiModbusController {
         return;
       }
 
-      const rejectListener = (error: Error) => {
-        this.socket.off('error', rejectListener);
-        reject(error);
-      };
-
-      this.socket.once('error', rejectListener);
-      this.socket.connect(this.options, () => {
-        this.log.debug(`Connected on ${Object.values(this.options).join(':')}`);
-        this.isConnected = true;
-        this.socket.off('error', rejectListener);
-        resolve();
-      });
+      this.client
+        .connectTCP(this.host, { port: this.port })
+        .then(() => {
+          this.log.debug(`Connected on ${this.host}:${this.port}`);
+          this.isConnected = true;
+          resolve();
+        })
+        .catch((error: Error) => {
+          reject(error);
+        });
     });
   }
 
@@ -74,14 +51,10 @@ export default class AirfiModbusController {
     return new Promise((resolve) => {
       if (this.isConnected) {
         this.isConnected = false;
-        const doneListener = (hadError: boolean) => {
-          this.log.debug(
-            `Disconnected ${hadError ? 'with error' : 'succesfully'}`
-          );
+        this.client.close(() => {
+          this.log.debug('Connection closed');
           resolve();
-        };
-        this.socket.once('close', doneListener);
-        this.socket.destroy();
+        });
       } else {
         this.log.debug('Disconnected already');
         resolve();
@@ -130,30 +103,15 @@ export default class AirfiModbusController {
           : this.client.readInputRegisters(start, readLength);
 
       await read
-        .then(
-          ({
-            response: {
-              body: { values },
-            },
-          }) => {
-            this.log.debug(
-              `Reading from ${start} to ${start - 1 + readLength}`
-            );
-            result = [...result, ...values];
-          }
-        )
-        .catch(
-          ({
-            err,
-            message,
-            response,
-          }: UserRequestError<ModbusTCPResponse, ModbusTCPRequest>) => {
-            this.log.debug('Modbus read error response:', response);
-            return Promise.reject(
-              new Error(`Unable to read register: ${err} - ${message}`)
-            );
-          }
-        );
+        .then(({ data }) => {
+          this.log.debug(`Reading from ${start} to ${start - 1 + readLength}`);
+          result = [...result, ...data];
+        })
+        .catch(({ message }: Error) => {
+          return Promise.reject(
+            new Error(`Unable to read register: "${message}"`)
+          );
+        });
     }
 
     if (result.length === length) {
@@ -201,28 +159,21 @@ export default class AirfiModbusController {
       }
 
       this.client
-        .writeSingleRegister(address, value)
+        .writeRegister(address, value)
         .then(() => {
           this.log.debug(
             `Successfully written value "${value}" to register "${address}"`
           );
           resolve();
         })
-        .catch(
-          ({
-            err,
-            message,
-            response,
-          }: UserRequestError<ModbusTCPResponse, ModbusTCPRequest>) => {
-            this.log.debug('Modbus write error response:', response);
-            reject(
-              new Error(
-                `Unable to write value "${value}" to register "${address}":` +
-                  `${err} – ${message}`
-              )
-            );
-          }
-        );
+        .catch(({ message }: Error) => {
+          reject(
+            new Error(
+              `Unable to write value "${value}" to register "${address}":` +
+                `"${message}"`
+            )
+          );
+        });
     });
   }
 }
