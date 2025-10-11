@@ -37,6 +37,7 @@
     "i18next-fs-backend": "^2.3.1",
     "jsmodbus": "^4.0.6",
     "jsonschema": "^1.4.1",
+    "modbus-serial": "^8.0.23",
     "semver": "^7.6.2"
   },
   "devDependencies": {
