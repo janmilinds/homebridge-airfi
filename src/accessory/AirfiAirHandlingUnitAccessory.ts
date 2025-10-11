@@ -324,7 +324,7 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
     }
 
     // Firmware 3.2.0 has a hidden register address causing issues with the
-    // plugin so therefore it's not supported.
+    // plugin; therefore, it is not supported.
     if (this.firmwareVersion === '3.2.0') {
       this.log.error(
         'Air handling unit firmware version 3.2.0 is unsupported. ' +
