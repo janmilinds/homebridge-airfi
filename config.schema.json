@@ -32,6 +32,17 @@
           "title": "Devices",
           "type": "object",
           "properties": {
+            "accessoryType": {
+              "title": "Display accessory as",
+              "type": "string",
+              "default": "fan",
+              "oneOf": [
+                { "title": "Air purifier", "enum": ["airpurifier"] },
+                { "title": "Fan", "enum": ["fan"] }
+              ],
+              "required": true,
+              "description": "Choose the accessory type to display in the Home app. Air purifier supports displaying the filter change indication if the air handling unit has been configured to indicate filter status. If you change the type, automations and scenes have to be reconfigured in the Home app."
+            },
             "host": {
               "title": "Host",
               "type": "string",
@@ -100,6 +111,7 @@
       "orderable": false,
       "buttonText": "Add air handling unit",
       "items": [
+        "devices[].accessoryType",
         "devices[].host",
         {
           "key": "devices[].port",

@@ -64,6 +64,7 @@ Plugin configuration is available through Homebridge UI. Example config.json:
             "language": "en",
             "devices": [
               {
+                "accessoryType": "fan",
                 "host": "127.0.0.1",
                 "port": 502,
                 "model": "Model 60",

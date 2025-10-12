@@ -1,6 +1,7 @@
 import { PlatformConfig } from 'homebridge';
 
 export interface AirfiDeviceConfig {
+  accessoryType: string;
   exposeFireplaceFunctionSwitch?: boolean;
   exposeBoostedCoolingSwitch?: boolean;
   exposeSaunaFunctionSwitch?: boolean;
@@ -25,9 +26,13 @@ export interface DebugOptions {
   printModbusMap?: boolean;
 }
 
+export type CurrentAirPurifierState = 0 | 1 | 2;
+
 export type FanActiveState = 0 | 1;
 
 export type FanRotationSpeedState = 0 | 1 | 2 | 3 | 4 | 5;
+
+export type FilterChangeIndication = 0 | 1;
 
 export type RegisterAddress =
   `${3 | 4}x${number}${number}${number}${number}${number}`;

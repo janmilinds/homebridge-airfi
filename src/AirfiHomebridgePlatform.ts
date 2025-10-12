@@ -85,7 +85,7 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   private discoverDevices() {
     for (const device of this.config.devices) {
       const displayName = `Airfi ${device.model} #${device.serialNumber}`;
-      const uuid = this.createUUID(device.serialNumber);
+      const uuid = this.createUUID(device.serialNumber, device.accessoryType);
 
       this.log.debug('Discovered device:', device);
 
@@ -134,7 +134,8 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
    */
   private removeUnconfiguredAccessories() {
     const configuredAccessoryUUIDs = this.config.devices.map(
-      ({ serialNumber }) => this.createUUID(serialNumber)
+      ({ accessoryType, serialNumber }) =>
+        this.createUUID(serialNumber, accessoryType)
     );
 
     const obsoleteAccessories = this.accessories.filter(

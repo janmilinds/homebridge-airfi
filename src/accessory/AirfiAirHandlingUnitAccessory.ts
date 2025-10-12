@@ -1,11 +1,13 @@
 import EventEmitter from 'events';
-import { Logging, PlatformAccessory } from 'homebridge';
+import { Logging, PlatformAccessory, Service } from 'homebridge';
 import semverGte from 'semver/functions/gte';
 
 import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { AirfiModbusController } from '../controller';
 import {
+  AirfiAirPurifierService,
   AirfiFanService,
+  AirfiFilterMaintenanceService,
   AirfiHumiditySensorService,
   AirfiInformationService,
   AirfiSwitchService,
@@ -145,6 +147,14 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
    * Initialize the accessory services.
    */
   private initializeServices() {
+    const services: Record<string, Service> = {};
+    const {
+      accessoryType,
+      exposeFireplaceFunctionSwitch,
+      exposeBoostedCoolingSwitch,
+      exposeSaunaFunctionSwitch,
+    } = this.accessory.context.config;
+
     // Clear accessory services prior to any changes.
     this.accessory.services
       .filter((service) => service.constructor.name !== 'AccessoryInformation')
@@ -159,90 +169,146 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
       updateFrequency: 60,
     });
 
-    new AirfiFanService(this, this.platform, {
-      configuredNameKey: 'service.fan',
-      name: 'Ventilation',
-      updateFrequency: 1,
-    });
+    if (accessoryType === 'airpurifier') {
+      services.ventilation = new AirfiAirPurifierService(this, this.platform, {
+        configuredNameKey: 'service.fan',
+        name: 'Ventilation',
+        updateFrequency: 1,
+      }).getService();
+      services.ventilation.setPrimaryService(true);
 
-    new AirfiThermostatService(this, this.platform, {
+      services.filterMaintenanceService = new AirfiFilterMaintenanceService(
+        this,
+        this.platform,
+        {
+          configuredNameKey: 'service.filterMaintenance',
+          name: 'FilterMaintenance',
+          updateFrequency: 60,
+        }
+      ).getService();
+      services.ventilation.addLinkedService(services.filterMaintenanceService);
+    } else {
+      services.ventilation = new AirfiFanService(this, this.platform, {
+        configuredNameKey: 'service.fan',
+        name: 'Ventilation',
+        updateFrequency: 1,
+      }).getService();
+      services.ventilation.setPrimaryService(true);
+    }
+
+    services.thermostat = new AirfiThermostatService(this, this.platform, {
       configuredNameKey: 'service.thermostat',
       name: 'SupplyAirTemperature',
       updateFrequency: 1,
-    });
+    }).getService();
+    services.ventilation.addLinkedService(services.thermostat);
 
-    new AirfiHumiditySensorService(this, this.platform, {
-      configuredNameKey: 'service.humiditySensor',
-      name: 'ExtractAirHumidity',
-      updateFrequency: 60,
-    });
+    services.humiditySensor = new AirfiHumiditySensorService(
+      this,
+      this.platform,
+      {
+        configuredNameKey: 'service.humiditySensor',
+        name: 'ExtractAirHumidity',
+        updateFrequency: 60,
+      }
+    ).getService();
+    services.ventilation.addLinkedService(services.humiditySensor);
 
-    new AirfiTemperatureSensorService(this, this.platform, {
-      configuredNameKey: 'service.temperatureSensor.outdoorAir',
-      name: 'OutdoorAir',
-      readAddress: '3x00004',
-      subtype: '_outdoorAirTemp',
-      updateFrequency: 60,
-    });
+    services.temperatureOutdoorAir = new AirfiTemperatureSensorService(
+      this,
+      this.platform,
+      {
+        configuredNameKey: 'service.temperatureSensor.outdoorAir',
+        name: 'OutdoorAir',
+        readAddress: '3x00004',
+        subtype: '_outdoorAirTemp',
+        updateFrequency: 60,
+      }
+    ).getService();
+    services.ventilation.addLinkedService(services.temperatureOutdoorAir);
 
-    new AirfiTemperatureSensorService(this, this.platform, {
-      configuredNameKey: 'service.temperatureSensor.extractAir',
-      name: 'ExtractAir',
-      readAddress: '3x00006',
-      subtype: '_extractAirTemp',
-      updateFrequency: 60,
-    });
+    services.temperatureExtractAir = new AirfiTemperatureSensorService(
+      this,
+      this.platform,
+      {
+        configuredNameKey: 'service.temperatureSensor.extractAir',
+        name: 'ExtractAir',
+        readAddress: '3x00006',
+        subtype: '_extractAirTemp',
+        updateFrequency: 60,
+      }
+    ).getService();
+    services.ventilation.addLinkedService(services.temperatureExtractAir);
 
-    new AirfiTemperatureSensorService(this, this.platform, {
-      configuredNameKey: 'service.temperatureSensor.exhaustAir',
-      name: 'ExhaustAir',
-      readAddress: '3x00007',
-      subtype: '_exhaustAirTemp',
-      updateFrequency: 60,
-    });
+    services.temperatureExhaustAir = new AirfiTemperatureSensorService(
+      this,
+      this.platform,
+      {
+        configuredNameKey: 'service.temperatureSensor.exhaustAir',
+        name: 'ExhaustAir',
+        readAddress: '3x00007',
+        subtype: '_exhaustAirTemp',
+        updateFrequency: 60,
+      }
+    ).getService();
+    services.ventilation.addLinkedService(services.temperatureExhaustAir);
 
-    new AirfiTemperatureSensorService(this, this.platform, {
-      configuredNameKey: 'service.temperatureSensor.supplyAir',
-      name: 'SupplyAir',
-      readAddress: '3x00008',
-      subtype: '_supplyAirTemp',
-      updateFrequency: 60,
-    });
-
-    const {
-      exposeFireplaceFunctionSwitch,
-      exposeBoostedCoolingSwitch,
-      exposeSaunaFunctionSwitch,
-    } = this.accessory.context.config;
+    services.temperatureSupplyAir = new AirfiTemperatureSensorService(
+      this,
+      this.platform,
+      {
+        configuredNameKey: 'service.temperatureSensor.supplyAir',
+        name: 'SupplyAir',
+        readAddress: '3x00008',
+        subtype: '_supplyAirTemp',
+        updateFrequency: 60,
+      }
+    ).getService();
+    services.ventilation.addLinkedService(services.temperatureSupplyAir);
 
     if (this.hasFeature('fireplaceFunction') && exposeFireplaceFunctionSwitch) {
-      new AirfiSwitchService(this, this.platform, {
-        configuredNameKey: 'service.switch.fireplaceFunction',
-        name: 'FireplaceFunction',
-        subtype: '_fireplace',
-        updateFrequency: 1,
-        writeAddress: '4x00058',
-      });
+      services.switchFireplaceFunction = new AirfiSwitchService(
+        this,
+        this.platform,
+        {
+          configuredNameKey: 'service.switch.fireplaceFunction',
+          name: 'FireplaceFunction',
+          subtype: '_fireplace',
+          updateFrequency: 1,
+          writeAddress: '4x00058',
+        }
+      ).getService();
+      services.ventilation.addLinkedService(services.switchFireplaceFunction);
     }
 
     if (this.hasFeature('boostedCooling') && exposeBoostedCoolingSwitch) {
-      new AirfiSwitchService(this, this.platform, {
-        configuredNameKey: 'service.switch.boostedCooling',
-        name: 'BoostedCooling',
-        subtype: '_boostedCooling',
-        updateFrequency: 1,
-        writeAddress: '4x00051',
-      });
+      services.switchBoostedCooling = new AirfiSwitchService(
+        this,
+        this.platform,
+        {
+          configuredNameKey: 'service.switch.boostedCooling',
+          name: 'BoostedCooling',
+          subtype: '_boostedCooling',
+          updateFrequency: 1,
+          writeAddress: '4x00051',
+        }
+      ).getService();
+      services.ventilation.addLinkedService(services.switchBoostedCooling);
     }
 
     if (this.hasFeature('saunaFunction') && exposeSaunaFunctionSwitch) {
-      new AirfiSwitchService(this, this.platform, {
-        configuredNameKey: 'service.switch.saunaFunction',
-        name: 'SaunaFunction',
-        subtype: '_sauna',
-        updateFrequency: 1,
-        writeAddress: '4x00057',
-      });
+      services.switchSaunaFunction = new AirfiSwitchService(
+        this,
+        this.platform,
+        {
+          configuredNameKey: 'service.switch.saunaFunction',
+          name: 'SaunaFunction',
+          subtype: '_sauna',
+          updateFrequency: 1,
+          writeAddress: '4x00057',
+        }
+      ).getService();
+      services.ventilation.addLinkedService(services.switchSaunaFunction);
     }
   }
 

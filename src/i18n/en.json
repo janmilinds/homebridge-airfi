@@ -1,6 +1,7 @@
 {
   "service": {
     "fan": "Ventilation",
+    "filterMaintenance": "Filter maintenance indicator",
     "humiditySensor": "Extract air humidity",
     "information": "Air handling unit",
     "switch": {
