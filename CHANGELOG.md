@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - 2025-10-12
 
-⚠️ **Important update notice**
+⚠️ **Update notice**
 
-To update from v1, a **complete uninstall, reinstall, and reconfiguration** is required. Please follow the [migration guide in the README](./README.md#upgrade-from-v1-to-v2) before updating.
+When updating from v1, the plugin must be **reconfigured** to apply the new architecture and settings. Home app automations and accessory configurations may need to be recreated after updating.
 
 ### Added
 - Multilingual support for displayed accessory names (English, Finnish, Swedish)
