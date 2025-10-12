@@ -73,34 +73,20 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
       this.platform.config.debug
     );
 
-    this.deviceLookup()
+    this.initialize()
       .then(() => {
-        if (!this.isSupportedDevice()) {
-          return Promise.reject(
-            new Error('Device validation failed during initialization')
-          );
-        }
-
-        this.setRegisterLengths();
-        this.setFeatureFlags();
-        return this.run();
-      })
-      .then(() => {
-        this.initializeServices();
-        this.emit('initialized');
         this.log.debug(
           'Finished initializing accessory:',
           this.accessory.displayName
         );
-
-        // Run periodic operations into modbus.
-        this.intervalId = setInterval(
-          () => this.run(),
-          AirfiAirHandlingUnitAccessory.INTERVAL_FREQUENCY
-        );
+        this.emit('initialized');
       })
       .catch((error: Error) => {
-        this.log.error(`${error.message} for "${this.accessory.displayName}"`);
+        this.log.error(
+          `Error while initializing "${this.accessory.displayName}":`,
+          error.message
+        );
+        this.emit('error');
       });
   }
 
@@ -112,21 +98,94 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
 
     await this.airfiController
       .open()
-      .then(async () => {
-        await this.airfiController
-          .read(1, 3, 3)
-          .then((values) => {
-            this.inputRegister = values;
-          })
-          .catch((error: Error) => this.log.error(error.toString()));
-      })
-      .catch((error: Error) => {
-        this.log.error(error.toString());
-      })
+      .then(() =>
+        this.airfiController.read(1, 3, 3).then((values) => {
+          this.inputRegister = values;
+        })
+      )
       .finally(() => {
         this.airfiController.close();
         this.isNetworking = false;
       });
+  }
+
+  /**
+   * Perform a data sync operation with the air handling unit.
+   */
+  private async deviceSync() {
+    if (!this.shouldExecute()) {
+      return;
+    }
+
+    if (this.isNetworking) {
+      this.log.warn(
+        `${this.accessory.displayName} is busy completing previous operations`
+      );
+      this.restartSync(10);
+      return;
+    }
+
+    this.isNetworking = true;
+
+    await this.airfiController
+      .open()
+      .then(() => this.performReadWriteOperations())
+      .finally(() => {
+        this.airfiController.close();
+        this.isNetworking = false;
+      });
+  }
+
+  /**
+   * Perform read and write operations to the air handling unit.
+   */
+  private async performReadWriteOperations(): Promise<void> {
+    // Write operations first
+    if (this.queue.size > 0) {
+      await this.writeQueue();
+    }
+
+    // Read operations only on sequence 1
+    if (this.sequenceCount === 1) {
+      await this.readRegisters();
+    }
+  }
+
+  /**
+   * Converts string representation of register address into register type and
+   * address.
+   *
+   * @param registerAddress
+   */
+  private getRegisterAddress(registerAddress: RegisterAddress): number[] {
+    if (!/^[3|4]x[\d]{5}$/.test(registerAddress)) {
+      this.log.error(
+        `Invalid register address format for "${registerAddress}"`
+      );
+      return [0, 0];
+    }
+    return registerAddress.split('x').map((value) => parseInt(value));
+  }
+
+  /**
+   * Return value from a register.
+   *
+   * @param registerAddress
+   *   String representation of register address including register type and
+   *   address
+   */
+  getRegisterValue(registerAddress: RegisterAddress): number {
+    const [register, address] = this.getRegisterAddress(registerAddress);
+
+    if (register === 3) {
+      return this.inputRegister[address - 1];
+    }
+
+    if (register === 4) {
+      return this.holdingRegister[address - 1];
+    }
+
+    return -1;
   }
 
   /**
@@ -139,6 +198,33 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
    */
   public hasFeature(key: keyof typeof this.featureFlags): boolean {
     return this.featureFlags[key] ?? false;
+  }
+
+  /**
+   * Initialize the accessory with device data and services.
+   */
+  private async initialize() {
+    await this.deviceLookup()
+      .then(() => {
+        if (!this.isSupportedDevice()) {
+          throw new Error('Device validation failed during initialization');
+        }
+
+        this.setRegisterLengths();
+        this.setFeatureFlags();
+
+        // Retrieve initial data from the air handling unit.
+        return this.deviceSync();
+      })
+      .then(() => {
+        this.initializeServices();
+
+        // Start periodic sync operations.
+        this.startPeriodicSync();
+      })
+      .catch((error: Error) => {
+        throw error;
+      });
   }
 
   /**
@@ -291,43 +377,6 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
   }
 
   /**
-   * Converts string representation of register address into register type and
-   * address.
-   *
-   * @param registerAddress
-   */
-  private getRegisterAddress(registerAddress: RegisterAddress): number[] {
-    if (!/^[3|4]x[\d]{5}$/.test(registerAddress)) {
-      this.log.error(
-        `Invalid register address format for "${registerAddress}"`
-      );
-      return [0, 0];
-    }
-    return registerAddress.split('x').map((value) => parseInt(value));
-  }
-
-  /**
-   * Return value from a register.
-   *
-   * @param registerAddress
-   *   String representation of register address including register type and
-   *   address
-   */
-  getRegisterValue(registerAddress: RegisterAddress): number {
-    const [register, address] = this.getRegisterAddress(registerAddress);
-
-    if (register === 3) {
-      return this.inputRegister[address - 1];
-    }
-
-    if (register === 4) {
-      return this.holdingRegister[address - 1];
-    }
-
-    return -1;
-  }
-
-  /**
    * Checks whether data was retrieved from the air handling unit and whether
    * the modbus map version is supported.
    */
@@ -404,84 +453,39 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
   }
 
   /**
+   * Reads both holding and input registers from the air handling unit.
+   */
+  private async readRegisters(): Promise<void> {
+    // Read holding register
+    await this.airfiController
+      .read(1, this.holdingRegisterLength, 4)
+      .then((values) => {
+        this.holdingRegister = values;
+      });
+
+    // Read input register
+    await this.airfiController
+      .read(1, this.inputRegisterLength, 3)
+      .then((values) => {
+        this.inputRegister = values;
+      });
+  }
+
+  /**
    * Pause interval execution and restart it after waiting time.
    *
    * @param seconds
    *   Number of seconds to wait before restarting
    */
-  private async restart(seconds: number) {
+  private async restartSync(seconds: number) {
     clearInterval(this.intervalId);
 
     this.sequenceCount = 0;
-    this.log.warn(`Restarting modbus read/write in ${seconds} seconds...`);
+    this.log.warn(`Restarting device data sync in ${seconds} seconds...`);
 
     await sleep(seconds);
-    this.intervalId = setInterval(
-      () => this.run(),
-      AirfiAirHandlingUnitAccessory.INTERVAL_FREQUENCY
-    );
-    this.log.info('Modbus read/write operations restarted');
-  }
-
-  /**
-   * Run read & write operations for modbus registers.
-   */
-  private async run() {
-    const queueLength = this.queue.size;
-
-    this.sequenceCount++;
-    if (this.sequenceCount > AirfiAirHandlingUnitAccessory.READ_FREQUENCY) {
-      this.sequenceCount = 1;
-    }
-
-    // Return if it's not a read sequence and there's nothing to write.
-    if (this.sequenceCount > 1 && queueLength === 0) {
-      return;
-    }
-
-    if (this.isNetworking) {
-      this.log.warn(
-        `${this.accessory.displayName} is busy completing previous operations`
-      );
-      this.restart(10);
-      return;
-    }
-
-    this.isNetworking = true;
-
-    await this.airfiController
-      .open()
-      .then(async () => {
-        // Write holding register.
-        if (queueLength > 0) {
-          await this.writeQueue();
-        }
-
-        if (this.sequenceCount === 1) {
-          // Read and save holding register.
-          await this.airfiController
-            .read(1, this.holdingRegisterLength, 4)
-            .then((values) => {
-              this.holdingRegister = values;
-            })
-            .catch((error: Error) => this.log.error(error.toString()));
-
-          // Read and save input register.
-          await this.airfiController
-            .read(1, this.inputRegisterLength, 3)
-            .then((values) => {
-              this.inputRegister = values;
-            })
-            .catch((error: Error) => this.log.error(error.toString()));
-        }
-      })
-      .catch((error: Error) => {
-        this.log.error(error.toString());
-      })
-      .finally(() => {
-        this.airfiController.close();
-        this.isNetworking = false;
-      });
+    this.startPeriodicSync();
+    this.log.info('Device data sync restarted');
   }
 
   /**
@@ -538,20 +542,42 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
   }
 
   /**
+   * Determine if the accessory should execute a read or write operation.
+   *
+   * @returns True if the accessory should execute, false otherwise.
+   */
+  private shouldExecute(): boolean {
+    this.sequenceCount++;
+    if (this.sequenceCount > AirfiAirHandlingUnitAccessory.READ_FREQUENCY) {
+      this.sequenceCount = 1;
+    }
+
+    // Return if it's not a read sequence and there's nothing to write
+    return !(this.sequenceCount > 1 && this.queue.size === 0);
+  }
+
+  /**
+   * Start the periodic sync operations.
+   */
+  private startPeriodicSync(): void {
+    this.intervalId = setInterval(() => {
+      this.deviceSync().catch((error: Error) => {
+        this.log.error(`Device sync failed: ${error.message}`);
+        this.restartSync(10);
+      });
+    }, AirfiAirHandlingUnitAccessory.INTERVAL_FREQUENCY);
+  }
+
+  /**
    * Write values from queue to the air handling unit.
    */
   private async writeQueue(): Promise<void> {
-    this.log.debug('Writing values to modbus');
+    this.log.debug('Writing values to device');
 
     for (const [address, value] of this.queue) {
-      await this.airfiController
-        .write(address, value)
-        .catch((error: Error) => this.log.error(error.toString()))
-        .finally(() => {
-          this.queue.delete(address);
-        });
+      await this.airfiController.write(address, value).finally(() => {
+        this.queue.delete(address);
+      });
     }
-
-    return Promise.resolve();
   }
 }
