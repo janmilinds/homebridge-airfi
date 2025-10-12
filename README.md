@@ -38,19 +38,15 @@ Unpair the accessory/child bridge from Home app and uninstall Homebridge Airfi p
 
 ## Installation
 
-Install either through [Homebridge UI](https://github.com/oznu/homebridge-config-ui-x#plugin-screen) or with npm:
-
-```bash
-npm install -g homebrigde-airfi
-```
+Install the plugin by using the Homebridge Plugins Manager.
 
 ### Requirements
 
 This plugin supports air handling units Model 60, 100, 130, 150, 250, 350 manufactured by Airfi.
 
-- Node.js 18.20.4 or greater and 20.16.0 or greater and 22.5.1 and greater
+- Supported Node.js LTS version
 - Homebridge 1.8.0 or greater and 2.0.0-beta.0 or greater
-- Modbus map v2.5 or greater on the air handling unit
+- Firmware version 1.6.5 or greater in the air handling unit but at least version 3.0.0 is recommended to have all features available. See instructions for updating air handling unit software: [English](https://airfi.fi/en/support/), [Finnish](https://airfi.fi/tuki/).
 
 ### Configuration
 
