@@ -5,85 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0-beta.11] - 2025-10-11
+## [2.0.0] - 2025-10-12
+
+⚠️ **Update notice**
+
+When updating from v1, the plugin must be **reconfigured** to apply the new architecture and settings. Home app automations and accessory configurations may need to be recreated after updating.
+
+### Added
+- Multilingual support for displayed accessory names (English, Finnish, Swedish)
+- ConfiguredName characteristic for default names in HomeKit
+- Upgrade instructions added to README
 
 ### Changed
-
-- Migrate to modbus-serial Modbus client
-
-## [2.0.0-beta.10] - 2025-06-15
-
-### Changed
-
-- Support for older firmware/modbus versions through feature flagging
-
-## [2.0.0-beta.9] - 2024-10-28
-
-### Changed
-
-- Improved error handling
-
-## [2.0.0-beta.8] - 2024-10-28
-
-### Changed
-
-- Migrate to ESLint 9
+- Complete rewrite of the plugin as a dynamic platform plugin (preferred architecture)
+- Migrated to the `modbus-serial` Modbus client
+- Support for Homebridge v2
+- Refactored config schema, Platform and Accessory classes
+- Improved error handling and process for unregistering obsolete devices/accessories
+- Accessory service improvements
+- Support for older firmware and Modbus versions via feature flagging
+- Migrated to ESLint 9
+- Updated and bumped dependencies
 
 ### Fixed
+- Correct handling of `Set` function with Identify characteristic
 
-- Set function with Identify characteristic
+---
 
-## [2.0.0-beta.7] - 2024-10-13
-
-### Changed
-
-- Improved process for unregistering obsolete devices
-
-## [2.0.0-beta.6] - 2024-10-09
-
-### Changed
-
-- Refactored config schema
-- Refactored Platform and Accessory classes
-- Bump dependencies
-
-## [2.0.0-beta.5] - 2024-09-07
-
-### Changed
-
-- Bump dependencies
-- Support for Homebridge v2
-
-## [2.0.0-beta.4] - 2024-07-21
-
-### Changed
-
-- Unregister obsolete cached accessories
-
-## [2.0.0-beta.3] - 2024-07-19
-
-### Changed
-
-- Accessory service improvements
-
-## [2.0.0-beta.2] - 2024-07-13
-
-### Added
-
-- Multilingual (English, Finnish, Swedish) support for displayed accessory names
-
-## [2.0.0-beta.1] - 2024-07-13
-
-### Added
-
-- ConfiguredName characteristic to service for default names in Homekit
-- Upgrade instructions to README
-
-## [2.0.0-beta.0] - 2024-07-12
-
-### Changed
-
-- Rewrite of the plugin as the preferred dynamic platform plugin
+_This release includes all improvements and fixes introduced during the 2.0.0-beta.0 → 2.0.0-beta.11 cycle._
 
 ## [1.7.0] - 2024-07-03
 

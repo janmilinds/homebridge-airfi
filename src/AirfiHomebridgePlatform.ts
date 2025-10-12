@@ -104,7 +104,6 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
 
         airHandlingUnitAccessory.once('initialized', () => {
           this.log.info('Restoring accessory from cache:', displayName);
-          this.api.updatePlatformAccessories([existingAccessory]);
         });
       } else {
         const accessory = new this.api.platformAccessory<AirfiDeviceContext>(
@@ -168,7 +167,8 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
     if (errors.length > 0) {
       errors.forEach((error) => {
         this.log.error(
-          `Property "${error.property.split('.')[1]}" ${error.message}`
+          `Property "${error.property.replace('instance.', '')}" ` +
+            `${error.message}`
         );
       });
 

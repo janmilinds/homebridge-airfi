@@ -2,11 +2,12 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": [
+      "DOM",
       "ES2022"
     ],
     "rootDir": "src",
-    "module": "CommonJS",
-    "moduleResolution": "Node10",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "strict": true,
     "declaration": true,
     "outDir": "dist",

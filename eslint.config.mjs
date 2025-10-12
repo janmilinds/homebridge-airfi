@@ -2,18 +2,13 @@
 
 import eslintConfigPrettier from 'eslint-config-prettier';
 import eslintPluginPrettier from 'eslint-plugin-prettier/recommended';
+import { defineConfig } from 'eslint/config';
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: ['dist/**'],
-  },
-  {
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'module',
-    },
   },
   {
     rules: {
@@ -52,6 +47,12 @@ export default tseslint.config(
         { classes: false, enums: false },
       ],
       '@typescript-eslint/no-unused-vars': ['error', { caughtErrors: 'none' }],
+    },
+  },
+  {
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
     },
   },
   eslint.configs.recommended,

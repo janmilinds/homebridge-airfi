@@ -1,6 +1,7 @@
 import { PlatformConfig } from 'homebridge';
 
 export interface AirfiDeviceConfig {
+  accessoryType?: 'fan';
   exposeFireplaceFunctionSwitch?: boolean;
   exposeBoostedCoolingSwitch?: boolean;
   exposeSaunaFunctionSwitch?: boolean;
