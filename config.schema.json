@@ -4,11 +4,11 @@
   "singular": true,
   "schema": {
     "type": "object",
+    "required": ["name", "language", "devices"],
     "properties": {
       "name": {
         "title": "Platform name",
         "type": "string",
-        "required": true,
         "default": "Homebridge Airfi"
       },
       "language": {
@@ -20,11 +20,21 @@
           { "title": "Finnish", "enum": ["fi"] },
           { "title": "Swedish", "enum": ["sv"] }
         ],
-        "required": true,
         "description": "Choose the language to display the default accessory names."
       },
+      "debug": {
+        "title": "Debug",
+        "type": "object",
+        "properties": {
+          "printModbusMap": {
+            "title": "Print Modbus map",
+            "type": "boolean",
+            "default": false,
+            "description": "When activated, the Modbus map is printed to the log when the accessory is initialized."
+          }
+        }
+      },
       "devices": {
-        "required": true,
         "type": "array",
         "minItems": 1,
         "maxItems": 1,
