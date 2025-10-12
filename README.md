@@ -38,6 +38,12 @@ When updating from v1, the plugin must be **reconfigured** to apply the new arch
 
 Install the plugin by using the Homebridge Plugins Manager.
 
+### Setup in Home app
+
+By default, the air handling unit accessory appears as a single tile in the Home app. For easier access to its various controls, it is recommended to select the "Show as Separate Tiles" option in the accessory settings.
+
+<img alt="Screenshot of the Home app showing the Airfi air handling unit accessory with option to Show as Separate Tiles for easier access." src="./images/setup.jpg" style="max-width: 512px;">
+
 ### Requirements
 
 This plugin supports air handling units Model 60, 100, 130, 150, 250, 350 manufactured by Airfi.

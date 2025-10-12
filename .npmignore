@@ -4,6 +4,9 @@ src
 # Ignore docs
 docs
 
+# Ignore images
+images
+
 # ------------- Defaults ------------- #
 
 # gitHub actions
