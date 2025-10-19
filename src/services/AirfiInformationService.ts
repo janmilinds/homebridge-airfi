@@ -1,7 +1,6 @@
 import { CharacteristicValue } from 'homebridge';
 
 import AirfiService from './AirfiService';
-import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
 
@@ -25,13 +24,12 @@ export default class AirfiInformationService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    device: AirfiAirHandlingUnitAccessory,
-    platform: AirfiHomebridgePlatform,
+    accessory: AirfiAirHandlingUnitAccessory,
     serviceOptions: ServiceOptions
   ) {
-    super(device, platform, {
+    super(accessory, {
       ...serviceOptions,
-      service: platform.Service.AccessoryInformation,
+      service: accessory.getPlatform().Service.AccessoryInformation,
     });
 
     this.service
@@ -43,11 +41,11 @@ export default class AirfiInformationService extends AirfiService {
     );
     this.service.setCharacteristic(
       this.Characteristic.Model,
-      device.accessory.context.config.model
+      accessory.getAccessory().context.config.model
     );
     this.service.setCharacteristic(
       this.Characteristic.SerialNumber,
-      device.accessory.context.config.serialNumber
+      accessory.getAccessory().context.config.serialNumber
     );
     this.service
       .getCharacteristic(this.Characteristic.FirmwareRevision)

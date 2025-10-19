@@ -1,15 +1,17 @@
 import { Characteristic, Logging, Service, WithUUID } from 'homebridge';
 
-import { AirfiAirHandlingUnitAccessory } from '../accessory';
-import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import i18n from '../i18n';
 import { ServiceOptions } from '../types';
+import { AirfiDevice } from '../device';
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
 
 /**
  * Accessory service class for defining services communicating on modbus
  * interface.
  */
 export default abstract class AirfiService {
+  protected readonly device: AirfiDevice;
+
   protected readonly Characteristic: typeof Characteristic;
 
   protected readonly log: Logging;
@@ -25,17 +27,22 @@ export default abstract class AirfiService {
    *   Various options defining the service characteristics.
    */
   constructor(
-    protected readonly device: AirfiAirHandlingUnitAccessory,
-    protected readonly platform: AirfiHomebridgePlatform,
-    serviceOptions: ServiceOptions<{ service: WithUUID<typeof Service> }>
+    protected readonly accessory: AirfiAirHandlingUnitAccessory,
+    serviceOptions: ServiceOptions<{
+      service: WithUUID<typeof Service>;
+    }>
   ) {
-    const { accessory } = device;
+    const platform = this.accessory.getPlatform();
+    const platformAccessory = this.accessory.getAccessory();
 
     this.Characteristic = platform.Characteristic;
+    this.device = this.accessory.getDevice();
     this.log = platform.log;
     this.service =
-      accessory.getService(serviceOptions.name || serviceOptions.service) ||
-      accessory.addService(
+      platformAccessory.getService(
+        serviceOptions.name || serviceOptions.service
+      ) ||
+      platformAccessory.addService(
         new serviceOptions.service(
           serviceOptions.name,
           serviceOptions?.subtype || ''

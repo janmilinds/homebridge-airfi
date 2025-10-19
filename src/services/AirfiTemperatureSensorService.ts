@@ -1,6 +1,5 @@
 import AirfiService from './AirfiService';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
-import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
@@ -18,13 +17,12 @@ export default class AirfiTemperatureSensorService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    device: AirfiAirHandlingUnitAccessory,
-    platform: AirfiHomebridgePlatform,
+    accessory: AirfiAirHandlingUnitAccessory,
     serviceOptions: ServiceOptions
   ) {
-    super(device, platform, {
+    super(accessory, {
       ...serviceOptions,
-      service: platform.Service.TemperatureSensor,
+      service: accessory.getPlatform().Service.TemperatureSensor,
     });
 
     this.readAddress = serviceOptions.readAddress as RegisterAddress;

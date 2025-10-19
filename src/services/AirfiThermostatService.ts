@@ -3,7 +3,6 @@ import { CharacteristicValue } from 'homebridge';
 import AirfiService from './AirfiService';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
 import AirfiTemperatureSensorService from './AirfiTemperatureSensorService';
-import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
@@ -30,13 +29,12 @@ export default class AirfiThermostatService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    device: AirfiAirHandlingUnitAccessory,
-    platform: AirfiHomebridgePlatform,
+    accessory: AirfiAirHandlingUnitAccessory,
     serviceOptions: ServiceOptions
   ) {
-    super(device, platform, {
+    super(accessory, {
       ...serviceOptions,
-      service: platform.Service.Thermostat,
+      service: accessory.getPlatform().Service.Thermostat,
     });
 
     this.service

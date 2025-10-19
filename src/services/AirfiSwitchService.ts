@@ -2,7 +2,6 @@ import { CharacteristicValue } from 'homebridge';
 
 import AirfiService from './AirfiService';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
-import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions, SwitchOnState } from '../types';
 
 /**
@@ -20,13 +19,12 @@ export default class AirfiSwitchService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    device: AirfiAirHandlingUnitAccessory,
-    platform: AirfiHomebridgePlatform,
+    accessory: AirfiAirHandlingUnitAccessory,
     serviceOptions: ServiceOptions
   ) {
-    super(device, platform, {
+    super(accessory, {
       ...serviceOptions,
-      service: platform.Service.Switch,
+      service: accessory.getPlatform().Service.Switch,
     });
 
     this.subtype = serviceOptions.subtype as string;

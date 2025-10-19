@@ -2,7 +2,6 @@ import { CharacteristicValue } from 'homebridge';
 
 import AirfiService from './AirfiService';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
-import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import {
   FanActiveState,
   FanRotationSpeedState,
@@ -30,13 +29,12 @@ export default class AirfiFanService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    device: AirfiAirHandlingUnitAccessory,
-    platform: AirfiHomebridgePlatform,
+    accessory: AirfiAirHandlingUnitAccessory,
     serviceOptions: ServiceOptions
   ) {
-    super(device, platform, {
+    super(accessory, {
       ...serviceOptions,
-      service: platform.Service.Fanv2,
+      service: accessory.getPlatform().Service.Fanv2,
     });
 
     this.service
