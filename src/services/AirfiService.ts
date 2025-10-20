@@ -1,15 +1,15 @@
 import { Characteristic, Logging, Service, WithUUID } from 'homebridge';
 
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
+import { AirfiDevice } from '../device';
 import i18n from '../i18n';
 import { ServiceOptions } from '../types';
-import { AirfiDevice } from '../device';
-import { AirfiAirHandlingUnitAccessory } from '../accessory';
 
 /**
  * Accessory service class for defining services communicating on modbus
  * interface.
  */
-export default abstract class AirfiService {
+export abstract class AirfiService {
   protected readonly device: AirfiDevice;
 
   protected readonly Characteristic: typeof Characteristic;

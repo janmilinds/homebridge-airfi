@@ -1,6 +1,6 @@
 import { CharacteristicValue } from 'homebridge';
 
-import AirfiService from './AirfiService';
+import { AirfiService } from './AirfiService';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
 import { RegisterAddress, ServiceOptions, SwitchOnState } from '../types';
 
@@ -8,7 +8,7 @@ import { RegisterAddress, ServiceOptions, SwitchOnState } from '../types';
  * Defines the switch service to control ON/OFF characteristics of the
  * air handling unit.
  */
-export default class AirfiSwitchService extends AirfiService {
+export class AirfiSwitchService extends AirfiService {
   private on = false;
 
   private readonly subtype: string;

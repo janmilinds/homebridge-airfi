@@ -1,6 +1,6 @@
 import { CharacteristicValue } from 'homebridge';
 
-import AirfiService from './AirfiService';
+import { AirfiService } from './AirfiService';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
 import {
   FanActiveState,
@@ -14,7 +14,7 @@ import { sleep } from '../utils';
  * Defines the fan service for controlling speed and "At home"/"Away" states of
  * the Airfi air handling unit.
  */
-export default class AirfiFanService extends AirfiService {
+export class AirfiFanService extends AirfiService {
   static readonly ROTATION_SPEED_STEP = 20;
 
   static readonly ACTIVE: RegisterAddress = '4x00012';

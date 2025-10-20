@@ -1,4 +1,4 @@
-import AirfiService from './AirfiService';
+import { AirfiService } from './AirfiService';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
 import { RegisterAddress, ServiceOptions } from '../types';
 
@@ -6,7 +6,7 @@ import { RegisterAddress, ServiceOptions } from '../types';
  * Defines the temperature sensor service to read temperature from the
  * air handling unit's sensors.
  */
-export default class AirfiTemperatureSensorService extends AirfiService {
+export class AirfiTemperatureSensorService extends AirfiService {
   private currentTemperature = 0;
 
   private readonly readAddress: RegisterAddress;

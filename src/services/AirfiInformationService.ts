@@ -1,13 +1,13 @@
 import { CharacteristicValue } from 'homebridge';
 
-import AirfiService from './AirfiService';
+import { AirfiService } from './AirfiService';
 import { RegisterAddress, ServiceOptions } from '../types';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
 
 /**
  * Provides the base information about platform.
  */
-export default class AirfiInformationService extends AirfiService {
+export class AirfiInformationService extends AirfiService {
   private static readonly READ_ADDRESS_FIRMWARE_REVISION: RegisterAddress =
     '3x00002';
 
