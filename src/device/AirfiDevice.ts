@@ -116,7 +116,7 @@ export class AirfiDevice extends EventEmitter {
    *
    * @param registerAddress
    */
-  getRegisterAddress(registerAddress: RegisterAddress): number[] {
+  private getRegisterAddress(registerAddress: RegisterAddress): number[] {
     if (!/^[3|4]x[\d]{5}$/.test(registerAddress)) {
       this.log.error(
         `Invalid register address format for "${registerAddress}"`
