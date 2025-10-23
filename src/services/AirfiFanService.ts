@@ -1,40 +1,41 @@
 import { CharacteristicValue } from 'homebridge';
 
-import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
+import { AirfiService } from './AirfiService';
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
 import {
   FanActiveState,
   FanRotationSpeedState,
   RegisterAddress,
+  ServiceOptions,
 } from '../types';
 import { sleep } from '../utils';
-import { AirfiService } from './airfiService';
 
 /**
  * Defines the fan service for controlling speed and "At home"/"Away" states of
- * the Airfi ventilation unit.
+ * the Airfi air handling unit.
  */
-export default class AirfiFanService extends AirfiService {
+export class AirfiFanService extends AirfiService {
   static readonly ROTATION_SPEED_STEP = 20;
 
   static readonly ACTIVE: RegisterAddress = '4x00012';
 
   static readonly ROTATION_SPEED: RegisterAddress = '4x00001';
 
-  private active: FanActiveState = 1;
+  private active: FanActiveState = 0;
 
-  private rotationSpeed = 60;
+  private rotationSpeed = 0;
 
   /**
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    accessory: AirfiVentilationUnitAccessory,
-    displayName: string,
-    updateFrequency = 0
+    accessory: AirfiAirHandlingUnitAccessory,
+    serviceOptions: ServiceOptions
   ) {
-    super(accessory, new accessory.Service.Fanv2(displayName), updateFrequency);
-
-    this.service.setCharacteristic(this.Characteristic.Name, displayName);
+    super(accessory, {
+      ...serviceOptions,
+      service: accessory.getPlatform().Service.Fanv2,
+    });
 
     this.service
       .getCharacteristic(this.Characteristic.Active)
@@ -42,7 +43,7 @@ export default class AirfiFanService extends AirfiService {
       .onSet(this.setActive.bind(this));
 
     // Set RotationSpeed charasteristic to correspond with speed supported by
-    // the Airfi ventilation unit.
+    // the Airfi air handling unit.
     this.service
       .getCharacteristic(this.Characteristic.RotationSpeed)
       .setProps({ minStep: AirfiFanService.ROTATION_SPEED_STEP });
@@ -51,6 +52,8 @@ export default class AirfiFanService extends AirfiService {
       .getCharacteristic(this.Characteristic.RotationSpeed)
       .onGet(this.getRotationSpeed.bind(this))
       .onSet(this.setRotationSpeed.bind(this));
+
+    this.updateState();
 
     this.log.debug('Airfi Fan service initialized.');
   }
@@ -63,7 +66,7 @@ export default class AirfiFanService extends AirfiService {
   private async setActive(value: CharacteristicValue) {
     // Only change fan state if it differs from current state,
     if (value !== this.active) {
-      this.accessory.queueInsert(
+      this.device.queueInsert(
         AirfiFanService.ACTIVE,
         AirfiFanService.convertActiveState(value as FanActiveState)
       );
@@ -83,7 +86,7 @@ export default class AirfiFanService extends AirfiService {
   }
 
   private async setRotationSpeed(value: CharacteristicValue) {
-    // Airfi ventilation unit supports only speeds 1–5, so only change speed on
+    // Airfi air handling unit supports only speeds 1–5, so only change speed on
     // that range. Speed 0 anyway sets the fan inactive.
     if ((value as number) > 0 && value !== this.rotationSpeed) {
       // Delay speed set if fan is not active.
@@ -93,7 +96,7 @@ export default class AirfiFanService extends AirfiService {
 
       this.log.info(`Fan RotationSpeed ${this.rotationSpeed} → ${value}`);
       this.rotationSpeed = value as number;
-      this.accessory.queueInsert(
+      this.device.queueInsert(
         AirfiFanService.ROTATION_SPEED,
         AirfiFanService.convertRotationSpeed(this.rotationSpeed, 'write')
       );
@@ -124,7 +127,7 @@ export default class AirfiFanService extends AirfiService {
    * @param direction
    *   Conversion direction read: speed → percentage, write: percentage → speed.
    *
-   * @returns Rotation speed as percentage or ventilation unit speed (1–5).
+   * @returns Rotation speed as percentage or air handling speed (1–5).
    */
   private static convertRotationSpeed(
     value: number | FanRotationSpeedState,
@@ -138,12 +141,12 @@ export default class AirfiFanService extends AirfiService {
   }
 
   /**
-   * Run periodic updates to service state.
+   * {@inheritDoc AirfiService.updateState}
    */
   protected updateState() {
     // Read active state
     this.active = AirfiFanService.convertActiveState(
-      this.accessory.getRegisterValue(AirfiFanService.ACTIVE) as FanActiveState
+      this.device.getRegisterValue(AirfiFanService.ACTIVE) as FanActiveState
     );
     this.service
       .getCharacteristic(this.Characteristic.Active)
@@ -151,7 +154,7 @@ export default class AirfiFanService extends AirfiService {
 
     // Read rotation speed state
     this.rotationSpeed = AirfiFanService.convertRotationSpeed(
-      this.accessory.getRegisterValue(AirfiFanService.ROTATION_SPEED),
+      this.device.getRegisterValue(AirfiFanService.ROTATION_SPEED),
       'read'
     );
     this.service

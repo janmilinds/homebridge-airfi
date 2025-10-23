@@ -5,7 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### [1.7.0] - 2024-07-03
+## [2.0.0] - 2025-10-23
+
+⚠️ **Update notice**
+
+When updating from v1, the plugin must be **reconfigured** to apply the new architecture and settings. Home app automations and accessory configurations may need to be recreated after updating.
+
+### Added
+- Multilingual support for displayed accessory names (English, Finnish, Swedish)
+- ConfiguredName characteristic for default names in HomeKit
+- Upgrade instructions added to README
+
+### Changed
+- Complete rewrite of the plugin as a dynamic platform plugin (preferred architecture)
+- Migrated to the `modbus-serial` Modbus client
+- Support for Homebridge v2
+- Refactored config schema, Platform and Accessory classes
+- Improved error handling and process for unregistering obsolete devices/accessories
+- Accessory service improvements
+- Support for older firmware and Modbus versions via feature flagging
+- Migrated to ESLint 9
+- Updated and bumped dependencies
+
+### Fixed
+- Correct handling of `Set` function with Identify characteristic
+
+---
+
+_This release includes all improvements and fixes introduced during the 2.0.0-beta.0 → 2.0.0-beta.11 cycle._
+
+## [1.7.0] - 2024-07-03
 
 ### Added
 
@@ -15,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update dependencies, Node.js 20, Homebridge 1.8
 
-### [1.6.0] - 2023-09-17
+## [1.6.0] - 2023-09-17
 
 ### Changed
 
