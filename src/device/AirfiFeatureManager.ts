@@ -159,7 +159,7 @@ export class AirfiFeatureManager {
     this.log.info(deviceInfoHeadline);
     this.log.info('  Firmware version:', this.firmwareVersion);
     this.log.info('  Modbus map version:', this.modbusMapVersion);
-    this.log.info(deviceInfoHeadline.replace(/./g, '-'));
+    this.log.info('-'.repeat(deviceInfoHeadline.length));
 
     this.log.debug('Feature flags:', this.featureFlags);
   }
