@@ -1,6 +1,8 @@
 import { Logging } from 'homebridge';
 import ModbusRTU from 'modbus-serial';
-import { DebugOptions, RegisterType } from '../types';
+
+import { RegisterType } from '../constants';
+import { DebugOptions } from '../types';
 
 /**
  * Modbus controller handling reading and writing registers in the Airfi
@@ -24,42 +26,29 @@ export default class AirfiModbusController {
     this.client.setTimeout(2000);
   }
 
-  open(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      this.log.debug(`Connecting ${this.host}:${this.port}...`);
+  async open(): Promise<void> {
+    this.log.debug(`Connecting ${this.host}:${this.port}...`);
 
-      if (this.isConnected) {
-        this.log.warn('Already connected to modbus server');
-        resolve();
-        return;
-      }
+    if (this.isConnected) {
+      this.log.warn('Already connected to modbus server');
+      return;
+    }
 
-      this.client
-        .connectTCP(this.host, { port: this.port })
-        .then(() => {
-          this.log.debug(`Connected on ${this.host}:${this.port}`);
-          this.isConnected = true;
-          resolve();
-        })
-        .catch((error: Error) => {
-          reject(error);
-        });
+    return this.client.connectTCP(this.host, { port: this.port }).then(() => {
+      this.log.debug(`Connected on ${this.host}:${this.port}`);
+      this.isConnected = true;
     });
   }
 
-  close(): Promise<void> {
-    return new Promise((resolve) => {
-      if (this.isConnected) {
-        this.isConnected = false;
-        this.client.close(() => {
-          this.log.debug('Connection closed');
-          resolve();
-        });
-      } else {
-        this.log.debug('Disconnected already');
-        resolve();
-      }
-    });
+  close(): void {
+    if (this.isConnected) {
+      this.isConnected = false;
+      this.client.close(() => {
+        this.log.debug('Connection closed');
+      });
+    } else {
+      this.log.debug('Disconnected already');
+    }
   }
 
   /**
@@ -78,9 +67,7 @@ export default class AirfiModbusController {
     registerType: RegisterType
   ): Promise<number[]> {
     if (!this.isConnected) {
-      return Promise.reject(
-        new Error('Unable to read: no connection to modbus server')
-      );
+      throw new Error('Unable to read: no connection to modbus server');
     }
 
     // Modbus read is restricted to certain amount of registers at a time so
@@ -98,7 +85,7 @@ export default class AirfiModbusController {
         length - i * AirfiModbusController.MODBUS_READ_LIMIT
       );
       const read =
-        registerType === 4
+        registerType === RegisterType.Holding
           ? this.client.readHoldingRegisters(start, readLength)
           : this.client.readInputRegisters(start, readLength);
 
@@ -108,15 +95,13 @@ export default class AirfiModbusController {
           result = [...result, ...data];
         })
         .catch(({ message }: Error) => {
-          return Promise.reject(
-            new Error(`Unable to read register: "${message}"`)
-          );
+          throw new Error(`Unable to read register - "${message}"`);
         });
     }
 
     if (result.length === length) {
       this.log.debug(
-        `Values for ${registerType === 4 ? 'holding' : 'input'}` +
+        `Values for ${registerType === RegisterType.Holding ? 'holding' : 'input'}` +
           ` register from ${startAddress} to ${length}:`,
 
         this.debugOptions.printModbusMap
@@ -133,14 +118,13 @@ export default class AirfiModbusController {
             }, {})
           : result
       );
-      return Promise.resolve(result);
+
+      return result;
     }
 
-    return Promise.reject(
-      new Error(
-        `Result length (${result.length}) does not match with query length` +
-          `(${length})`
-      )
+    throw new Error(
+      `Result length (${result.length}) does not match with query length ` +
+        `(${length})`
     );
   }
 
@@ -152,28 +136,23 @@ export default class AirfiModbusController {
    * @param value
    *   Value to be written into the register.
    */
-  write(address: number, value: number): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      if (!this.isConnected) {
-        reject(new Error('Unable to write: no connection to modbus server'));
-      }
+  async write(address: number, value: number): Promise<void> {
+    if (!this.isConnected) {
+      throw new Error('Unable to write - no connection to modbus server');
+    }
 
-      this.client
-        .writeRegister(address, value)
-        .then(() => {
-          this.log.debug(
-            `Successfully written value "${value}" to register "${address}"`
-          );
-          resolve();
-        })
-        .catch(({ message }: Error) => {
-          reject(
-            new Error(
-              `Unable to write value "${value}" to register "${address}":` +
-                `"${message}"`
-            )
-          );
-        });
-    });
+    return this.client
+      .writeRegister(address, value)
+      .then(() => {
+        this.log.debug(
+          `Successfully written value "${value}" to register "${address}"`
+        );
+      })
+      .catch(({ message }: Error) => {
+        throw new Error(
+          `Unable to write value "${value}" to register "${address}" - ` +
+            `"${message}"`
+        );
+      });
   }
 }

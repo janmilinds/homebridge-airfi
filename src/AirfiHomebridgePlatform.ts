@@ -12,7 +12,11 @@ import { AirfiAirHandlingUnitAccessory } from './accessory';
 import configSchema from '../config.schema.json';
 import i18n from './i18n';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { AirfiDeviceContext, AirfiPlatformConfig } from './types';
+import {
+  AirfiDeviceConfig,
+  AirfiDeviceContext,
+  AirfiPlatformConfig,
+} from './types';
 
 /**
  * Homebridge platform for the Airfi air handling unit.
@@ -50,16 +54,90 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
       this.log.debug('Executed didFinishLaunching callback');
 
       this.removeUnconfiguredAccessories();
-      this.discoverDevices();
+      this.addAccessories();
     });
+  }
+
+  /**
+   * Add an existing accessory to the platform.
+   *
+   * @param accessory The accessory to add.
+   * @param device The device configuration.
+   * @param displayName The display name for the accessory.
+   */
+  private addExistingAccessory(
+    accessory: PlatformAccessory<AirfiDeviceContext>,
+    device: AirfiDeviceConfig,
+    displayName: string
+  ) {
+    accessory.context.config = device;
+    accessory.displayName = displayName;
+
+    const airHandlingUnitAccessory = new AirfiAirHandlingUnitAccessory(
+      accessory,
+      this
+    );
+
+    airHandlingUnitAccessory
+      .once('initialized', () => {
+        this.log.info('Loading accessory from cache:', accessory.displayName);
+      })
+      .once('error', () => {
+        this.log.warn(
+          'Failed to load accessory from cache:',
+          accessory.displayName
+        );
+
+        const index = this.accessories.findIndex(
+          (acc) => acc.UUID === accessory.UUID
+        );
+
+        if (index > -1) {
+          this.accessories.splice(index, 1);
+        }
+      });
+  }
+
+  /**
+   * Add a new accessory to the platform.
+   *
+   * @param uuid The UUID for the accessory.
+   * @param device The device configuration.
+   * @param displayName The display name for the accessory.
+   */
+  private addNewAccessory(
+    uuid: string,
+    device: AirfiDeviceConfig,
+    displayName: string
+  ) {
+    const accessory = new this.api.platformAccessory<AirfiDeviceContext>(
+      displayName,
+      uuid
+    );
+
+    accessory.context = { config: device };
+
+    const airHandlingUnitAccessory = new AirfiAirHandlingUnitAccessory(
+      accessory,
+      this
+    );
+
+    airHandlingUnitAccessory
+      .once('initialized', () => {
+        this.log.info('Adding new accessory:', displayName);
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+          accessory,
+        ]);
+      })
+      .once('error', () => {
+        this.log.error('Failed to initialize new accessory:', displayName);
+      });
   }
 
   /**
    * {@inheritDoc DynamicPlatformPlugin.configureAccessory}
    */
   configureAccessory(accessory: PlatformAccessory<AirfiDeviceContext>) {
-    this.log.info('Loading accessory from cache:', accessory.displayName);
-
     // add the restored accessory to the accessories cache, so we can track if
     // it has already been registered
     this.accessories.push(accessory);
@@ -80,9 +158,9 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * Discover devices and register them as accessories.
+   * Add accessories to platform.
    */
-  private discoverDevices() {
+  private addAccessories() {
     for (const device of this.config.devices) {
       const displayName = `Airfi ${device.model} #${device.serialNumber}`;
       const uuid = this.createUUID(device.serialNumber);
@@ -94,36 +172,9 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
       );
 
       if (existingAccessory) {
-        existingAccessory.context.config = device;
-        existingAccessory.displayName = displayName;
-
-        const airHandlingUnitAccessory = new AirfiAirHandlingUnitAccessory(
-          existingAccessory,
-          this
-        );
-
-        airHandlingUnitAccessory.once('initialized', () => {
-          this.log.info('Restoring accessory from cache:', displayName);
-        });
+        this.addExistingAccessory(existingAccessory, device, displayName);
       } else {
-        const accessory = new this.api.platformAccessory<AirfiDeviceContext>(
-          displayName,
-          uuid
-        );
-
-        accessory.context = { config: device };
-
-        const airHandlingUnitAccessory = new AirfiAirHandlingUnitAccessory(
-          accessory,
-          this
-        );
-
-        airHandlingUnitAccessory.once('initialized', () => {
-          this.log.info('Adding new accessory:', displayName);
-          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-            accessory,
-          ]);
-        });
+        this.addNewAccessory(uuid, device, displayName);
       }
     }
   }
