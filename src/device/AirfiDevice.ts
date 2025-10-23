@@ -17,7 +17,7 @@ export class AirfiDevice extends EventEmitter {
 
   private static readonly READ_FREQUENCY = 3;
 
-  private readonly controller!: AirfiModbusController;
+  private readonly controller: AirfiModbusController;
 
   private readonly featureManager: AirfiFeatureManager;
 
