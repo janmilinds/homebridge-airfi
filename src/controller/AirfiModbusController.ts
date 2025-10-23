@@ -52,6 +52,44 @@ export default class AirfiModbusController {
   }
 
   /**
+   * Debug modbus values read from the device.
+   *
+   * @param values
+   *   Values read from the device.
+   * @param startAddress
+   *   Start address of the registers read.
+   * @param length
+   *   Length of the registers read.
+   * @param registerType
+   *   Type of the registers read.
+   */
+  private debugModbusValues(
+    values: number[],
+    startAddress: number,
+    length: number,
+    registerType: RegisterType
+  ) {
+    this.log.debug(
+      `Values for ${registerType === RegisterType.Holding ? 'holding' : 'input'}` +
+        ` register from ${startAddress} to ${length}:`,
+
+      this.debugOptions.printModbusMap
+        ? values.reduce((result, value, i) => {
+            const address = `${startAddress + i}`;
+            const registerAddress =
+              `${registerType}x` +
+              `${'00000'.substring(address.length)}${address}`;
+
+            return {
+              ...result,
+              [registerAddress]: value,
+            };
+          }, {})
+        : values
+    );
+  }
+
+  /**
    * Read value from input register.
    *
    * @param startAddress
@@ -77,7 +115,7 @@ export default class AirfiModbusController {
       (e, i) => i
     );
 
-    let result: number[] = [];
+    let values: number[] = [];
     for (const i of sequences) {
       const start = i * AirfiModbusController.MODBUS_READ_LIMIT + startAddress;
       const readLength = Math.min(
@@ -92,38 +130,20 @@ export default class AirfiModbusController {
       await read
         .then(({ data }) => {
           this.log.debug(`Reading from ${start} to ${start - 1 + readLength}`);
-          result = [...result, ...data];
+          values = [...values, ...data];
         })
         .catch(({ message }: Error) => {
           throw new Error(`Unable to read register - "${message}"`);
         });
     }
 
-    if (result.length === length) {
-      this.log.debug(
-        `Values for ${registerType === RegisterType.Holding ? 'holding' : 'input'}` +
-          ` register from ${startAddress} to ${length}:`,
-
-        this.debugOptions.printModbusMap
-          ? result.reduce((result, value, i) => {
-              const address = `${startAddress + i}`;
-              const registerAddress =
-                `${registerType}x` +
-                `${'00000'.substring(address.length)}${address}`;
-
-              return {
-                ...result,
-                [registerAddress]: value,
-              };
-            }, {})
-          : result
-      );
-
-      return result;
+    if (values.length === length) {
+      this.debugModbusValues(values, startAddress, length, registerType);
+      return values;
     }
 
     throw new Error(
-      `Result length (${result.length}) does not match with query length ` +
+      `Result length (${values.length}) does not match with query length ` +
         `(${length})`
     );
   }
