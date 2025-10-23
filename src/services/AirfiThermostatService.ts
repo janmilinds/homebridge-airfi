@@ -1,53 +1,41 @@
 import { CharacteristicValue } from 'homebridge';
-import AirfiVentilationUnitAccessory from '../airfiVentilationUnit';
-import { RegisterAddress } from '../types';
-import { AirfiService } from './airfiService';
-import AirfiTemperatureSensorService from './airfiTemperatureSensorService';
+
+import { AirfiService } from './AirfiService';
+import { AirfiTemperatureSensorService } from './AirfiTemperatureSensorService';
+import { AirfiAirHandlingUnitAccessory } from '../accessory';
+import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
  * Defines the thermostat service to set the target temperature for supply air.
  */
-export default class AirfiThermostatService extends AirfiService {
+export class AirfiThermostatService extends AirfiService {
   private static readonly MINIMUM_TEMPERATURE = 10;
 
   private static readonly MAXIMUM_TEMPERATURE = 21;
 
   private static readonly CURRENT_TEMPERATURE: RegisterAddress = '3x00008';
 
-  private static readonly EXHAUST_AIR_TEMPERATURE: RegisterAddress = '3x00007';
-
-  private static readonly EXTRACT_AIR_TEMPERATURE: RegisterAddress = '3x00006';
-
   private static readonly TARGET_MIN_TEMPERATURE: RegisterAddress = '4x00050';
 
   private static readonly TARGET_TEMPERATURE: RegisterAddress = '4x00005';
 
-  private currentTemperature = 17;
+  private currentTemperature = 0;
 
-  private targetTemperature = 17;
+  private targetTemperature = 0;
 
-  private targetMinTemperature = 17;
+  private targetMinTemperature = 0;
 
   /**
-   * @param accessory
-   *   Accessory object.
-   * @param displayName
-   *   Name shown on the sensor.
-   * @param updateFrequency
-   *   Number of seconds to run periodic updates on service charasterictics.
+   * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    accessory: AirfiVentilationUnitAccessory,
-    displayName: string,
-    updateFrequency: number
+    accessory: AirfiAirHandlingUnitAccessory,
+    serviceOptions: ServiceOptions
   ) {
-    super(
-      accessory,
-      new accessory.Service.Thermostat(displayName),
-      updateFrequency
-    );
-
-    this.service.setCharacteristic(this.Characteristic.Name, displayName);
+    super(accessory, {
+      ...serviceOptions,
+      service: accessory.getPlatform().Service.Thermostat,
+    });
 
     this.service
       .getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
@@ -57,6 +45,10 @@ export default class AirfiThermostatService extends AirfiService {
       .getCharacteristic(this.Characteristic.CurrentTemperature)
       .onGet(this.getCurrentTemperature.bind(this));
 
+    this.service.setCharacteristic(
+      this.Characteristic.TargetHeatingCoolingState,
+      this.Characteristic.TargetHeatingCoolingState.AUTO
+    );
     this.service
       .getCharacteristic(this.Characteristic.TargetHeatingCoolingState)
       .setProps({
@@ -82,40 +74,12 @@ export default class AirfiThermostatService extends AirfiService {
       .getCharacteristic(this.Characteristic.TemperatureDisplayUnits)
       .onGet(this.getTemperatureDisplayUnits.bind(this));
 
+    this.updateState();
+
     this.log.debug('Airfi Thermostat service initialized.');
   }
 
   private getCurrentHeatingCoolingState() {
-    const exhaustAirTemperature =
-      AirfiTemperatureSensorService.convertTemperature(
-        this.accessory.getRegisterValue(
-          AirfiThermostatService.EXHAUST_AIR_TEMPERATURE
-        )
-      );
-    const extractAirTemperature =
-      AirfiTemperatureSensorService.convertTemperature(
-        this.accessory.getRegisterValue(
-          AirfiThermostatService.EXTRACT_AIR_TEMPERATURE
-        )
-      );
-    const currentTemperature = AirfiTemperatureSensorService.convertTemperature(
-      this.accessory.getRegisterValue(
-        AirfiThermostatService.CURRENT_TEMPERATURE
-      )
-    );
-    const targetTemperature = AirfiTemperatureSensorService.convertTemperature(
-      this.accessory.getRegisterValue(AirfiThermostatService.TARGET_TEMPERATURE)
-    );
-
-    // Determine heating state by the delta of extract and exhaust air.
-    // If Δ ≥ 1°C ⇒ heat is being extracted from extract air to supply air and
-    // thus the air is being heated.
-    const delta = extractAirTemperature - exhaustAirTemperature;
-
-    if (delta >= 1 && targetTemperature > currentTemperature) {
-      return this.Characteristic.CurrentHeatingCoolingState.HEAT;
-    }
-
     return this.Characteristic.CurrentHeatingCoolingState.OFF;
   }
 
@@ -134,16 +98,23 @@ export default class AirfiThermostatService extends AirfiService {
   }
 
   private async setTargetTemperature(value: CharacteristicValue) {
-    this.log.info(`TargetTemperature ${this.targetTemperature}°C → ${value}°C`);
-    this.targetTemperature = this.targetMinTemperature = value as number;
-    this.accessory.queueInsert(
-      AirfiThermostatService.TARGET_TEMPERATURE,
-      (value as number) * 10
-    );
-    this.accessory.queueInsert(
-      AirfiThermostatService.TARGET_MIN_TEMPERATURE,
-      value as number
-    );
+    if ((value as number) !== this.targetTemperature) {
+      this.log.info(
+        `TargetTemperature ${this.targetTemperature}°C → ${value}°C`
+      );
+      this.targetTemperature = this.targetMinTemperature = value as number;
+      this.device.queueInsert(
+        AirfiThermostatService.TARGET_TEMPERATURE,
+        (value as number) * 10
+      );
+
+      if (this.device.hasFeature('minimumTemperatureSet')) {
+        this.device.queueInsert(
+          AirfiThermostatService.TARGET_MIN_TEMPERATURE,
+          value as number
+        );
+      }
+    }
   }
 
   private async getTemperatureDisplayUnits() {
@@ -151,14 +122,12 @@ export default class AirfiThermostatService extends AirfiService {
   }
 
   /**
-   * Run periodic updates to service state.
+   * {@inheritDoc AirfiService.updateState}
    */
   protected updateState() {
     // Read current temperature value.
     this.currentTemperature = AirfiTemperatureSensorService.convertTemperature(
-      this.accessory.getRegisterValue(
-        AirfiThermostatService.CURRENT_TEMPERATURE
-      )
+      this.device.getRegisterValue(AirfiThermostatService.CURRENT_TEMPERATURE)
     );
     this.service
       .getCharacteristic(this.Characteristic.CurrentTemperature)
@@ -166,30 +135,32 @@ export default class AirfiThermostatService extends AirfiService {
 
     // Read target temperature value.
     this.targetTemperature = AirfiTemperatureSensorService.convertTemperature(
-      this.accessory.getRegisterValue(AirfiThermostatService.TARGET_TEMPERATURE)
+      this.device.getRegisterValue(AirfiThermostatService.TARGET_TEMPERATURE)
     );
-    this.targetMinTemperature = this.accessory.getRegisterValue(
-      AirfiThermostatService.TARGET_MIN_TEMPERATURE
-    );
+
+    if (this.device.hasFeature('minimumTemperatureSet')) {
+      this.targetMinTemperature = this.device.getRegisterValue(
+        AirfiThermostatService.TARGET_MIN_TEMPERATURE
+      );
+    }
+
     this.service
       .getCharacteristic(this.Characteristic.TargetTemperature)
       .updateValue(this.targetTemperature);
 
-    if (this.targetTemperature !== this.targetMinTemperature) {
+    if (
+      this.device.hasFeature('minimumTemperatureSet') &&
+      this.targetTemperature !== this.targetMinTemperature
+    ) {
       this.syncTargetMinTemperature();
     }
-
-    // Set heating/cooling state.
-    this.service
-      .getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
-      .updateValue(this.getCurrentHeatingCoolingState());
   }
 
   /**
    * Sync heat exchanger bypass minimum temperature with set target temperature.
    */
   private syncTargetMinTemperature() {
-    this.accessory.queueInsert(
+    this.device.queueInsert(
       AirfiThermostatService.TARGET_MIN_TEMPERATURE,
       this.targetTemperature
     );

@@ -1,17 +1,8 @@
-import AirfiFanService from './airfiFanService';
-import AirfiHumiditySensorService from './airfiHumiditySensorService';
-import AirfiInformationService from './airfiInformationService';
-import AirfiSwitchService from './airfiSwitchService';
-import AirfiTemperatureSensorService from './airfiTemperatureSensorService';
-import AirfiThermostatService from './airfiThermostatService';
-import { AirfiService } from './airfiService';
-
-export {
-  AirfiFanService,
-  AirfiHumiditySensorService,
-  AirfiInformationService,
-  AirfiSwitchService,
-  AirfiService,
-  AirfiTemperatureSensorService,
-  AirfiThermostatService,
-};
+export { AirfiService } from './AirfiService';
+export { AirfiFanService } from './AirfiFanService';
+export { AirfiInformationService } from './AirfiInformationService';
+export { AirfiSwitchService } from './AirfiSwitchService';
+export { AirfiTemperatureSensorService } from './AirfiTemperatureSensorService';
+export { AirfiThermostatService } from './AirfiThermostatService';
+export { AirfiHumiditySensorService } from './AirfiHumiditySensorService';
+export { AirfiServiceFactory } from './factory/AirfiServiceFactory';
