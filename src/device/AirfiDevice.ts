@@ -1,29 +1,25 @@
 import EventEmitter from 'events';
 import { Logging } from 'homebridge';
-import semverGte from 'semver/functions/gte';
 
+import { RegisterType } from '../constants';
 import { AirfiModbusController } from '../controller';
-import { AirfiInformationService } from '../services';
-import { DebugOptions, RegisterAddress, WriteQueue } from '../types';
+import {
+  DebugOptions,
+  RegisterAddress,
+  WriteQueue,
+  FeatureFlags,
+} from '../types';
 import { sleep } from '../utils';
+import { AirfiFeatureManager } from './AirfiFeatureManager';
 
 export class AirfiDevice extends EventEmitter {
   private static readonly INTERVAL_FREQUENCY = 1000;
-
-  private static readonly MIN_MODBUS_VERSION = '1.5.0';
 
   private static readonly READ_FREQUENCY = 3;
 
   private readonly controller!: AirfiModbusController;
 
-  private readonly featureFlags = {
-    fireplaceFunction: false,
-    boostedCooling: false,
-    minimumTemperatureSet: false,
-    saunaFunction: false,
-  };
-
-  private firmwareVersion = '';
+  private readonly featureManager: AirfiFeatureManager;
 
   private holdingRegister: number[] = [];
 
@@ -36,8 +32,6 @@ export class AirfiDevice extends EventEmitter {
   private intervalId: NodeJS.Timeout | undefined;
 
   private isNetworking = false;
-
-  private modbusMapVersion = '';
 
   private queue: WriteQueue = new Map();
 
@@ -52,34 +46,35 @@ export class AirfiDevice extends EventEmitter {
   ) {
     super();
     this.controller = new AirfiModbusController(host, port, log, debugOptions);
+    this.featureManager = new AirfiFeatureManager(log);
   }
 
   /**
    * Tests connection to the air handling unit and reads version information.
    */
-  private async deviceLookup() {
+  private async deviceLookup(): Promise<number[]> {
+    const inputRegister: number[] = [];
     this.isNetworking = true;
 
     await this.controller
       .open()
-      .then(() =>
-        this.controller.read(1, 3, 3).then((values) => {
-          this.inputRegister = values;
-        })
-      )
+      .then(() => this.controller.read(1, 3, RegisterType.Input))
+      .then((values) => {
+        inputRegister.push(...values);
+      })
       .finally(() => {
         this.controller.close();
         this.isNetworking = false;
       });
+
+    return inputRegister;
   }
 
   /**
    * Perform a data sync operation with the air handling unit.
    */
   async deviceSync() {
-    if (!this.shouldExecute()) {
-      return;
-    }
+    if (!this.shouldExecute()) return;
 
     if (this.isNetworking) {
       this.log.warn(
@@ -141,11 +136,11 @@ export class AirfiDevice extends EventEmitter {
   getRegisterValue(registerAddress: RegisterAddress): number {
     const [register, address] = this.getRegisterAddress(registerAddress);
 
-    if (register === 3) {
+    if (register === RegisterType.Input) {
       return this.inputRegister[address - 1];
     }
 
-    if (register === 4) {
+    if (register === RegisterType.Holding) {
       return this.holdingRegister[address - 1];
     }
 
@@ -160,8 +155,8 @@ export class AirfiDevice extends EventEmitter {
    *
    * @returns Whether the feature is enabled.
    */
-  public hasFeature(key: keyof typeof this.featureFlags): boolean {
-    return this.featureFlags[key] ?? false;
+  public hasFeature(key: keyof FeatureFlags): boolean {
+    return this.featureManager.hasFeature(key);
   }
 
   /**
@@ -169,13 +164,11 @@ export class AirfiDevice extends EventEmitter {
    */
   async initialize() {
     await this.deviceLookup()
-      .then(() => {
-        if (!this.isSupportedDevice()) {
-          throw new Error('Device validation failed during initialization');
-        }
-
-        this.setRegisterLengths();
-        this.setFeatureFlags();
+      .then((lookupValues) => {
+        this.featureManager.initialize(this.displayName, lookupValues);
+        this.log.debug('Feature flags initialized');
+        [this.inputRegisterLength, this.holdingRegisterLength] =
+          this.featureManager.getRegisterLengths();
 
         // Retrieve initial data from the air handling unit.
         return this.deviceSync();
@@ -183,59 +176,7 @@ export class AirfiDevice extends EventEmitter {
       .then(() => {
         // Start periodic sync operations.
         this.startPeriodicSync();
-      })
-      .catch((error: Error) => {
-        throw error;
       });
-  }
-
-  /**
-   * Checks whether data was retrieved from the air handling unit and whether
-   * the modbus map version is supported.
-   */
-  private isSupportedDevice(): boolean {
-    // Verify that data was retrieved from the air handling unit.
-    if (this.inputRegister.length === 0) {
-      this.log.error(
-        'Failed to retrieve data from the air handling unit ' +
-          `"${this.displayName}". ` +
-          'Please check your network settings, the air handling unit is ' +
-          'powered on and connected to a network. Then restart Homebridge ' +
-          'and try again.'
-      );
-
-      return false;
-    }
-
-    this.firmwareVersion = AirfiInformationService.getVersionString(
-      this.getRegisterValue('3x00002')
-    );
-
-    this.modbusMapVersion = AirfiInformationService.getVersionString(
-      this.getRegisterValue('3x00003')
-    );
-
-    if (!semverGte(this.modbusMapVersion, AirfiDevice.MIN_MODBUS_VERSION)) {
-      this.log.error(
-        `Device firmware version ${this.firmwareVersion} is unsupported. ` +
-          'Please upgrade to a newer version.'
-      );
-
-      return false;
-    }
-
-    // Firmware 3.2.0 has a hidden register address causing issues with the
-    // plugin; therefore, it is not supported.
-    if (this.firmwareVersion === '3.2.0') {
-      this.log.error(
-        'Air handling unit firmware version 3.2.0 is unsupported. ' +
-          'Please downgrade or upgrade to another version.'
-      );
-
-      return false;
-    }
-
-    return true;
   }
 
   /**
@@ -249,7 +190,7 @@ export class AirfiDevice extends EventEmitter {
   queueInsert(registerAddress: RegisterAddress, value: number) {
     const [register, address] = this.getRegisterAddress(registerAddress);
 
-    if (register === 4) {
+    if (register === RegisterType.Holding) {
       this.holdingRegister[address - 1] = value;
       this.queue.set(address, value);
     } else {
@@ -266,14 +207,14 @@ export class AirfiDevice extends EventEmitter {
   private async readRegisters(): Promise<void> {
     // Read holding register
     await this.controller
-      .read(1, this.holdingRegisterLength, 4)
+      .read(1, this.holdingRegisterLength, RegisterType.Holding)
       .then((values) => {
         this.holdingRegister = values;
       });
 
     // Read input register
     await this.controller
-      .read(1, this.inputRegisterLength, 3)
+      .read(1, this.inputRegisterLength, RegisterType.Input)
       .then((values) => {
         this.inputRegister = values;
       });
@@ -294,59 +235,6 @@ export class AirfiDevice extends EventEmitter {
     await sleep(seconds);
     this.startPeriodicSync();
     this.log.info('Device data sync restarted');
-  }
-
-  /**
-   * Set feature flags based on the modbus map version.
-   */
-  private setFeatureFlags() {
-    const deviceInfoHeadline = `----- ${this.displayName} -----`;
-    this.log.info(deviceInfoHeadline);
-    this.log.info('  Firmware version:', this.firmwareVersion);
-    this.log.info('  Modbus map version:', this.modbusMapVersion);
-    this.log.info(deviceInfoHeadline.replace(/./g, '-'));
-
-    if (semverGte(this.modbusMapVersion, '2.1.0')) {
-      this.featureFlags.minimumTemperatureSet = true;
-    }
-
-    if (semverGte(this.modbusMapVersion, '2.5.0')) {
-      this.featureFlags.fireplaceFunction = true;
-      this.featureFlags.boostedCooling = true;
-      this.featureFlags.saunaFunction = true;
-    }
-
-    this.log.debug('Feature flags:', this.featureFlags);
-  }
-
-  /**
-   * Set the input and holding register lengths based on the modbus map version.
-   */
-  private setRegisterLengths() {
-    const registerLengths = {
-      '2.7.0': [42, 59],
-      '2.5.0': [40, 58],
-      '2.3.0': [40, 55],
-      '2.1.0': [40, 51],
-      '2.0.0': [40, 34],
-      '1.5.0': [31, 12],
-    };
-
-    for (const [
-      version,
-      [inputRegisterLength, holdingRegisterLength],
-    ] of Object.entries(registerLengths)) {
-      if (semverGte(this.modbusMapVersion, version)) {
-        this.inputRegisterLength = inputRegisterLength;
-        this.holdingRegisterLength = holdingRegisterLength;
-        this.log.debug(
-          `Setting input register length to ${this.inputRegisterLength} and ` +
-            `holding register length to ${this.holdingRegisterLength}`
-        );
-
-        break;
-      }
-    }
   }
 
   /**

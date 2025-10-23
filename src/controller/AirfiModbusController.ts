@@ -1,6 +1,8 @@
 import { Logging } from 'homebridge';
 import ModbusRTU from 'modbus-serial';
-import { DebugOptions, RegisterType } from '../types';
+
+import { RegisterType } from '../constants';
+import { DebugOptions } from '../types';
 
 /**
  * Modbus controller handling reading and writing registers in the Airfi
@@ -83,7 +85,7 @@ export default class AirfiModbusController {
         length - i * AirfiModbusController.MODBUS_READ_LIMIT
       );
       const read =
-        registerType === 4
+        registerType === RegisterType.Holding
           ? this.client.readHoldingRegisters(start, readLength)
           : this.client.readInputRegisters(start, readLength);
 
@@ -93,13 +95,13 @@ export default class AirfiModbusController {
           result = [...result, ...data];
         })
         .catch(({ message }: Error) => {
-          throw new Error(`Unable to read register: "${message}"`);
+          throw new Error(`Unable to read register - "${message}"`);
         });
     }
 
     if (result.length === length) {
       this.log.debug(
-        `Values for ${registerType === 4 ? 'holding' : 'input'}` +
+        `Values for ${registerType === RegisterType.Holding ? 'holding' : 'input'}` +
           ` register from ${startAddress} to ${length}:`,
 
         this.debugOptions.printModbusMap
@@ -136,7 +138,7 @@ export default class AirfiModbusController {
    */
   async write(address: number, value: number): Promise<void> {
     if (!this.isConnected) {
-      throw new Error('Unable to write: no connection to modbus server');
+      throw new Error('Unable to write - no connection to modbus server');
     }
 
     return this.client
@@ -148,7 +150,7 @@ export default class AirfiModbusController {
       })
       .catch(({ message }: Error) => {
         throw new Error(
-          `Unable to write value "${value}" to register "${address}":` +
+          `Unable to write value "${value}" to register "${address}" - ` +
             `"${message}"`
         );
       });
