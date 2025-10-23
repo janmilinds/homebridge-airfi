@@ -1,15 +1,14 @@
 import { CharacteristicValue } from 'homebridge';
 
-import AirfiService from './AirfiService';
+import { AirfiService } from './AirfiService';
+import { AirfiTemperatureSensorService } from './AirfiTemperatureSensorService';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
-import AirfiTemperatureSensorService from './AirfiTemperatureSensorService';
-import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
  * Defines the thermostat service to set the target temperature for supply air.
  */
-export default class AirfiThermostatService extends AirfiService {
+export class AirfiThermostatService extends AirfiService {
   private static readonly MINIMUM_TEMPERATURE = 10;
 
   private static readonly MAXIMUM_TEMPERATURE = 21;
@@ -30,13 +29,12 @@ export default class AirfiThermostatService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    device: AirfiAirHandlingUnitAccessory,
-    platform: AirfiHomebridgePlatform,
+    accessory: AirfiAirHandlingUnitAccessory,
     serviceOptions: ServiceOptions
   ) {
-    super(device, platform, {
+    super(accessory, {
       ...serviceOptions,
-      service: platform.Service.Thermostat,
+      service: accessory.getPlatform().Service.Thermostat,
     });
 
     this.service

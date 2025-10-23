@@ -1,13 +1,12 @@
-import AirfiService from './AirfiService';
+import { AirfiService } from './AirfiService';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
-import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
  * Defines the temperature sensor service to read temperature from the
  * air handling unit's sensors.
  */
-export default class AirfiTemperatureSensorService extends AirfiService {
+export class AirfiTemperatureSensorService extends AirfiService {
   private currentTemperature = 0;
 
   private readonly readAddress: RegisterAddress;
@@ -18,13 +17,12 @@ export default class AirfiTemperatureSensorService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    device: AirfiAirHandlingUnitAccessory,
-    platform: AirfiHomebridgePlatform,
+    accessory: AirfiAirHandlingUnitAccessory,
     serviceOptions: ServiceOptions
   ) {
-    super(device, platform, {
+    super(accessory, {
       ...serviceOptions,
-      service: platform.Service.TemperatureSensor,
+      service: accessory.getPlatform().Service.TemperatureSensor,
     });
 
     this.readAddress = serviceOptions.readAddress as RegisterAddress;

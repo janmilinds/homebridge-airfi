@@ -1,8 +1,7 @@
 import { CharacteristicValue } from 'homebridge';
 
-import AirfiService from './AirfiService';
+import { AirfiService } from './AirfiService';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
-import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import {
   FanActiveState,
   FanRotationSpeedState,
@@ -15,7 +14,7 @@ import { sleep } from '../utils';
  * Defines the fan service for controlling speed and "At home"/"Away" states of
  * the Airfi air handling unit.
  */
-export default class AirfiFanService extends AirfiService {
+export class AirfiFanService extends AirfiService {
   static readonly ROTATION_SPEED_STEP = 20;
 
   static readonly ACTIVE: RegisterAddress = '4x00012';
@@ -30,13 +29,12 @@ export default class AirfiFanService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    device: AirfiAirHandlingUnitAccessory,
-    platform: AirfiHomebridgePlatform,
+    accessory: AirfiAirHandlingUnitAccessory,
     serviceOptions: ServiceOptions
   ) {
-    super(device, platform, {
+    super(accessory, {
       ...serviceOptions,
-      service: platform.Service.Fanv2,
+      service: accessory.getPlatform().Service.Fanv2,
     });
 
     this.service

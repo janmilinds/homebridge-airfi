@@ -1,13 +1,12 @@
-import AirfiService from './AirfiService';
+import { AirfiService } from './AirfiService';
 import { AirfiAirHandlingUnitAccessory } from '../accessory';
-import { AirfiHomebridgePlatform } from '../AirfiHomebridgePlatform';
 import { RegisterAddress, ServiceOptions } from '../types';
 
 /**
  * Defines the humidity sensor service to read relative humidity from the
  * air handling unit's sensor.
  */
-export default class AirfiHumiditySensorService extends AirfiService {
+export class AirfiHumiditySensorService extends AirfiService {
   static readonly READ_ADDRESS_RELATIVE_HUMIDITY: RegisterAddress = '3x00023';
 
   private relativeHumidity = 0;
@@ -16,13 +15,12 @@ export default class AirfiHumiditySensorService extends AirfiService {
    * {@inheritDoc AirfiService.constructor}
    */
   constructor(
-    device: AirfiAirHandlingUnitAccessory,
-    platform: AirfiHomebridgePlatform,
+    accessory: AirfiAirHandlingUnitAccessory,
     serviceOptions: ServiceOptions
   ) {
-    super(device, platform, {
+    super(accessory, {
       ...serviceOptions,
-      service: platform.Service.HumiditySensor,
+      service: accessory.getPlatform().Service.HumiditySensor,
     });
 
     this.service
