@@ -95,6 +95,9 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
         if (index > -1) {
           this.accessories.splice(index, 1);
         }
+
+        // Clean up the accessory.
+        airHandlingUnitAccessory.destroy();
       });
   }
 
@@ -131,6 +134,9 @@ export class AirfiHomebridgePlatform implements DynamicPlatformPlugin {
       })
       .once('error', () => {
         this.log.error('Failed to initialize new accessory:', displayName);
+
+        // Clean up the accessory.
+        airHandlingUnitAccessory.destroy();
       });
   }
 
