@@ -151,6 +151,8 @@ export class AirfiAirHandlingUnitAccessory extends EventEmitter {
       clearTimeout(this.retryTimeout);
       this.retryTimeout = undefined;
     }
+
+    this.device.removeAllListeners();
     this.removeAllListeners();
   }
 }
