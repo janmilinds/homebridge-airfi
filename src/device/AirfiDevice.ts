@@ -137,11 +137,11 @@ export class AirfiDevice extends EventEmitter {
     const [register, address] = this.getRegisterAddress(registerAddress);
 
     if (register === RegisterType.Input) {
-      return this.inputRegister[address - 1];
+      return this.inputRegister[address - 1] ?? 0;
     }
 
     if (register === RegisterType.Holding) {
-      return this.holdingRegister[address - 1];
+      return this.holdingRegister[address - 1] ?? 0;
     }
 
     return -1;
@@ -191,6 +191,13 @@ export class AirfiDevice extends EventEmitter {
     const [register, address] = this.getRegisterAddress(registerAddress);
 
     if (register === RegisterType.Holding) {
+      if (!Number.isFinite(value)) {
+        this.log.warn(
+          `Rejecting invalid value "${value}" for register "${registerAddress}"`
+        );
+        return;
+      }
+
       this.holdingRegister[address - 1] = value;
       this.queue.set(address, value);
     } else {
@@ -205,14 +212,12 @@ export class AirfiDevice extends EventEmitter {
    * Reads both holding and input registers from the air handling unit.
    */
   private async readRegisters(): Promise<void> {
-    // Read holding register
     await this.controller
       .read(1, this.holdingRegisterLength, RegisterType.Holding)
       .then((values) => {
         this.holdingRegister = values;
       });
 
-    // Read input register
     await this.controller
       .read(1, this.inputRegisterLength, RegisterType.Input)
       .then((values) => {
@@ -244,6 +249,8 @@ export class AirfiDevice extends EventEmitter {
    */
   private shouldExecute(): boolean {
     this.sequenceCount++;
+
+    // Reset sequence count after it exceeds the read frequency.
     if (this.sequenceCount > AirfiDevice.READ_FREQUENCY) {
       this.sequenceCount = 1;
     }
