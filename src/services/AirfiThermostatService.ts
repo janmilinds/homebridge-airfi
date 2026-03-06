@@ -150,6 +150,8 @@ export class AirfiThermostatService extends AirfiService {
 
     if (
       this.device.hasFeature('minimumTemperatureSet') &&
+      Number.isFinite(this.targetTemperature) &&
+      this.targetTemperature > 0 &&
       this.targetTemperature !== this.targetMinTemperature
     ) {
       this.syncTargetMinTemperature();

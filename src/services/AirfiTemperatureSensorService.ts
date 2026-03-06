@@ -56,6 +56,10 @@ export class AirfiTemperatureSensorService extends AirfiService {
    * @returns Temperature value in °C
    */
   static convertTemperature(value: number): number {
+    if (!Number.isFinite(value)) {
+      return 0;
+    }
+
     let temperatureValue = value;
 
     // Convert negative value based on unsigned 16-bit integer value.
