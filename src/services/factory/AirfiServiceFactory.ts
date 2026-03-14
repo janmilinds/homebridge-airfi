@@ -175,8 +175,7 @@ export class AirfiServiceFactory {
       exposeFireplaceFunctionSwitch,
       exposeBoostedCoolingSwitch,
       exposeSaunaFunctionSwitch,
-    } = this.platform.config;
-
+    } = this.platformAccessory.context.config;
     // Fireplace function switch
     if (
       this.device.hasFeature('fireplaceFunction') &&
