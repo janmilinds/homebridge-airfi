@@ -33,6 +33,8 @@ export class AirfiDevice extends EventEmitter {
 
   private isNetworking = false;
 
+  private isRestarting = false;
+
   private queue: WriteQueue = new Map();
 
   private sequenceCount = 0;
@@ -232,6 +234,11 @@ export class AirfiDevice extends EventEmitter {
    *   Number of seconds to wait before restarting
    */
   async restartSync(seconds: number) {
+    if (this.isRestarting) {
+      return;
+    }
+
+    this.isRestarting = true;
     clearInterval(this.intervalId);
 
     this.sequenceCount = 0;
@@ -240,6 +247,7 @@ export class AirfiDevice extends EventEmitter {
     await sleep(seconds);
     this.startPeriodicSync();
     this.log.info('Device data sync restarted');
+    this.isRestarting = false;
   }
 
   /**
